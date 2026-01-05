@@ -1,3 +1,5 @@
+![Szente Pincészet logó](logoborazsazt.png)
+
 # vizsgaremek
 Szoftverfejlesztő és tesztelő záróvizsga remeke.
 Résztvevők: Sinthavong Bence és Szente Benedek Rafael
