@@ -1,4 +1,7 @@
-![Szente Pincészet logó](logoborazsazt.png)
+<p align="center">
+  <img src="logoborazsazt.png" alt="Szente Pincészet logó" width="220">
+</p>
+
 
 # vizsgaremek
 Szoftverfejlesztő és tesztelő záróvizsga remeke.
