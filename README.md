@@ -1,7 +1,13 @@
-<p align="center">
-  <img src="logoborazsazt.png" alt="Szente Pincészet logó" width="220">
-</p>
-
+<table>
+  <tr>
+    <td>
+      <img src="logoborazsazt.png" alt="Szente Pincészet" width="70">
+    </td>
+    <td>
+      <h1>vizsgaremek</h1>
+    </td>
+  </tr>
+</table>
 
 # vizsgaremek
 Szoftverfejlesztő és tesztelő záróvizsga remeke.
