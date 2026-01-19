@@ -1,7 +1,16 @@
 <p align="center">
   <img src="logoborazsazt.png" alt="Szente Pincészet logó" width="220">
 </p>
-
+## Tartalomjegyzék
+* [Vizsgaremek célkitűzése](#vizsgaremek-célkitűzése)
+* [Feladat leírása, bemutatása](#feladat-leírása-bemutatása)
+* [Tervezett vállalásaim](#tervezett-vállalásaim)
+    * [Frontend](#frontend)
+    * [Backend](#backend)
+* [Adatbázistervezés](#adatbázistervezés)
+* [Tesztelés](#tesztelés)
+    * [Backend tesztek](#backend-tesztek)
+    * [Frontend tesztek](#frontend-tesztek)
 
 # vizsgaremek
 Szoftverfejlesztő és tesztelő záróvizsga remeke.
