@@ -1,16 +1,7 @@
 <p align="center">
   <img src="logoborazsazt.png" alt="Szente Pincészet logó" width="220">
 </p>
-## Tartalomjegyzék
-* [Vizsgaremek célkitűzése](#vizsgaremek-célkitűzése)
-* [Feladat leírása, bemutatása](#feladat-leírása-bemutatása)
-* [Tervezett vállalásaim](#tervezett-vállalásaim)
-    * [Frontend](#frontend)
-    * [Backend](#backend)
-* [Adatbázistervezés](#adatbázistervezés)
-* [Tesztelés](#tesztelés)
-    * [Backend tesztek](#backend-tesztek)
-    * [Frontend tesztek](#frontend-tesztek)
+
 
 # vizsgaremek
 Szoftverfejlesztő és tesztelő záróvizsga remeke.
@@ -102,3 +93,14 @@ A projektben mind backend, mind frontend oldali tesztek készülnek, hogy a műk
 - automatizált UI tesztek Selenium segítségével
 - alap funkciók tesztelése: regisztráció, belépés, kosár, rendelés, foglalás
 
+
+## Tartalomjegyzék
+* [Vizsgaremek célkitűzése](#vizsgaremek-célkitűzése)
+* [Feladat leírása, bemutatása](#feladat-leírása-bemutatása)
+* [Tervezett vállalásaim](#tervezett-vállalásaim)
+    * [Frontend](#frontend)
+    * [Backend](#backend)
+* [Adatbázistervezés](#adatbázistervezés)
+* [Tesztelés](#tesztelés)
+    * [Backend tesztek](#backend-tesztek)
+    * [Frontend tesztek](#frontend-tesztek)
