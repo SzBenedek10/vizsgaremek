@@ -7,6 +7,16 @@
 Szoftverfejlesztő és tesztelő záróvizsga remeke.
 Résztvevők: Sinthavong Bence és Szente Benedek Rafael
 
+## Tartalomjegyzék
+* [Vizsgaremek célkitűzése](#vizsgaremek-célkitűzése)
+* [Feladat leírása, bemutatása](#feladat-leírása-bemutatása)
+* [Tervezett vállalásaim](#tervezett-vállalásaim)
+    * [Frontend](#frontend)
+    * [Backend](#backend)
+* [Adatbázistervezés](#adatbázistervezés)
+* [Tesztelés](#tesztelés)
+    * [Backend tesztek](#backend-tesztek)
+    * [Frontend tesztek](#frontend-tesztek)
 
 ## Vizsgaremek célkitűzése
 
@@ -94,13 +104,4 @@ A projektben mind backend, mind frontend oldali tesztek készülnek, hogy a műk
 - alap funkciók tesztelése: regisztráció, belépés, kosár, rendelés, foglalás
 
 
-## Tartalomjegyzék
-* [Vizsgaremek célkitűzése](#vizsgaremek-célkitűzése)
-* [Feladat leírása, bemutatása](#feladat-leírása-bemutatása)
-* [Tervezett vállalásaim](#tervezett-vállalásaim)
-    * [Frontend](#frontend)
-    * [Backend](#backend)
-* [Adatbázistervezés](#adatbázistervezés)
-* [Tesztelés](#tesztelés)
-    * [Backend tesztek](#backend-tesztek)
-    * [Frontend tesztek](#frontend-tesztek)
+
