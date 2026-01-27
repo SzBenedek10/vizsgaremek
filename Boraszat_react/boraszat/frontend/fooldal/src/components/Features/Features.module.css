@@ -1,0 +1,70 @@
+.features {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+.featureItem {
+  flex: 1 1 300px;
+  background: linear-gradient(135deg, var(--feature-bg), #fff);
+  border-radius: 12px;
+  padding: 30px 25px;
+  box-shadow: 0 5px 20px rgba(160, 26, 47, 0.15);
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(160, 26, 47, 0.1);
+  position: relative;
+}
+
+.featureItem::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--primary-wine);
+  border-radius: 12px 12px 0 0;
+}
+
+.featureItem:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(160, 26, 47, 0.25);
+}
+
+.featureItem h3 {
+  color: var(--primary-wine);
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.featureItem p {
+  color: var(--text-dark);
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+
+.customLink {
+  display: inline-block;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--primary-wine), var(--secondary-wine));
+  color: white;
+  padding: 12px 25px;
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(160, 26, 47, 0.4);
+  transition: all 0.3s ease;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.customLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(160, 26, 47, 0.6);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .featureItem { flex: 1 1 100%; }
+  .features { gap: 20px; }
+}

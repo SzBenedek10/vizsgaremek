@@ -1,0 +1,728 @@
+:root {
+  --primary-wine: #a01a2f;
+  --secondary-wine: #8B0000;
+  --accent-gold: #D4AF37;
+  --text-dark: #4b2c2c;
+  --feature-bg: #f4e9e9;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+  background-color: #121212; /* SÖTÉT HÁTTÉR GLOBÁLISAN */
+  color: white;
+}
+
+/* Ezt a részt keresd meg és módosítsd: */
+.container {
+  margin: 0 auto; /* Vedd ki a nagy margót */
+  padding: 40px;
+  /* background-color: #fff;  <-- EZT TÖRÖLD VAGY KOMMENTELD KI */
+  /* box-shadow: ... <-- EZT IS TÖRÖLHETED, HA SÖTÉT OLDALT AKARSZ */
+  position: relative;
+  overflow: hidden;
+  min-height: 100%;
+}
+
+
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-wine), var(--accent-gold), var(--primary-wine));
+  border-radius: 15px 15px 0 0;
+}
+
+.welcome {
+  text-align: center;
+  margin-bottom: 50px;
+  padding: 40px;
+  background: linear-gradient(135deg, rgba(160, 26, 47, 0.05), rgba(212, 175, 55, 0.05));
+  border-radius: 15px;
+  border: 1px solid rgba(160, 26, 47, 0.1);
+}
+
+h1 {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  color: var(--primary-wine);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.lead {
+  font-size: 1.4rem;
+  line-height: 1.8;
+  margin: 0 auto 30px auto;
+  text-align: center;
+  font-weight: 300;
+}
+
+.sectionTitle {
+  text-align: center;
+  color: var(--primary-wine);
+  margin-bottom: 20px;
+}
+
+.gallery {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.gallery img {
+  width: 22%;
+  height: 250px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+  object-fit: cover;
+  transition: all 0.4s ease;
+  border: 3px solid transparent;
+}
+
+.gallery img:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  border-color: var(--accent-gold);
+}
+
+.features {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+.featureItem {
+  flex: 1 1 300px;
+  background: linear-gradient(135deg, var(--feature-bg), #fff);
+  border-radius: 12px;
+  padding: 30px 25px;
+  box-shadow: 0 5px 20px rgba(160, 26, 47, 0.15);
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(160, 26, 47, 0.1);
+  position: relative;
+}
+
+.featureItem::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--primary-wine);
+  border-radius: 12px 12px 0 0;
+}
+
+.featureItem:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(160, 26, 47, 0.25);
+}
+
+.featureItem h3 {
+  color: var(--primary-wine);
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.featureItem p {
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+
+.customLink {
+  display: inline-block;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--primary-wine), var(--secondary-wine));
+  color: white;
+  padding: 12px 25px;
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(160, 26, 47, 0.4);
+  transition: all 0.3s ease;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.customLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(160, 26, 47, 0.6);
+  color: white;
+}
+
+.separator {
+  height: 80px;
+  background: linear-gradient(135deg, #f4e9e9, #fff, #f4e9e9);
+  margin: 60px 0;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.separator::before {
+  content: '🍷';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  opacity: 0.3;
+}
+
+/* Reszponzív */
+@media (max-width: 1200px) {
+  .container { margin: 20px; padding: 30px; }
+  .gallery img { width: 45%; height: 200px; }
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 2.5rem; }
+  .lead { font-size: 1.2rem; }
+  .featureItem { flex: 1 1 100%; }
+  .gallery img { width: 100%; max-width: 400px; height: 200px; }
+}
+
+@media (max-width: 480px) {
+  .container { margin: 10px; padding: 20px; }
+  h1 { font-size: 2rem; }
+}
+
+/* TOP NAVBAR */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(160, 26, 47, 0.12);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* a nav középen marad */
+}
+
+/* Középső menü */
+.nav {
+  display: flex;
+  gap: 18px;
+}
+
+/* Jobb oldali gombok */
+.navRight {
+  position: absolute;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Menüpontok */
+.navLink {
+  text-decoration: none;
+  color: var(--primary-wine);
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(160, 26, 47, 0.18);
+  background: linear-gradient(135deg, rgba(160, 26, 47, 0.04), rgba(212, 175, 55, 0.04));
+}
+
+.navLink:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(160, 26, 47, 0.18);
+  border-color: rgba(212, 175, 55, 0.6);
+}
+
+.navLink.active {
+  color: white;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--primary-wine), var(--secondary-wine));
+  box-shadow: 0 10px 25px rgba(160, 26, 47, 0.25);
+}
+
+/* Jobb oldali gombok */
+.navBtn,
+.navBtnOutline {
+  text-decoration: none;
+  font-weight: 800;
+  padding: 10px 14px;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+  font-size: 0.95rem;
+}
+
+.navBtn {
+  color: white;
+  background: linear-gradient(135deg, var(--primary-wine), var(--secondary-wine));
+  box-shadow: 0 8px 20px rgba(160, 26, 47, 0.22);
+}
+
+.navBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(160, 26, 47, 0.3);
+}
+
+.navBtnOutline {
+  color: var(--primary-wine);
+  border: 1px solid rgba(160, 26, 47, 0.25);
+  background: rgba(255,255,255,0.6);
+}
+
+.navBtnOutline:hover {
+  transform: translateY(-1px);
+  border-color: rgba(212, 175, 55, 0.8);
+  box-shadow: 0 10px 24px rgba(160, 26, 47, 0.15);
+}
+
+/* Mobilon ne lógjon le */
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .navRight {
+    position: static;
+  }
+}
+
+/* ===== BORRENDELÉS PAGE (MODERN, FŐOLDALHOZ ILLŐ) ===== */
+
+.shopPageWrap{
+  max-width: 1700px;
+  margin: 40px auto;
+  padding: 40px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.shopPageWrap::before{
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-wine), var(--accent-gold), var(--primary-wine));
+  border-radius: 18px 18px 0 0;
+}
+
+.shopContainer{
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 28px;
+  margin-top: 18px;
+}
+
+.shopHeader{
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 28px 24px;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+
+  /* sötét bordós alap */
+  background: white;
+  opacity: 0.95;
+  border: 1px solid rgba(212,175,55,0.45);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.20);
+}
+
+/* világos “üveges” réteg, hogy a szöveg kiemelkedjen */
+.shopHeader::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(212,175,55,0.10));
+  pointer-events: none;
+}
+
+/* hogy a szöveg a ::before felett legyen */
+.shopHeader *{
+  position: relative;
+  z-index: 1;
+}
+
+.shopHeader h1{
+  margin: 0 0 8px 0;
+  font-size: 2.5rem;
+  color: black; /* KONTRASZT */
+  text-shadow: 0 3px 18px rgba(0,0,0,0.35);
+  letter-spacing: 0.2px;
+}
+
+.shopHeader p{
+  margin: 0;
+  font-size: 1.1rem;
+  color: black; /* KONTRASZT */
+  text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+
+
+.successMessageTimed{
+  grid-column: 1 / -1;
+  background: rgba(76, 175, 80, 0.92);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 800;
+  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.22);
+  border: 1px solid rgba(255,255,255,0.35);
+}
+
+/* --- shared card surface --- */
+.surface{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(160, 26, 47, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+}
+
+.cartSection{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(160, 26, 47, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  padding: 22px;
+  height: fit-content;
+  position: sticky;
+  top: 92px;
+}
+
+.wineSelection{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(160, 26, 47, 0.10);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  padding: 22px;
+}
+
+
+.cartHeader{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(212,175,55,0.55);
+  margin-bottom: 12px;
+}
+
+.cartTitle{
+  color: var(--primary-wine);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.clearCart{
+  background: rgba(212,175,55,0.25);
+  border: 1px solid rgba(212,175,55,0.55);
+  color: var(--text-dark);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.clearCart:hover{
+  transform: translateY(-1px);
+  background: rgba(212,175,55,0.35);
+}
+
+.cartItems{
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.cartItem{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.cartItem:last-child{ border-bottom: none; }
+
+.itemInfo h4{
+  margin: 0 0 6px 0;
+  color: var(--primary-wine);
+  font-size: 0.98rem;
+  font-weight: 900;
+}
+
+.itemDetails{
+  color: rgba(0,0,0,0.55);
+  font-size: 0.85rem;
+}
+
+.itemActions{
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.itemSum{
+  font-weight: 900;
+  color: var(--primary-wine);
+}
+
+.itemRemove{
+  background: rgba(255, 68, 68, 0.12);
+  color: #c62828;
+  border: 1px solid rgba(255, 68, 68, 0.35);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.itemRemove:hover{
+  background: rgba(255, 68, 68, 0.18);
+}
+
+.cartTotal{
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(160,26,47,0.06), rgba(212,175,55,0.06));
+  border: 1px solid rgba(160,26,47,0.10);
+  text-align: center;
+}
+
+.totalPrice{
+  margin-top: 6px;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--primary-wine);
+}
+
+.orderBtnContainer{
+  margin-top: 14px;
+}
+
+.orderBtn{
+  width: 100%;
+  border: none;
+  padding: 14px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-wine), var(--secondary-wine));
+  box-shadow: 0 10px 25px rgba(160, 26, 47, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.orderBtn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(160, 26, 47, 0.28);
+}
+
+.emptyCart{
+  padding: 26px 10px;
+  text-align: center;
+  color: rgba(0,0,0,0.6);
+}
+
+
+
+.wineTitle{
+  margin: 0;
+  color: var(--primary-wine);
+  font-weight: 900;
+}
+
+.wineGrid{
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 18px;
+}
+
+
+.wineCard{
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(160, 26, 47, 0.10);
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.wineCard:hover{
+  transform: translateY(-4px);
+  border-color: rgba(212,175,55,0.65);
+  box-shadow: 0 14px 32px rgba(160, 26, 47, 0.12);
+}
+
+.wineImage{
+  height: 175px;
+  background: #f9f5f0;
+}
+
+.wineImage img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #f9f5f0;          
+}
+.wineInfo{
+  padding: 16px;
+  text-align: left;
+}
+
+.wineName{
+  margin: 0 0 6px 0;
+  color: var(--primary-wine);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.wineDesc{
+  margin: 0 0 12px 0;
+  color: rgba(0,0,0,0.65);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  min-height: 40px;
+}
+
+.wineBottomRow{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.winePrice{
+  font-weight: 900;
+  color: var(--primary-wine);
+  font-size: 1.1rem;
+}
+
+.wineActions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.quantitySelect{
+  padding: 10px 10px;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  width: 88px;
+  background: rgba(255,255,255,0.9);
+}
+
+.addToCartBtn{
+  flex: 1;
+  border: none;
+  padding: 11px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-wine), var(--secondary-wine));
+  box-shadow: 0 10px 22px rgba(160, 26, 47, 0.20);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.addToCartBtn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(160, 26, 47, 0.28);
+}
+
+/* ŰRLAP */
+.orderForm{
+  margin-top: 22px;
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(160, 26, 47, 0.10);
+  background: linear-gradient(135deg, rgba(160,26,47,0.04), rgba(212,175,55,0.04));
+  display: none;
+}
+
+.orderForm.active{ display: block; }
+
+.orderFormTitle{
+  margin: 0 0 16px 0;
+  color: var(--primary-wine);
+  font-weight: 900;
+  text-align: center;
+}
+
+.formGroup{ margin-bottom: 14px; }
+
+.required::after{ content: " *"; color: var(--primary-wine); }
+
+.shopPageWrap input,
+.shopPageWrap select,
+.shopPageWrap textarea{
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(0,0,0,0.14);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: rgba(255,255,255,0.95);
+}
+
+.shopPageWrap input:focus,
+.shopPageWrap select:focus,
+.shopPageWrap textarea:focus{
+  outline: none;
+  border-color: rgba(160, 26, 47, 0.45);
+  box-shadow: 0 0 0 3px rgba(160, 26, 47, 0.10);
+}
+
+.formRow{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.submitBtn{
+  width: 100%;
+  border: none;
+  padding: 14px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-wine), var(--secondary-wine));
+  box-shadow: 0 12px 28px rgba(160, 26, 47, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submitBtn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(160, 26, 47, 0.28);
+}
+
+/* Responsive */
+@media (max-width: 1100px){
+  .shopPageWrap{ margin: 20px; padding: 30px; }
+}
+@media (max-width: 968px){
+  .shopContainer{ grid-template-columns: 1fr; }
+  .cartSection{ position: static; top: auto; }
+}
+@media (max-width: 768px){
+  .formRow{ grid-template-columns: 1fr; }
+}

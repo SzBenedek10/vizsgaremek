@@ -1,0 +1,189 @@
+import React from 'react';
+import { Container, Box, Typography, TextField, Button, Paper, Grid, IconButton } from '@mui/material';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import HomeIcon from '@mui/icons-material/Home';
+import { useNavigate } from 'react-router-dom';
+
+export default function SignUpSide() {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch('http://localhost:5000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Sikeres regisztráció!');
+        navigate('/login');
+      } else {
+        alert(result.error);
+      }
+    } catch (error) {
+      console.error('Hiba:', error);
+      alert('Nem sikerült kapcsolódni a szerverhez.');
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+      }}
+    >
+      <Container component="main" maxWidth="sm">
+        <Paper
+          elevation={6}
+          sx={{
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            borderRadius: 4,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          }}
+        >
+          {/* Főoldal gomb a bal felső sarokban */}
+          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-start', mb: -4 }}>
+            <IconButton onClick={() => navigate('/')} sx={{ color: '#722f37' }}>
+              <HomeIcon />
+            </IconButton>
+          </Box>
+
+          <Box
+            sx={{
+              m: 1,
+              p: 1,
+              bgcolor: '#722f37',
+              borderRadius: '50%',
+              display: 'flex',
+            }}
+          >
+            <AccountCircleOutlinedIcon sx={{ color: 'white', fontSize: 30 }} />
+          </Box>
+
+          <Typography
+            component="h1"
+            variant="h5"
+            sx={{ fontWeight: 'bold', color: '#722f37', mb: 3 }}
+          >
+            Regisztráció
+          </Typography>
+
+          <Box component="form" noValidate onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Grid container spacing={2}>
+              {/* Alapadatok */}
+              <Grid>
+                <TextField
+                  required
+                  fullWidth
+                  label="Teljes név (nev)"
+                  name="nev"
+                  autoFocus
+                  sx={{ gridColumn: 'span 12' }}
+                />
+              </Grid>
+              <Grid>
+                <TextField
+                  required
+                  fullWidth
+                  label="Email cím"
+                  name="email"
+                  type="email"
+                  sx={{ gridColumn: { xs: 'span 12', sm: 'span 6' } }}
+                />
+              </Grid>
+              <Grid>
+                <TextField
+                  required
+                  fullWidth
+                  label="Telefonszám"
+                  name="telefonszam"
+                  sx={{ gridColumn: { xs: 'span 12', sm: 'span 6' } }}
+                />
+              </Grid>
+              <Grid>
+                <TextField
+                  required
+                  fullWidth
+                  label="Jelszó"
+                  name="password_hash"
+                  type="password"
+                  sx={{ gridColumn: 'span 12' }}
+                />
+              </Grid>
+
+              {/* Cím adatok */}
+              <Grid>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ gridColumn: 'span 12' }}>
+                  Lakcím adatok
+                </Typography>
+              </Grid>
+              <Grid>
+                <TextField fullWidth label="Ország" name="orszag" sx={{ gridColumn: { xs: 'span 12', sm: 'span 6' } }} />
+              </Grid>
+              <Grid>
+                <TextField fullWidth label="Irsz" name="irsz" sx={{ gridColumn: { xs: 'span 6', sm: 'span 3' } }} />
+              </Grid>
+              <Grid>
+                <TextField fullWidth label="Város" name="varos" sx={{ gridColumn: { xs: 'span 6', sm: 'span 3' } }} />
+              </Grid>
+              <Grid>
+                <TextField fullWidth label="Utca" name="utca" sx={{ gridColumn: { xs: 'span 12', sm: 'span 8' } }} />
+              </Grid>
+              <Grid>
+                <TextField fullWidth label="Házszám" name="hazszam" sx={{ gridColumn: { xs: 'span 12', sm: 'span 4' } }} />
+              </Grid>
+            </Grid>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: 4,
+                mb: 2,
+                backgroundColor: '#722f37',
+                '&:hover': { backgroundColor: '#5a252c' },
+                borderRadius: '20px',
+                py: 1.5,
+                fontWeight: 'bold',
+              }}
+            >
+              Fiók létrehozása
+            </Button>
+
+            <Box sx={{ textAlign: 'center' }}>
+              <Button
+                onClick={() => navigate('/login')}
+                sx={{
+                  color: '#722f37',
+                  textTransform: 'none',
+                  '&:hover': { backgroundColor: 'transparent', textDecoration: 'underline' },
+                }}
+              >
+                Már van fiókod? Jelentkezz be!
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
+  );
+}
+
+
+
+

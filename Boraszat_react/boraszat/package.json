@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "backend": "node backend/server.js",
+    "frontend": "cd frontend/fooldal && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "express": "^5.2.1",
+    "sweetalert2": "^11.26.17"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
