@@ -1,5 +1,5 @@
-<p align="center">
-  <img src="logoborazsazt.png" alt="Szente Pincészet logó" width="220">
+<p aligne="center">
+  <img src="logoborazsazt.png" alt="Szente Pincészet logo" width="220">
 </p>
 
 
