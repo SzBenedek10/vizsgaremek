@@ -9,19 +9,23 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = mysql.createConnection({
-    host: 'localhost',
+const db = mysql.createPool({
+    host: 'mysqldb',
     user: 'root',
     password: '',
-    database: 'boraszat'
+    database: 'boraszat',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect(err => {
+db.getConnection((err, connection) => {
     if (err) {
-        console.error('Adatbázis csatlakozási hiba:', err.message);
-        return;
+        console.error('Adatbázis csatlakozási hiba (Pool):', err.message);
+    } else {
+        console.log('Sikeresen csatlakozva a MySQL-hez (Pool)!');
+        connection.release(); // Fontos: engedjük vissza a kapcsolatot!
     }
-    console.log('Sikeresen csatlakozva a MySQL-hez!');
 });
 
 app.post('/api/register', async (req, res) => {
@@ -96,7 +100,7 @@ app.post('/api/login', (req, res) => {
     });
 });
 app.get('/api/borok', (req, res) => {
-  const sql = "SELECT id, nev, ar, leiras FROM bor WHERE aktiv = 1";
+  const sql = "SELECT id, nev, ar, leiras, keszlet FROM bor WHERE keszlet IS NOT NULL";
   
   db.query(sql, (err, results) => {
     if (err) {
@@ -105,5 +109,6 @@ app.get('/api/borok', (req, res) => {
     }
     res.json(results); 
   });
+
 });
-app.listen(3000, () => console.log('A szerver fut a 3000-es porton!'));
+app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));

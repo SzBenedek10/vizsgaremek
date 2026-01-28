@@ -12,7 +12,7 @@ export default function BorRendeles() {
 
   // 1. ADATOK LEKÉRÉSE A BACKENDTŐL
   useEffect(() => {
-    fetch("http://localhost:3000/api/borok") 
+    fetch("http://localhost:5000/api/borok") 
       .then((res) => res.json())
       .then((data) => {
         setBorok(data);
@@ -24,8 +24,16 @@ export default function BorRendeles() {
       });
   }, []);
 
-  // 2. KOSÁR LOGIKA
+ 
   const kosarba = (id, db) => {
+    const adottBor = borok.find(b => b.id === id);
+    const jelenlegKosarban = kosar[id] || 0;
+
+    if (adottBor && (jelenlegKosarban + db) > adottBor.keszlet) {
+      alert(`Sajnos ebből a borból csak ${adottBor.keszlet} db van készleten!`);
+      return;
+    }
+
     setKosar((prev) => ({
       ...prev,
       [id]: (prev[id] || 0) + db,

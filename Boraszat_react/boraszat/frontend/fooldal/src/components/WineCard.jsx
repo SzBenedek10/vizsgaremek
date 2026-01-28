@@ -32,6 +32,9 @@ export default function WineCard({ bor, onAdd }) {
       <div className="wineInfo">
         <h3 className="wineName">{bor.nev}</h3>
         <p className="wineDesc">{bor.leiras}</p>
+        <div className="wineStock">
+          Készleten: {bor.keszlet} db
+        </div>
         <div className="winePrice">{HUF.format(bor.ar)} Ft</div>
         <div className="wineActions">
           <select value={db} onChange={(e) => setDb(Number(e.target.value))}>

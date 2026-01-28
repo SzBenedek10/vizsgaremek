@@ -1,0 +1,61 @@
+services:
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      # Ez a legfontosabb: megmondjuk, hogy a 'mysqldb' nevű szervizhez kapcsolódjon
+      PMA_HOST: mysqldb
+      PMA_USER: root
+      PMA_PASSWORD: ""
+      # Ez segít, ha mégis kézzel kellene beírni a szervernevet
+      PMA_ARBITRARY: 1
+    depends_on:
+      - mysqldb
+
+
+  mysqldb:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: boraszat
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: mysqldb
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: boraszat
+    depends_on:
+      - mysqldb
+    # ÚJ: Ez teszi lehetővé, hogy a server.js módosítása azonnal hasson
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+
+  client:
+    build: ./frontend/fooldal
+    ports:
+      - "5173:5173"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - api
+    # ÚJ: Ez teszi lehetővé, hogy a React fájlok módosítása azonnal látsszon a böngészőben
+    volumes:
+      - ./frontend/fooldal:/usr/src/app
+      - /usr/src/app/node_modules
+
+volumes:
+  db_data:

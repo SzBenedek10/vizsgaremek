@@ -25,10 +25,26 @@ export default function MainLayout() {
         <Button onClick={() => navigate('/bortura')} color="inherit" sx={{ fontWeight: 'bold' }}>Bortúra</Button>
         
         
-          <Box sx={{ position: 'absolute', right: 20 }}>
-            {user ? (
-               <Avatar sx={{ bgcolor: '#722f37' }}>{user.nev?.charAt(0)}</Avatar>
-            ) : (
+        <Box sx={{ position: 'absolute', right: 20 }}>
+          {user ? (
+            <>
+              <Tooltip title="Profilom">
+                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0 }}>
+                  <Avatar sx={{ bgcolor: '#722f37', border: '2px solid white' }}>
+                    {user.nev ? user.nev.charAt(0).toUpperCase() : 'U'}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
+                <MenuItem onClick={() => navigate('/profilom')}>Profilom</MenuItem>
+                <MenuItem onClick={logout}>Kijelentkezés</MenuItem>
+              </Menu>
+            </>
+          ) : (
               <Button onClick={() => navigate('/login')} sx={{ color: '#722f37' }}>Bejelentkezés</Button>
             )}
           
@@ -39,7 +55,6 @@ export default function MainLayout() {
     <Box component="main" sx={{ 
       flex: 1, 
       width: '100%',
-      // Itt nem kényszerítünk fehér színt, így az index.css h1, h2, p stílusai érvényesülnek!
     }}>
       <Outlet /> 
     </Box>
