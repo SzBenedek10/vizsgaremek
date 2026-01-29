@@ -62,41 +62,46 @@ app.post('/api/register', async (req, res) => {
     }
 });
 app.post('/api/login', (req, res) => {
-   
     const { email, password_hash } = req.body; 
-
-    if (!email || !password_hash) {
-        return res.status(400).json({ error: 'Email és jelszó megadása kötelező!' });
-    }
 
     const sql = "SELECT * FROM users WHERE email = ?";
     db.query(sql, [email], async (err, results) => {
         if (err) return res.status(500).json({ error: 'Adatbázis hiba' });
-        
-        if (results.length === 0) {
-            return res.status(401).json({ error: 'Hibás email vagy jelszó!' });
-        }
+        if (results.length === 0) return res.status(401).json({ error: 'Hibás adatok!' });
 
         const user = results[0];
-
-      
         const isMatch = await bcrypt.compare(password_hash, user.password_hash);
 
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Hibás email vagy jelszó!' });
-        }
+        if (!isMatch) return res.status(401).json({ error: 'Hibás adatok!' });
 
+        // A TOKENBE beletesszük a ROLE-t is!
         const token = jwt.sign(
-            { id: user.id, email: user.email, nev: user.nev },
+            { id: user.id, email: user.email, role: user.role }, 
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
         res.json({
-            message: 'Sikeres bejelentkezés!',
-            token: token,
-            user: { id: user.id, nev: user.nev, email: user.email }
+            token,
+            user: { id: user.id, nev: user.nev, role: user.role } // A frontendnek is elküldjük
         });
+    });
+});
+app.get('/api/admin/users', (req, res) => {
+    // Ideális esetben itt kéne egy authenticateToken middleware, 
+    // de kezdésnek legyen meg az alap lekérés:
+    db.query("SELECT id, nev, email, role FROM users", (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+// Felhasználó törlése
+app.delete('/api/admin/users/:id', (req, res) => {
+    const { id } = req.params;
+    db.query("DELETE FROM users WHERE id = ?", [id], (err) => {
+        if (err) return res.status(500).json({ error: "Sikertelen törlés" });
+        res.json({ message: "Felhasználó törölve!" });
     });
 });
 app.get('/api/borok', (req, res) => {
