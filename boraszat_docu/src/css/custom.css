@@ -1,0 +1,9 @@
+:root {
+  --ifm-color-primary: #800020; /* Bordeaux vörös */
+  --ifm-color-primary-dark: #73001d;
+  --ifm-color-primary-darker: #6d001b;
+  --ifm-color-primary-darkest: #5a0016;
+  --ifm-color-primary-light: #8d0023;
+  --ifm-color-primary-lighter: #940025;
+  --ifm-color-primary-lightest: #a81a3a;
+}
