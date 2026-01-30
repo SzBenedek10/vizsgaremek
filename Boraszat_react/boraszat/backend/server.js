@@ -62,29 +62,18 @@ app.post('/api/register', async (req, res) => {
     }
 });
 app.post('/api/login', (req, res) => {
-   
     const { email, password_hash } = req.body; 
-
-    if (!email || !password_hash) {
-        return res.status(400).json({ error: 'Email és jelszó megadása kötelező!' });
-    }
 
     const sql = "SELECT * FROM users WHERE email = ?";
     db.query(sql, [email], async (err, results) => {
         if (err) return res.status(500).json({ error: 'Adatbázis hiba' });
-        
-        if (results.length === 0) {
-            return res.status(401).json({ error: 'Hibás email vagy jelszó!' });
-        }
+        if (results.length === 0) return res.status(401).json({ error: 'Hibás adatok!' });
 
         const user = results[0];
-
-      
         const isMatch = await bcrypt.compare(password_hash, user.password_hash);
 
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Hibás email vagy jelszó!' });
-        }
+        if (!isMatch) return res.status(401).json({ error: 'Hibás adatok!' });
+
 
        const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '24h' });
     
@@ -103,12 +92,14 @@ app.post('/api/login', (req, res) => {
         hazszam: user.hazszam
     }
 });
+
     });
 });
+
+
+
 app.get('/api/borok', (req, res) => {
-  // JOIN LEKÉRDEZÉS:
-  // Kiveszünk mindent a 'bor' táblából (b), 
-  // és hozzárakjuk a 'kiszereles' tábla (k) megnevezését.
+
   const sql = `
     SELECT 
       b.id, 
@@ -196,7 +187,7 @@ app.post("/api/rendeles", (req, res) => {
             }
         });
       });
-      // ---------------------------------------------
+      
 
       res.json({ msg: "Rendelés sikeresen rögzítve!", orderId: rendelesId });
     });
