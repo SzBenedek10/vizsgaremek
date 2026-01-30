@@ -99,7 +99,6 @@ app.post('/api/login', (req, res) => {
 
 
 app.get('/api/borok', (req, res) => {
-
   const sql = `
     SELECT 
       b.id, 
@@ -108,17 +107,16 @@ app.get('/api/borok', (req, res) => {
       b.ar, 
       b.leiras, 
       b.keszlet, 
-      b.alkoholfok,
-      k.megnevezes AS kiszereles
+      k.megnevezes AS kiszereles 
     FROM bor b
     JOIN kiszereles k ON b.kiszereles_id = k.id
-    WHERE b.keszlet IS NOT NULL AND b.aktiv = 1
+    WHERE b.keszlet IS NOT NULL
   `;
   
   db.query(sql, (err, results) => {
     if (err) {
-      console.error("SQL hiba:", err.message);
-      return res.status(500).json([]); 
+      console.error("SQL hiba:", err.message); // <--- EZT KERESD A TERMINÁLBAN!
+      return res.status(500).json({ error: "Adatbázis hiba" }); 
     }
     res.json(results); 
   });
