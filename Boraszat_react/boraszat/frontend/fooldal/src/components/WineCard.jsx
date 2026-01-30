@@ -1,12 +1,13 @@
-// src/components/WineCard.jsx
 import { useState } from "react";
+import { useCart } from "../context/CartContext"; // <--- FONTOS IMPORT
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
-export default function WineCard({ bor, onAdd }) {
+export default function WineCard({ bor }) {
   const [db, setDb] = useState(1);
+  const { addToCart } = useCart(); // <--- Bekötjük a Contextet
 
-  // Ez a függvény párosítja a nevet a képfájlhoz
+  // A te képkezelőd (változatlan)
   const getWineImage = (nev) => {
     const n = nev.toLowerCase();
     if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
@@ -32,9 +33,7 @@ export default function WineCard({ bor, onAdd }) {
       <div className="wineInfo">
         <h3 className="wineName">{bor.nev}</h3>
         <p className="wineDesc">{bor.leiras}</p>
-        <div className="wineStock">
-          Készleten: {bor.keszlet} db
-        </div>
+        <div className="wineStock">Készleten: {bor.keszlet} db</div>
         <div className="winePrice">{HUF.format(bor.ar)} Ft</div>
         <div className="wineActions">
           <select value={db} onChange={(e) => setDb(Number(e.target.value))}>
@@ -42,7 +41,8 @@ export default function WineCard({ bor, onAdd }) {
               <option key={n} value={n}>{n} db</option>
             ))}
           </select>
-          <button className="addToCartBtn" onClick={() => onAdd(bor.id, db)}>
+          {/* Itt már az addToCart-ot hívjuk a Contextből */}
+          <button className="addToCartBtn" onClick={() => addToCart(bor, db)}>
             Kosárba 
           </button>
         </div>

@@ -26,36 +26,33 @@ SET time_zone = "+00:00";
 --
 -- Tábla szerkezet ehhez a táblához `bor`
 --
-CREATE DATABASE IF NOT EXISTS `boraszat`;
-USE `boraszat`;
 
 CREATE TABLE `bor` (
-  `id` int(11) NOT NULL,
-  `bor_szin_id` int(11) NOT NULL,
-  `nev` varchar(100) NOT NULL,
-  `evjarat` int(11) NOT NULL,
-  `ar` int(11) NOT NULL,
-  `keszlet` int(11) NOT NULL DEFAULT 0,
+  `id` int NOT NULL,
+  `bor_szin_id` int NOT NULL,
+  `nev` varchar(100) COLLATE utf8mb4_hungarian_ci NOT NULL,
+  `evjarat` int NOT NULL,
+  `ar` int NOT NULL,
+  `kiszereles_id` int NOT NULL DEFAULT '1',
+  `keszlet` int NOT NULL DEFAULT '0',
   `alkoholfok` decimal(4,2) DEFAULT NULL,
-  `kiszereles_ml` int(11) NOT NULL DEFAULT 750,
-  `leiras` text DEFAULT NULL,
-  `aktiv` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `leiras` text COLLATE utf8mb4_hungarian_ci,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
 --
 -- A tábla adatainak kiíratása `bor`
 --
 
-INSERT INTO `bor` (`id`, `bor_szin_id`, `nev`, `evjarat`, `ar`, `keszlet`, `alkoholfok`, `kiszereles_ml`, `leiras`, `aktiv`, `created_at`) VALUES
-(1, 1, 'Badacsonyi Kéknyelvű', 2022, 4500, 50, 12.50, 750, 'Hungaricum, vulkanikus talajról származó elegáns fehérbor.', 1, '2026-01-27 10:50:43'),
-(2, 1, 'Badacsonyi Olaszrizling', 2023, 2800, 120, 11.50, 750, 'Mandulás utóízű, friss és üde klasszikus Badacsonyi bor.', 1, '2026-01-27 10:50:43'),
-(3, 1, 'Badacsonyi Szürkebarát', 2022, 3200, 85, 13.00, 750, 'Testes, krémes textúrájú fehérbor, az aszú közeli élményért.', 1, '2026-01-27 10:50:43'),
-(4, 1, 'Rózsakő', 2022, 3600, 40, 12.00, 750, 'A Kéknyelvű és a Budai Zöld keresztezéséből született ritkaság.', 1, '2026-01-27 10:50:43'),
-(5, 1, 'Ottonel Muskotály', 2023, 2900, 60, 11.00, 750, 'Illatos, intenzív virágos jegyekkel rendelkező könnyed fehérbor.', 1, '2026-01-27 10:50:43'),
-(6, 3, 'Badacsonyi Pinot Noir Rosé', 2023, 2600, 100, 12.00, 750, 'Epres illatú, ropogós savakkal rendelkező nyári frissítő.', 1, '2026-01-27 10:50:43'),
-(7, 2, 'Badacsonyi Cabernet Sauvignon', 2021, 4800, 35, 14.00, 750, 'Mélyvörös színű, erdei gyümölcsös jegyekkel bíró testes vörösbor.', 1, '2026-01-27 10:50:43'),
-(8, 2, 'Badacsonyi Kékfrankos', 2022, 3400, 70, 13.00, 750, 'Fűszeres karakterű, gyümölcsös vörösbor a bazaltos lejtőkről.', 1, '2026-01-27 10:50:43');
+INSERT INTO `bor` (`id`, `bor_szin_id`, `nev`, `evjarat`, `ar`, `kiszereles_id`, `keszlet`, `alkoholfok`, `leiras`, `created_at`) VALUES
+(1, 1, 'Badacsonyi Kéknyelvű', 2022, 4500, 1, 7, 12.50, 'Hungaricum, vulkanikus talajról származó elegáns fehérbor.', '2026-01-27 10:50:43'),
+(2, 1, 'Badacsonyi Olaszrizling', 2023, 2800, 3, 119, 11.50, 'Mandulás utóízű, friss és üde klasszikus Badacsonyi bor.', '2026-01-27 10:50:43'),
+(3, 1, 'Badacsonyi Szürkebarát', 2022, 3200, 1, 85, 13.00, 'Testes, krémes textúrájú fehérbor, az aszú közeli élményért.', '2026-01-27 10:50:43'),
+(4, 1, 'Rózsakő', 2022, 3600, 5, 40, 12.00, 'A Kéknyelvű és a Budai Zöld keresztezéséből született ritkaság.', '2026-01-27 10:50:43'),
+(5, 1, 'Ottonel Muskotály', 2023, 2900, 1, 60, 11.00, 'Illatos, intenzív virágos jegyekkel rendelkező könnyed fehérbor.', '2026-01-27 10:50:43'),
+(6, 3, 'Badacsonyi Pinot Noir Rosé', 2023, 2600, 1, 100, 12.00, 'Epres illatú, ropogós savakkal rendelkező nyári frissítő.', '2026-01-27 10:50:43'),
+(7, 2, 'Badacsonyi Cabernet Sauvignon', 2021, 4800, 1, 35, 14.00, 'Mélyvörös színű, erdei gyümölcsös jegyekkel bíró testes vörösbor.', '2026-01-27 10:50:43'),
+(8, 2, 'Badacsonyi Kékfrankos', 2022, 3400, 1, 70, 13.00, 'Fűszeres karakterű, gyümölcsös vörösbor a bazaltos lejtőkről.', '2026-01-27 10:50:43');
 
 -- --------------------------------------------------------
 
@@ -64,8 +61,8 @@ INSERT INTO `bor` (`id`, `bor_szin_id`, `nev`, `evjarat`, `ar`, `keszlet`, `alko
 --
 
 CREATE TABLE `bor_szin` (
-  `id` int(11) NOT NULL,
-  `nev` varchar(20) NOT NULL
+  `id` int NOT NULL,
+  `nev` varchar(20) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -84,13 +81,13 @@ INSERT INTO `bor_szin` (`id`, `nev`) VALUES
 --
 
 CREATE TABLE `fizetes` (
-  `id` int(11) NOT NULL,
-  `rendeles_id` int(11) NOT NULL,
-  `fizetesi_mod` enum('KARTYA','UTALAS','UTANVET') NOT NULL,
-  `statusz` enum('INIT','SIKERES','SIKERTELEN') NOT NULL DEFAULT 'INIT',
-  `tranzakcio_azon` varchar(80) DEFAULT NULL,
-  `osszeg` int(11) NOT NULL,
-  `datum` datetime NOT NULL DEFAULT current_timestamp()
+  `id` int NOT NULL,
+  `rendeles_id` int NOT NULL,
+  `fizetesi_mod` enum('KARTYA','UTALAS','UTANVET') COLLATE utf8mb4_general_ci NOT NULL,
+  `statusz` enum('INIT','SIKERES','SIKERTELEN') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'INIT',
+  `tranzakcio_azon` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `osszeg` int NOT NULL,
+  `datum` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -107,16 +104,16 @@ INSERT INTO `fizetes` (`id`, `rendeles_id`, `fizetesi_mod`, `statusz`, `tranzakc
 --
 
 CREATE TABLE `foglalas` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `szolgaltatas_id` int(11) NOT NULL,
+  `id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `szolgaltatas_id` int NOT NULL,
   `erkezes` date DEFAULT NULL,
   `tavozas` date DEFAULT NULL,
-  `letszam` int(11) NOT NULL DEFAULT 1,
-  `statusz` enum('PENDING','CONFIRMED','CANCELLED') NOT NULL DEFAULT 'PENDING',
-  `foglalas_datuma` datetime NOT NULL DEFAULT current_timestamp(),
-  `megjegyzes` varchar(255) DEFAULT NULL,
-  `osszeg` int(11) NOT NULL DEFAULT 0
+  `letszam` int NOT NULL DEFAULT '1',
+  `statusz` enum('PENDING','CONFIRMED','CANCELLED') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'PENDING',
+  `foglalas_datuma` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `megjegyzes` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `osszeg` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -129,30 +126,63 @@ INSERT INTO `foglalas` (`id`, `user_id`, `szolgaltatas_id`, `erkezes`, `tavozas`
 -- --------------------------------------------------------
 
 --
+-- Tábla szerkezet ehhez a táblához `kiszereles`
+--
+
+CREATE TABLE `kiszereles` (
+  `id` int NOT NULL,
+  `megnevezes` varchar(50) COLLATE utf8mb4_hungarian_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `kiszereles`
+--
+
+INSERT INTO `kiszereles` (`id`, `megnevezes`) VALUES
+(1, '0.75L Palack'),
+(2, '1.5L Magnum'),
+(3, '2L Kanna'),
+(4, '3L Bag-in-Box'),
+(5, '0.75L + Díszdoboz');
+
+-- --------------------------------------------------------
+
+--
 -- Tábla szerkezet ehhez a táblához `rendeles`
 --
 
 CREATE TABLE `rendeles` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `datum` datetime NOT NULL DEFAULT current_timestamp(),
-  `statusz` enum('KOSAR','FELDOLGOZAS','FIZETVE','KISZALLITVA','TOROLVE') NOT NULL DEFAULT 'KOSAR',
-  `szall_orszag` varchar(60) DEFAULT NULL,
-  `szall_irsz` varchar(10) DEFAULT NULL,
-  `szall_varos` varchar(80) DEFAULT NULL,
-  `szall_utca` varchar(120) DEFAULT NULL,
-  `szall_hazszam` varchar(20) DEFAULT NULL,
-  `szallitasi_dij` int(11) NOT NULL DEFAULT 0,
-  `vegosszeg` int(11) NOT NULL DEFAULT 0,
-  `megjegyzes` varchar(255) DEFAULT NULL
+  `id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `szaml_nev` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szaml_orszag` varchar(60) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szaml_irsz` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szaml_varos` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szaml_utca` varchar(120) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szaml_hazszam` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szall_nev` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `datum` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `statusz` enum('KOSAR','FELDOLGOZAS','FIZETVE','KISZALLITVA','TOROLVE') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'KOSAR',
+  `szall_orszag` varchar(60) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szall_irsz` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szall_varos` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szall_utca` varchar(120) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szall_hazszam` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `szallitasi_dij` int NOT NULL DEFAULT '0',
+  `vegosszeg` int NOT NULL DEFAULT '0',
+  `megjegyzes` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `rendeles`
 --
 
-INSERT INTO `rendeles` (`id`, `user_id`, `datum`, `statusz`, `szall_orszag`, `szall_irsz`, `szall_varos`, `szall_utca`, `szall_hazszam`, `szallitasi_dij`, `vegosszeg`, `megjegyzes`) VALUES
-(1, 1, '2026-01-10 16:33:40', 'KOSAR', NULL, NULL, NULL, NULL, NULL, 1200, 0, NULL);
+INSERT INTO `rendeles` (`id`, `user_id`, `szaml_nev`, `szaml_orszag`, `szaml_irsz`, `szaml_varos`, `szaml_utca`, `szaml_hazszam`, `szall_nev`, `datum`, `statusz`, `szall_orszag`, `szall_irsz`, `szall_varos`, `szall_utca`, `szall_hazszam`, `szallitasi_dij`, `vegosszeg`, `megjegyzes`) VALUES
+(1, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-10 16:33:40', 'KOSAR', NULL, NULL, NULL, NULL, NULL, 1200, 0, NULL),
+(2, 6, 'Szikla Szilárd', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', NULL, '2026-01-30 17:22:45', 'FELDOLGOZAS', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 0, 10100, NULL),
+(3, 6, 'Szikla Szilárd', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 'Szikla Szilárd', '2026-01-30 17:41:58', 'FELDOLGOZAS', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 0, 4500, NULL),
+(4, 6, 'Szikla Szilárd', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 'Szikla Szilárd', '2026-01-30 17:44:36', 'FELDOLGOZAS', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 0, 9000, NULL),
+(5, 6, 'Szikla Szilárd', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 'Szikla Szilárd', '2026-01-30 18:11:34', 'FELDOLGOZAS', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 0, 7300, NULL);
 
 -- --------------------------------------------------------
 
@@ -161,12 +191,24 @@ INSERT INTO `rendeles` (`id`, `user_id`, `datum`, `statusz`, `szall_orszag`, `sz
 --
 
 CREATE TABLE `rendeles_tetel` (
-  `id` int(11) NOT NULL,
-  `rendeles_id` int(11) NOT NULL,
-  `bor_id` int(11) NOT NULL,
-  `mennyiseg` int(11) NOT NULL,
-  `egysegar` int(11) NOT NULL
+  `id` int NOT NULL,
+  `rendeles_id` int NOT NULL,
+  `bor_id` int NOT NULL,
+  `mennyiseg` int NOT NULL,
+  `egysegar` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `rendeles_tetel`
+--
+
+INSERT INTO `rendeles_tetel` (`id`, `rendeles_id`, `bor_id`, `mennyiseg`, `egysegar`) VALUES
+(5, 2, 1, 1, 4500),
+(6, 2, 2, 2, 2800),
+(7, 3, 1, 1, 4500),
+(8, 4, 1, 2, 4500),
+(9, 5, 1, 1, 4500),
+(10, 5, 2, 1, 2800);
 
 -- --------------------------------------------------------
 
@@ -175,15 +217,15 @@ CREATE TABLE `rendeles_tetel` (
 --
 
 CREATE TABLE `szolgaltatas` (
-  `id` int(11) NOT NULL,
-  `tipus` enum('BORKOSTOLO','SZALLAS') NOT NULL,
-  `nev` varchar(120) NOT NULL,
+  `id` int NOT NULL,
+  `tipus` enum('BORKOSTOLO','SZALLAS') COLLATE utf8mb4_general_ci NOT NULL,
+  `nev` varchar(120) COLLATE utf8mb4_general_ci NOT NULL,
   `kezdete` datetime DEFAULT NULL,
   `vege` datetime DEFAULT NULL,
-  `kapacitas` int(11) NOT NULL DEFAULT 1,
-  `ar` int(11) NOT NULL,
-  `leiras` text DEFAULT NULL,
-  `aktiv` tinyint(1) NOT NULL DEFAULT 1
+  `kapacitas` int NOT NULL DEFAULT '1',
+  `ar` int NOT NULL,
+  `leiras` text COLLATE utf8mb4_general_ci,
+  `aktiv` tinyint(1) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -202,19 +244,19 @@ INSERT INTO `szolgaltatas` (`id`, `tipus`, `nev`, `kezdete`, `vege`, `kapacitas`
 --
 
 CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
-  `email` varchar(150) CHARACTER SET utf8 COLLATE utf8_hungarian_ci NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `role` enum('USER','ADMIN') CHARACTER SET utf8 COLLATE utf8_hungarian_ci NOT NULL DEFAULT 'USER',
-  `nev` varchar(100) CHARACTER SET utf8 COLLATE utf8_hungarian_ci NOT NULL,
-  `telefonszam` varchar(20) CHARACTER SET utf8 COLLATE utf8_hungarian_ci DEFAULT NULL,
-  `orszag` varchar(60) CHARACTER SET utf8 COLLATE utf8_hungarian_ci NOT NULL DEFAULT 'Magyarország',
-  `irsz` varchar(10) CHARACTER SET utf8 COLLATE utf8_hungarian_ci DEFAULT NULL,
-  `varos` varchar(80) CHARACTER SET utf8 COLLATE utf8_hungarian_ci DEFAULT NULL,
-  `utca` varchar(120) CHARACTER SET utf8 COLLATE utf8_hungarian_ci DEFAULT NULL,
-  `hazszam` varchar(20) CHARACTER SET utf8 COLLATE utf8_hungarian_ci DEFAULT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `id` int NOT NULL,
+  `email` varchar(150) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `role` enum('USER','ADMIN') CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci NOT NULL DEFAULT 'USER',
+  `nev` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci NOT NULL,
+  `telefonszam` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci DEFAULT NULL,
+  `orszag` varchar(60) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci NOT NULL DEFAULT 'Magyarország',
+  `irsz` varchar(10) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci DEFAULT NULL,
+  `varos` varchar(80) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci DEFAULT NULL,
+  `utca` varchar(120) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci DEFAULT NULL,
+  `hazszam` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8mb3_hungarian_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -226,7 +268,8 @@ INSERT INTO `users` (`id`, `email`, `password_hash`, `role`, `nev`, `telefonszam
 (1, 'teszt@bor.hu', 'teszt123', 'USER', 'Teszt Elek', '0612345678', 'Magyarország', NULL, NULL, NULL, NULL, 1, '2026-01-10 16:32:53', NULL),
 (2, 'bencesinthavong@gmail.com', '$2b$10$oLF8hiELHvXbhrO6gWKIqO2UnwwxtWZm6KTjSLy6I6ptcg7kM02b6', 'USER', 'Sinthavong Bence', '06303216644', 'Magyarország', '8314', 'Vonyarcvashegy', 'Petőfi utca', '12', 1, '2026-01-21 21:26:54', NULL),
 (3, 'gibszjakab900@gmail.com', '$2b$10$NH239kEgofclOgUGBwsMQOQw2ikp9NHpNEq6dOic7YAdeeS1x2iSi', 'USER', 'Zongora', '06 203222', 'Magyarország', '', '', '', '', 1, '2026-01-22 09:22:42', NULL),
-(5, 'admin@gmail.com', '$2b$10$wEoWWETNHk9qGCdMN.Hu5.BjdsMTlrU/oJRQ71y2JaCUzLt.DgbQu', 'USER', 'Admin', '06 2032221', 'Magyarország', '8360', 'Keszthely', 'Fő tér', '12', 1, '2026-01-27 10:13:51', NULL);
+(5, 'admin@gmail.com', '$2b$10$wEoWWETNHk9qGCdMN.Hu5.BjdsMTlrU/oJRQ71y2JaCUzLt.DgbQu', 'USER', 'Admin', '06 2032221', 'Magyarország', '8360', 'Keszthely', 'Fő tér', '12', 1, '2026-01-27 10:13:51', NULL),
+(6, 'szikla@gmail.com', '$2b$10$Epe5ByWs8xhA/ma3lzsLwukae5lsHfYHnfVZxa/ea905FhmxW1LXG', 'USER', 'Szikla Szilárd', '06203214444', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 1, '2026-01-30 17:19:24', NULL);
 
 --
 -- Indexek a kiírt táblákhoz
@@ -239,7 +282,8 @@ ALTER TABLE `bor`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_bor` (`bor_szin_id`,`nev`,`evjarat`),
   ADD KEY `idx_bor_szin` (`bor_szin_id`),
-  ADD KEY `idx_bor_ar` (`ar`);
+  ADD KEY `idx_bor_ar` (`ar`),
+  ADD KEY `fk_bor_kiszereles` (`kiszereles_id`);
 
 --
 -- A tábla indexei `bor_szin`
@@ -263,6 +307,12 @@ ALTER TABLE `foglalas`
   ADD KEY `idx_foglalas_user` (`user_id`,`foglalas_datuma`),
   ADD KEY `idx_foglalas_szolg` (`szolgaltatas_id`),
   ADD KEY `idx_foglalas_ido` (`erkezes`,`tavozas`);
+
+--
+-- A tábla indexei `kiszereles`
+--
+ALTER TABLE `kiszereles`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- A tábla indexei `rendeles`
@@ -304,49 +354,55 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT a táblához `bor`
 --
 ALTER TABLE `bor`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT a táblához `bor_szin`
 --
 ALTER TABLE `bor_szin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT a táblához `fizetes`
 --
 ALTER TABLE `fizetes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT a táblához `foglalas`
 --
 ALTER TABLE `foglalas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT a táblához `kiszereles`
+--
+ALTER TABLE `kiszereles`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT a táblához `rendeles`
 --
 ALTER TABLE `rendeles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT a táblához `rendeles_tetel`
 --
 ALTER TABLE `rendeles_tetel`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT a táblához `szolgaltatas`
 --
 ALTER TABLE `szolgaltatas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT a táblához `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Megkötések a kiírt táblákhoz
@@ -356,7 +412,8 @@ ALTER TABLE `users`
 -- Megkötések a táblához `bor`
 --
 ALTER TABLE `bor`
-  ADD CONSTRAINT `bor_ibfk_1` FOREIGN KEY (`bor_szin_id`) REFERENCES `bor_szin` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `bor_ibfk_1` FOREIGN KEY (`bor_szin_id`) REFERENCES `bor_szin` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_bor_kiszereles` FOREIGN KEY (`kiszereles_id`) REFERENCES `kiszereles` (`id`);
 
 --
 -- Megkötések a táblához `fizetes`

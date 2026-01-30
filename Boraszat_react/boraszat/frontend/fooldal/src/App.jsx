@@ -6,6 +6,7 @@ import BorTura from "./pages/BorTura.jsx";
 import SignInSide from "./pages/SignInSide.jsx";
 import SignUpSide from "./pages/SignUpSide.jsx";
 import { AuthProvider } from "./context/AuthContext"; // Importáld be a contextet!
+import Checkout from './pages/Checkout';
 import Footer from "./components/footer.jsx"; 
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
           <Route path="/bortura" element={<BorTura />} />
           <Route path="/login" element={<SignInSide />} />
           <Route path="/signup" element={<SignUpSide />} />
-          
+          <Route path="/checkout" element={<Checkout />} /> 
         </Route>
 
         {/* Minden más esetben főoldal */}
