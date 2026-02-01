@@ -61,6 +61,8 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ error: 'Belső szerverhiba történt.' });
     }
 });
+
+
 app.post('/api/login', (req, res) => {
     const { email, password_hash } = req.body; 
 
@@ -74,28 +76,25 @@ app.post('/api/login', (req, res) => {
 
         if (!isMatch) return res.status(401).json({ error: 'Hibás adatok!' });
 
-
-       const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '24h' }); // Tokenbe is rakjuk bele a role-t!
     
-       res.json({
-    message: 'Sikeres bejelentkezés!',
-    token: token,
-    user: { 
-        id: user.id, 
-        nev: user.nev, 
-        email: user.email,
-        // EZEKNEK ITT KELL LENNIÜK:
-        telefonszam: user.telefonszam, 
-        irsz: user.irsz,
-        varos: user.varos,
-        utca: user.utca,
-        hazszam: user.hazszam
-    }
-});
-
+        res.json({
+            message: 'Sikeres bejelentkezés!',
+            token: token,
+            user: { 
+                id: user.id, 
+                nev: user.nev, 
+                email: user.email,
+                role: user.role, 
+                telefonszam: user.telefonszam, 
+                irsz: user.irsz,
+                varos: user.varos,
+                utca: user.utca,
+                hazszam: user.hazszam
+            }
+        });
     });
 });
-
 
 
 app.get('/api/borok', (req, res) => {
@@ -190,5 +189,98 @@ app.post("/api/rendeles", (req, res) => {
       res.json({ msg: "Rendelés sikeresen rögzítve!", orderId: rendelesId });
     });
   });
+});
+
+
+app.get('/api/users', (req, res) => {
+    const sql = "SELECT id, nev, email, role, telefonszam, is_active FROM users";
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+// 2. Felhasználó törlése
+app.delete('/api/users/:id', (req, res) => {
+    const id = req.params.id;
+    // Admin védelme: az 1-es ID-jű vagy 'admin@gmail.com'-t ne engedjük törölni!
+    if(id == 1) return res.status(403).json({ error: "A fő admint nem lehet törölni!" });
+
+    const sql = "DELETE FROM users WHERE id = ?";
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba a törléskor" });
+        res.json({ message: "Felhasználó törölve!" });
+    });
+});
+
+// --- BOROK KEZELÉSE (Bővített) ---
+
+// 3. Új bor hozzáadása
+app.post('/api/borok', (req, res) => {
+    const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
+    
+    const sql = `INSERT INTO bor (nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    
+    // Alapértelmezett értékek kezelése (pl. ha nincs megadva szín, legyen 1-es)
+    const values = [nev, evjarat, ar, keszlet, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Hiba bor hozzáadásakor:", err);
+            return res.status(500).json({ error: "Adatbázis hiba" });
+        }
+        res.json({ message: "Bor sikeresen hozzáadva!", id: result.insertId });
+    });
+});
+
+// 4. Bor módosítása
+app.put('/api/borok/:id', (req, res) => {
+    const id = req.params.id;
+    const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, alkoholfok } = req.body;
+
+    const sql = `UPDATE bor SET 
+                 nev = ?, evjarat = ?, ar = ?, keszlet = ?, leiras = ?, bor_szin_id = ?, alkoholfok = ?
+                 WHERE id = ?`;
+
+    const values = [nev, evjarat, ar, keszlet, leiras, bor_szin_id, alkoholfok, id];
+
+    db.query(sql, values, (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba a módosításkor" });
+        res.json({ message: "Bor sikeresen frissítve!" });
+    });
+});
+
+// 5. Bor törlése (Ez már lehet, hogy megvan, de biztos ami biztos)
+app.delete('/api/borok/:id', (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM bor WHERE id = ?", [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba törléskor" });
+        res.json({ message: "Törölve" });
+    });
+});
+
+app.get('/api/borok/top', (req, res) => {
+    const sql = `
+        SELECT b.*, SUM(rt.mennyiseg) as eladott_db 
+        FROM bor b
+        LEFT JOIN rendeles_tetel rt ON b.id = rt.bor_id
+        GROUP BY b.id
+        ORDER BY eladott_db DESC
+        LIMIT 3
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+// TOP 3 legújabb bor (létrehozás dátuma alapján)
+app.get('/api/borok/new', (req, res) => {
+    const sql = `SELECT * FROM bor ORDER BY created_at DESC LIMIT 3`;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
 });
 app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));

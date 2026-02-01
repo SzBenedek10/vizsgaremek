@@ -7,10 +7,12 @@ export default function WineCard({ bor }) {
   const [db, setDb] = useState(1);
   const { addToCart } = useCart(); // <--- Bekötjük a Contextet
 
-  // A te képkezelőd (változatlan)
+  
   const getWineImage = (nev) => {
     const n = nev.toLowerCase();
+    if (n.includes("lesencei")) return "lacibetyar.jpg";
     if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
+    if (n.includes("lecsó")) return "lecsó.jpg";
     if (n.includes("olaszrizling")) return "rizling.jpg";
     if (n.includes("szürkebarát")) return "szurkebarat.jpg";
     if (n.includes("rózsakő")) return "rozsako.jpg";
