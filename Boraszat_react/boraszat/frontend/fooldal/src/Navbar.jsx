@@ -29,7 +29,7 @@ export default function Navbar() {
         {/* Navigációs gombok */}
         <Button onClick={() => navigate('/')} color="inherit">Főoldal</Button>
         <Button onClick={() => navigate('/borrendeles')} color="inherit">Borrendelés</Button>
-        <Button onClick={() => navigate('/bortura')} color="inherit">Bortúra</Button>
+        <Button onClick={() => navigate('/borkostolas')} color="inherit">Borkostolás</Button>
 
         {/* Jobb felső sarok: Login Gomb vagy Avatar */}
         <Box sx={{ position: 'absolute', right: 20 }}>

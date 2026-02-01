@@ -22,7 +22,7 @@ export default function MainLayout() {
       <Toolbar sx={{ justifyContent: 'center', gap: 2 }}>
         <Button onClick={() => navigate('/')} color="inherit" sx={{ fontWeight: 'bold' }}>Főoldal</Button>
         <Button onClick={() => navigate('/borrendeles')} color="inherit" sx={{ fontWeight: 'bold' }}>Borrendelés</Button>
-        <Button onClick={() => navigate('/bortura')} color="inherit" sx={{ fontWeight: 'bold' }}>Bortúra</Button>
+        <Button onClick={() => navigate('/borkostolas')} color="inherit" sx={{ fontWeight: 'bold' }}>Borkostolás</Button>
         
         
         <Box sx={{ position: 'absolute', right: 20 }}>

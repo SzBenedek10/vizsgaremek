@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./MainLayout.jsx";
 import Home from "./pages/Home/Home.jsx";
 import BorRendeles from "./pages/BorRendeles.jsx";
-import BorTura from "./pages/BorTura.jsx";
+import BorKostolas from "./pages/BorKostolas.jsx";
 import SignInSide from "./pages/SignInSide.jsx";
 import SignUpSide from "./pages/SignUpSide.jsx";
 import { AuthProvider } from "./context/AuthContext"; // Importáld be a contextet!
@@ -11,6 +11,7 @@ import Checkout from './pages/Checkout';
 
 import Footer from "./components/footer.jsx"; 
 
+
 export default function App() {
   return (
     <AuthProvider>
@@ -18,7 +19,7 @@ export default function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/borrendeles" element={<BorRendeles />} />
-          <Route path="/bortura" element={<BorTura />} />
+          <Route path="/borkostolas" element={<BorKostolas />} />
           <Route path="/login" element={<SignInSide />} />
           <Route path="/signup" element={<SignUpSide />} />
           <Route path="/checkout" element={<Checkout />} /> 
