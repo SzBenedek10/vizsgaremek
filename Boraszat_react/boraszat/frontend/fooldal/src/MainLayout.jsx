@@ -41,6 +41,9 @@ export default function MainLayout() {
                 onClose={() => setAnchorEl(null)}
               >
                 <MenuItem onClick={() => navigate('/profilom')}>Profilom</MenuItem>
+                {user && user.role === 'ADMIN' && (
+                <MenuItem onClick={() => navigate('/admin')}>Admin Vezérlőpult</MenuItem>
+                )}
                 <MenuItem onClick={logout}>Kijelentkezés</MenuItem>
               </Menu>
             </>

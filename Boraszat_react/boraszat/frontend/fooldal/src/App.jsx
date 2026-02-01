@@ -7,7 +7,7 @@ import SignInSide from "./pages/SignInSide.jsx";
 import SignUpSide from "./pages/SignUpSide.jsx";
 import { AuthProvider } from "./context/AuthContext"; // Importáld be a contextet!
 import Checkout from './pages/Checkout';
-
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 import Footer from "./components/footer.jsx"; 
 
@@ -23,7 +23,8 @@ export default function App() {
           <Route path="/signup" element={<SignUpSide />} />
           <Route path="/checkout" element={<Checkout />} /> 
 
-
+          
+          <Route path="/admin" element={<AdminDashboard />} />
 
 
         </Route>

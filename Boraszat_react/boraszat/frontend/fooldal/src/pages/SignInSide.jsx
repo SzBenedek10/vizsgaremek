@@ -17,27 +17,29 @@ export default function SignInSide() {
     const password = formData.get('password');
 
     try {
-      // Küldjük az adatokat a backendnek
-      const res = await axios.post('http://localhost:5000/api/login', { 
-        email, 
-        password_hash: password 
-      });
-      
-      // Mentés a Contextbe és Local Storage-ba
-      login(res.data.token, res.data.user); 
-      
-      // MODERN ÜDVÖZLÉS: Alapértelmezett alert helyett
-      Swal.fire({
-        title: 'Üdvözlünk bent!',
-        text: `Sikeresen bejelentkeztél, ${res.data.user.nev}!`,
-        icon: 'success',
-        confirmButtonColor: '#722f37', // A borászatod színe
-        timer: 2000, // 2 másodperc után magától eltűnik
-        timerProgressBar: true,
-        showConfirmButton: false // Mivel van timer, nem kell gomb
-      }).then(() => {
-        navigate('/'); // Az ablak bezáródása után navigálunk
-      });
+  const res = await axios.post('http://localhost:5000/api/login', { 
+    email, 
+    password_hash: password 
+  });
+  
+  login(res.data.token, res.data.user); 
+  
+  Swal.fire({
+    title: 'Üdvözlünk bent!',
+    text: `Sikeresen bejelentkeztél, ${res.data.user.nev}!`,
+    icon: 'success',
+    confirmButtonColor: '#722f37',
+    timer: 2000,
+    timerProgressBar: true,
+    showConfirmButton: false
+  }).then(() => {
+    // ITT A VÁLTOZTATÁS:
+    if (res.data.user.role === 'ADMIN') {
+        navigate('/admin'); // Ha admin, irány a dashboard
+    } else {
+        navigate('/'); // Ha sima user, irány a főoldal
+    }
+  });
 
     } catch (err) {
       console.error("Belépési hiba:", err);
