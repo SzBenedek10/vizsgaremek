@@ -106,7 +106,8 @@ app.get('/api/borok', (req, res) => {
       b.ar, 
       b.leiras, 
       b.keszlet, 
-      k.megnevezes AS kiszereles 
+      k.megnevezes AS kiszereles_nev, 
+      k.szorzo 
     FROM bor b
     JOIN kiszereles k ON b.kiszereles_id = k.id
     WHERE b.keszlet IS NOT NULL
@@ -114,11 +115,22 @@ app.get('/api/borok', (req, res) => {
   
   db.query(sql, (err, results) => {
     if (err) {
-      console.error("SQL hiba:", err.message); // <--- EZT KERESD A TERMINÁLBAN!
+      console.error("SQL hiba:", err.message);
       return res.status(500).json({ error: "Adatbázis hiba" }); 
     }
     res.json(results); 
   });
+});
+
+app.get('/api/kiszerelesek', (req, res) => {
+    const sql = "SELECT * FROM kiszereles ORDER BY id ASC";
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Hiba a kiszerelések lekérésekor:", err);
+            return res.status(500).json({ error: "Adatbázis hiba" });
+        }
+        res.json(results);
+    });
 });
 
 // POST /api/rendeles - Rendelés mentése (Javított)
@@ -170,10 +182,8 @@ app.post("/api/rendeles", (req, res) => {
         return res.status(500).json({ msg: "Hiba a tételek mentésekor." });
       }
 
-      // --- 3. ITT A LÉNYEG: KÉSZLET CSÖKKENTÉSE ---
-      // Minden megvásárolt tételnél levonjuk a mennyiséget a 'bor' táblából
+   
       tetelek.forEach(item => {
-        // "Csökkentsd a készletet X darabbal annál a bornál, aminek ez az ID-ja"
         const sqlUpdateStock = "UPDATE bor SET keszlet = keszlet - ? WHERE id = ?";
         
         db.query(sqlUpdateStock, [item.amount, item.id], (updateErr) => {
@@ -294,5 +304,32 @@ app.get('/api/szolgaltatasok', (req, res) => {
     }
     res.json(results);
   });
+});
+// server.js - ÚJ VÉGPONT HOZZÁADÁSA
+
+// BORKÓSTOLÓ FOGLALÁS MENTÉSE
+// BORKÓSTOLÓ FOGLALÁS MENTÉSE (boraszat (4).sql kompatibilis)
+app.post('/api/foglalas', (req, res) => {
+    const { userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes } = req.body;
+
+    if (!userId || !szolgaltatasId || !datum) {
+        return res.status(400).json({ error: "Hiányzó adatok!" });
+    }
+
+    const sql = `
+        INSERT INTO foglalas 
+        (user_id, szolgaltatas_id, letszam, datum, idotartam, osszeg, statusz, megjegyzes, foglalas_datuma) 
+        VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, NOW())
+    `;
+
+    const values = [userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Hiba a foglalás mentésekor:", err);
+            return res.status(500).json({ error: "Adatbázis hiba" });
+        }
+        res.json({ message: "Sikeres foglalás!", foglalasId: result.insertId });
+    });
 });
 app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));
