@@ -30,9 +30,9 @@ SET time_zone = "+00:00";
 --
 -- Tábla szerkezet ehhez a táblához `bor`
 --
-DROP DATABASE boraszat if EXISTS;
+DROP DATABASE IF EXISTS boraszat;
 CREATE DATABASE boraszat;
-use boraszat;
+USE boraszat;
 
 CREATE TABLE `bor` (
   `id` int NOT NULL,
