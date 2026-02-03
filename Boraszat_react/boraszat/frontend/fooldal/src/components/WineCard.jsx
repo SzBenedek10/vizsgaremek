@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, CardContent, CardMedia, Typography, Button, Box, 
   Select, MenuItem, FormControl, InputLabel, Chip 
@@ -8,13 +8,26 @@ import { useCart } from '../context/CartContext';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
-export default function WineCard({ bor }) {
+export default function WineCard({ bor, kiszerelesek = [] }) {
   const [db, setDb] = useState(1);
+  const [selectedKiszerelesId, setSelectedKiszerelesId] = useState(1); 
   const { addToCart } = useCart();
 
-  // 1. Ár kalkuláció: Alap ár * Szorzó (ha nincs szorzó, akkor 1)
-  const szorzo = bor.szorzo || 1;
-  const vegsoAr = bor.ar * szorzo;
+  // Alapértelmezés beállítása, amikor betölt a bor
+  useEffect(() => {
+    if (bor.kiszereles_id) {
+        setSelectedKiszerelesId(bor.kiszereles_id);
+    }
+  }, [bor.kiszereles_id]);
+
+  // Megkeressük a kiválasztott kiszerelés objektumot a listából
+  // Ha még nincs betöltve a lista, használunk egy alapértelmezettet
+  const aktualisKiszereles = kiszerelesek.find(k => k.id === selectedKiszerelesId) 
+                              || { id: 1, megnevezes: '0.75L Palack', szorzo: 1 };
+
+  // --- ÁR KALKULÁCIÓ ---
+  // A bor.ar az ALAPÁR (1-es szorzóhoz). Ezt szorozzuk fel.
+  const vegsoAr = Math.round(bor.ar * aktualisKiszereles.szorzo);
 
   const getWineImage = (nev) => {
     const n = nev.toLowerCase();
@@ -31,31 +44,26 @@ export default function WineCard({ bor }) {
     return "placeholder.jpg";
   };
 
-  // Kosárba tételkor módosítjuk a bor objektumot, hogy a felszorzott ár kerüljön bele!
   const handleAddToCart = () => {
-    const borKosarba = {
-        ...bor, 
-        ar: vegsoAr // Felülírjuk az alap árat a felszorzottal
+    const tetel = {
+        ...bor,
+        id: bor.id, // A bor ID marad
+        ar: vegsoAr, // A felszorzott ár megy a kosárba
+        kiszereles_nev: aktualisKiszereles.megnevezes, // Hogy lássuk a kosárban, mit vett
+        kiszereles_id: selectedKiszerelesId // Fontos: ezt is elmentjük, hogy a rendelésnél tudjuk
     };
-    addToCart(borKosarba, db);
+    addToCart(tetel, db);
   };
 
   return (
     <Card 
       sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        borderRadius: 3,
-        transition: '0.3s',
-        '&:hover': {
-          transform: 'translateY(-5px)',
-          boxShadow: '0 8px 20px rgba(114, 47, 55, 0.2)'
-        },
-        position: 'relative' // A címke pozicionálásához
+        height: '100%', display: 'flex', flexDirection: 'column', 
+        borderRadius: 3, transition: '0.3s',
+        '&:hover': { transform: 'translateY(-5px)', boxShadow: '0 8px 20px rgba(114, 47, 55, 0.2)' },
+        position: 'relative'
       }}
     >
-      {/* Kép szekció */}
       <Box sx={{ position: 'relative' }}>
         <CardMedia
           component="img"
@@ -65,72 +73,61 @@ export default function WineCard({ bor }) {
           onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }}
           sx={{ objectFit: 'cover' }}
         />
-        {/* Kiszerelés címke a sarokban (csak ha extra méret) */}
-        {szorzo > 1 && (
+        {/* Csak akkor mutatunk címkét, ha nagyobb kiszerelést választott */}
+        {aktualisKiszereles.szorzo > 1 && (
           <Chip 
-            label={bor.kiszereles_nev || 'Extra méret'} 
-            color="secondary" 
-            size="small"
-            sx={{ 
-              position: 'absolute', 
-              top: 10, 
-              right: 10, 
-              bgcolor: '#722f37',
-              fontWeight: 'bold'
-            }} 
+            label={aktualisKiszereles.megnevezes} 
+            color="secondary" size="small"
+            sx={{ position: 'absolute', top: 10, right: 10, bgcolor: '#722f37', fontWeight: 'bold' }} 
           />
         )}
       </Box>
 
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Név és Évjárat */}
-        <Typography variant="h6" component="div" sx={{ color: '#722f37', fontWeight: 'bold', lineHeight: 1.2, mb: 0.5 }}>
+        <Typography variant="h6" sx={{ color: '#722f37', fontWeight: 'bold', lineHeight: 1.2, mb: 0.5 }}>
           {bor.nev}
         </Typography>
-        
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'bold' }}>
            Évjárat: {bor.evjarat}
         </Typography>
-
-        {/* Kiszerelés kiírása szövegesen is */}
-        <Typography variant="caption" sx={{ color: '#555', fontStyle: 'italic', mb: 2, display: 'block' }}>
-            Kiszerelés: {bor.kiszereles_nev || 'Normál palack'}
-        </Typography>
-
+        
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2, flexGrow: 1 }}>
           {bor.leiras}
         </Typography>
 
-        {/* Ár */}
-        <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mt: 'auto', mb: 2 }}>
+        {/* --- KISZERELÉS VÁLASZTÓ --- */}
+        <FormControl fullWidth size="small" sx={{ mb: 2, mt: 'auto' }}>
+            <InputLabel>Kiszerelés</InputLabel>
+            <Select
+                value={selectedKiszerelesId}
+                label="Kiszerelés"
+                onChange={(e) => setSelectedKiszerelesId(e.target.value)}
+            >
+                {kiszerelesek.map((k) => (
+                    <MenuItem key={k.id} value={k.id}>
+                        {k.megnevezes} {k.szorzo > 1 ? `(x${k.szorzo})` : ''}
+                    </MenuItem>
+                ))}
+            </Select>
+        </FormControl>
+
+        {/* ÁR MEGJELENÍTÉS */}
+        <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mb: 2 }}>
           {HUF.format(vegsoAr)} Ft
         </Typography>
 
-        {/* Kosárba tétel vezérlők */}
+        {/* KOSÁR VEZÉRLŐK */}
         <Box sx={{ display: 'flex', gap: 1 }}>
           <FormControl size="small" sx={{ minWidth: 80 }}>
             <InputLabel>Db</InputLabel>
-            <Select
-              value={db}
-              label="Db"
-              onChange={(e) => setDb(Number(e.target.value))}
-            >
-              {[1, 2, 3, 4, 5, 6, 12].map((n) => (
-                <MenuItem key={n} value={n}>{n} db</MenuItem>
-              ))}
+            <Select value={db} label="Db" onChange={(e) => setDb(Number(e.target.value))}>
+              {[1, 2, 3, 4, 5, 6, 12].map((n) => <MenuItem key={n} value={n}>{n} db</MenuItem>)}
             </Select>
           </FormControl>
 
           <Button 
-            variant="contained" 
-            fullWidth 
-            startIcon={<ShoppingCartIcon />}
-            onClick={handleAddToCart}
-            sx={{ 
-              bgcolor: '#722f37', 
-              '&:hover': { bgcolor: '#5a252c' },
-              fontWeight: 'bold'
-            }}
+            variant="contained" fullWidth startIcon={<ShoppingCartIcon />} onClick={handleAddToCart}
+            sx={{ bgcolor: '#722f37', '&:hover': { bgcolor: '#5a252c' }, fontWeight: 'bold' }}
           >
             Kosárba
           </Button>

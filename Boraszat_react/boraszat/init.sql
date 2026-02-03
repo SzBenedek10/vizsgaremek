@@ -131,22 +131,22 @@ CREATE TABLE `foglalas` (
 --
 -- Tábla szerkezet ehhez a táblához `kiszereles`
 --
-
 CREATE TABLE `kiszereles` (
   `id` int NOT NULL,
-  `megnevezes` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_hungarian_ci NOT NULL
+  `megnevezes` varchar(50) COLLATE utf8mb4_hungarian_ci NOT NULL,
+  `szorzo` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
 --
 -- A tábla adatainak kiíratása `kiszereles`
 --
 
-INSERT INTO `kiszereles` (`id`, `megnevezes`) VALUES
-(1, '0.75L Palack'),
-(2, '1.5L Magnum'),
-(3, '2L Kanna'),
-(4, '3L Bag-in-Box'),
-(5, '0.75L + Díszdoboz');
+INSERT INTO `kiszereles` (`id`, `megnevezes`, `szorzo`) VALUES
+(1, '0.75L Palack', 1),
+(2, '1.5L Magnum', 2),
+(3, '2L Kanna', 2.4),
+(4, '3L Bag-in-Box', 2.8),
+(5, '0.75L + Díszdoboz', 3);
 
 -- --------------------------------------------------------
 
