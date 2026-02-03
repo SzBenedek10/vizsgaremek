@@ -1,40 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TastingCard from "../components/TastingCard";
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
 export default function BorKostolas() {
+  const [csomagok, setCsomagok] = useState([]);
   const [valasztott, setValasztott] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const csomagok = [
-    { id: 1, nev: "Alap Borkóstoló", leiras: "5 fajta bor kóstolása helyi borkorcsolyával.", ar: 4500, idotartam: "1.5 óra" },
-    { id: 2, nev: "Prémium Válogatás", leiras: "7 fajta dűlőszelektált bor és teljes pincetúra.", ar: 8900, idotartam: "3 óra" },
-    { id: 3, nev: "Dűlőmenti Séta", leiras: "Interaktív séta a szőlőben borkóstolással.", ar: 6500, idotartam: "2 óra" }
-  ];
+  // Adatok lekérése a szerverről
+  useEffect(() => {
+    fetch("http://localhost:5000/api/szolgaltatasok")
+      .then((res) => res.json())
+      .then((data) => {
+        setCsomagok(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Hiba a borkóstolók betöltésekor:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const handleValasztas = (csomag, letszam) => {
     setValasztott({ ...csomag, letszam });
   };
 
+  if (loading) return <div className="shopHeader"><h1>Kóstolók betöltése...</h1></div>;
+
   return (
     <div className="shopPageWrap">
       <header className="shopHeader">
-        <h1>Borkóstolás</h1>
-        <p>Válasszon programjaink közül és foglaljon helyet!</p>
+        <h1>Borkóstolás & Élmények</h1>
+        <p>Válasszon aktuális ajánlataink közül!</p>
       </header>
 
       <div className="shopContainer">
-        
-        {/* Bal oldali panel (Összegző) */}
         <section className="cartSection">
           <div className="cartCard">
             <h2>Foglalásod</h2>
             {!valasztott ? (
-              <p>Válassz egy csomagot a kínálatból!</p>
+              <p>Még nem választottál csomagot.</p>
             ) : (
               <ul className="cartList">
                 <li className="cartItem">
-                  <span>{valasztott.nev}</span>
+                  <span><strong>{valasztott.nev}</strong></span>
                   <span>{valasztott.letszam} fő</span>
                 </li>
                 <li className="totalPrice">
@@ -42,21 +52,26 @@ export default function BorKostolas() {
                 </li>
               </ul>
             )}
-            
             {valasztott && (
-                <button 
-                    style={{marginTop: '10px', width: '100%', padding: '10px', cursor: 'pointer', backgroundColor: 'darkred', color: 'white', border: 'none'}} 
-                    onClick={() => alert("Sikeres foglalás!")}
-                >
-                    Tovább a foglaláshoz
-                </button>
+              <button 
+                style={{
+                  marginTop: '15px', width: '100%', padding: '12px', cursor: 'pointer', 
+                  backgroundColor: '#722f37', color: 'white', border: 'none',
+                  fontWeight: 'bold', borderRadius: '4px'
+                }} 
+                onClick={() => alert("Sikeres kiválasztás!")}
+              >
+                Tovább a foglaláshoz
+              </button>
             )}
           </div>
         </section>
 
-        {/* Jobb oldali panel (Kártyák) */}
         <section className="wineSelection">
-          <div className="wineGrid">
+          <div 
+            className="wineGrid" 
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}
+          >
             {csomagok.map((csomag) => (
               <TastingCard key={csomag.id} csomag={csomag} onValaszt={handleValasztas} />
             ))}

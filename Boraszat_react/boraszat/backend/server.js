@@ -283,4 +283,16 @@ app.get('/api/borok/new', (req, res) => {
         res.json(results);
     });
 });
+// BORKÓSTOLÓK (szolgáltatások) lekérése az adatbázisból
+app.get('/api/szolgaltatasok', (req, res) => {
+  const sql = "SELECT * FROM szolgaltatas WHERE aktiv = 1";
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("SQL hiba a szolgáltatásoknál:", err.message);
+      return res.status(500).json({ error: "Adatbázis hiba" });
+    }
+    res.json(results);
+  });
+});
 app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));
