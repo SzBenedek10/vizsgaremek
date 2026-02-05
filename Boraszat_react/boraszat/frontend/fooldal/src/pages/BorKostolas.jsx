@@ -1,97 +1,154 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; 
 import TastingCard from "../components/TastingCard";
-import { Container, Typography, Grid, Box, Paper, Button, CircularProgress } from '@mui/material';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
 export default function BorKostolas() {
   const [csomagok, setCsomagok] = useState([]);
+  const [foglaltsag, setFoglaltsag] = useState({}); 
   const [valasztott, setValasztott] = useState(null);
   const [loading, setLoading] = useState(true);
-  
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/szolgaltatasok")
-      .then((res) => res.json())
-      .then((data) => {
-        // Mivel nincs már 'tipus' oszlop, betöltünk mindent, amit a szerver küld (ott van aktiv=1 szűrés)
-        setCsomagok(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Hiba:", err);
-        setLoading(false);
+    Promise.all([
+      fetch("http://localhost:5000/api/szolgaltatasok").then(res => res.json()),
+      fetch("http://localhost:5000/api/foglaltsag").then(res => res.json())
+    ])
+    .then(([szolgData, foglData]) => {
+      setCsomagok(szolgData);
+      const foglMap = {};
+      foglData.forEach(f => {
+        foglMap[f.szolgaltatas_id] = f.ossz_letszam;
       });
+      setFoglaltsag(foglMap);
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error("Hiba az adatok letöltésekor:", err);
+      setLoading(false);
+    });
   }, []);
 
-  const handleValasztas = (csomag, letszam) => {
-    setValasztott({ ...csomag, letszam });
+  const handleValasztas = (csomag) => {
+    setValasztott({ ...csomag, letszam: 1 });
   };
 
-  if (loading) return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
-        <CircularProgress sx={{ color: '#722f37' }} />
-    </Box>
-  );
+  const handleTorles = () => {
+    setValasztott(null);
+  };
+
+  const updateLetszam = (ujLetszam) => {
+    const jelenlegFoglalt = foglaltsag[valasztott.id] || 0;
+    const szabadHely = valasztott.kapacitas - jelenlegFoglalt;
+
+    if (ujLetszam < 1) return;
+    if (ujLetszam > szabadHely) {
+      alert(`Sajnos erre a programra már csak ${szabadHely} szabad hely van!`);
+      return;
+    }
+    setValasztott(prev => ({ ...prev, letszam: ujLetszam }));
+  };
+
+  if (loading) return <div className="loading">Betöltés...</div>;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, bgcolor: '#fdfbfb', minHeight: '100vh' }}>
-      <Box sx={{ textAlign: 'center', mb: 6 }}>
-        <Typography variant="h3" sx={{ color: '#722f37', fontWeight: 'bold', fontFamily: 'serif' }}>
-           Élmények a Pincében
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-           Válasszon aktuális programjaink közül!
-        </Typography>
-      </Box>
+    <div className="shopPageWrap">
+      <div className="shopContainer">
+        
+        {/* BAL OLDAL: KOSÁR SÁV */}
+        <section className="cartSection">
+          <div className="cartCard">
+            <h2>Kiválasztott kóstoló</h2>
+            {!valasztott ? (
+              <p className="emptyCartMsg">Nincs kiválasztott program.</p>
+            ) : (
+              <ul className="cartList">
+                <li className="cartItem" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', color: '#722f37', fontSize: '1rem' }}>
+                        {valasztott.nev}
+                    </span>
+                    <button onClick={handleTorles} className="removeBtn" title="Törlés">❌</button>
+                  </div>
+                  
+                  {/* LÉTSZÁM KEZELŐ */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                    <button 
+                      onClick={() => updateLetszam(valasztott.letszam - 1)}
+                      style={{ padding: '2px 10px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff' }}
+                    >-</button>
+                    <span style={{ fontWeight: 'bold' }}>{valasztott.letszam} fő</span>
+                    <button 
+                      onClick={() => updateLetszam(valasztott.letszam + 1)}
+                      style={{ padding: '2px 10px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff' }}
+                    >+</button>
+                  </div>
 
-      <Grid container spacing={4}>
-        {/* BAL OLDAL: VÁLASZTOTT CSOMAG */}
-        <Grid item xs={12} md={3} order={{ xs: 1, md: 2 }}>
-            <Paper elevation={3} sx={{ p: 3, position: 'sticky', top: 100 }}>
-                <Typography variant="h6" sx={{ borderBottom: '2px solid #722f37', pb: 1, mb: 2 }}>
-                    Választott program
-                </Typography>
-                
-                {!valasztott ? (
-                  <Typography variant="body2" color="text.secondary">Kérjük, válasszon a listából.</Typography>
-                ) : (
-                  <Box>
-                     <Typography variant="subtitle1" fontWeight="bold">{valasztott.nev}</Typography>
-                     {valasztott.datum && (
-                        <Typography variant="caption" display="block" color="primary">
-                            Dátum: {new Date(valasztott.datum).toLocaleDateString('hu-HU')}
-                        </Typography>
-                     )}
-                     <Typography variant="body2" sx={{ mt: 1 }}>{valasztott.letszam} fő részére</Typography>
-                     <Typography variant="h6" sx={{ mt: 2, color: '#722f37', fontWeight: 'bold' }}>
-                        {HUF.format(valasztott.ar * valasztott.letszam)} Ft
-                     </Typography>
-                     
-                     <Button 
-                        variant="contained" fullWidth sx={{ mt: 2, bgcolor: '#722f37', '&:hover': { bgcolor: '#5a252c' } }}
-                        onClick={() => navigate("/kostolo-foglalas", { state: { selectedPackage: valasztott } })}
-                     >
-                        Tovább a foglaláshoz
-                     </Button>
-                  </Box>
-                )}
-            </Paper>
-        </Grid>
+                  {/* ÚJ: SZABAD HELYEK KIJELZÉSE KICSIBEN */}
+                  <div style={{ fontSize: '0.75rem', color: '#d32f2f', fontWeight: '500' }}>
+                    Még {valasztott.kapacitas - (foglaltsag[valasztott.id] || 0)} szabad hely elérhető
+                  </div>
+                  
+                  <span style={{ fontSize: '0.85rem', color: '#666' }}>
+                    Egységár: {HUF.format(valasztott.ar)} Ft / fő
+                  </span>
+                </li>
 
-        {/* JOBB OLDAL: KÍNÁLAT */}
-        <Grid item xs={12} md={9} order={{ xs: 2, md: 1 }}>
-            <Grid container spacing={3}>
-                {csomagok.map((csomag) => (
-                    <Grid item key={csomag.id} xs={12} sm={6} lg={4}>
-                        <TastingCard csomag={csomag} onValaszt={handleValasztas} />
-                    </Grid>
-                ))}
-            </Grid>
-        </Grid>
-      </Grid>
-    </Container>
+                <li className="totalPrice" style={{ borderTop: '2px solid #722f37', marginTop: '10px', paddingTop: '10px' }}>
+                  Összesen: {HUF.format(valasztott.ar * valasztott.letszam)} Ft
+                </li>
+              </ul>
+            )}
+
+            {valasztott && (
+              <button 
+                className="checkoutBtn"
+                style={{ 
+                  marginTop: '20px', 
+                  width: '100%', 
+                  padding: '12px', 
+                  cursor: 'pointer', 
+                  backgroundColor: '#722f37', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '5px',
+                  fontWeight: 'bold',
+                  fontSize: '1rem'
+                }} 
+                onClick={() => navigate("/kostolo-foglalas", { state: { selectedPackage: valasztott } })}
+              >
+                Tovább a foglaláshoz
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* JOBB OLDAL: KÍNÁLAT (2 kártya egy sorban) */}
+        <section className="wineSelection">
+          <div className="wineGrid" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: '20px' 
+          }}>
+            {csomagok.map((csomag) => {
+              const jelenlegiLetszam = foglaltsag[csomag.id] || 0;
+              const isFull = jelenlegiLetszam >= csomag.kapacitas;
+
+              return (
+                <TastingCard 
+                  key={csomag.id} 
+                  csomag={csomag} 
+                  onValaszt={handleValasztas} 
+                  isFull={isFull} 
+                />
+              );
+            })}
+          </div>
+        </section>
+
+      </div>
+    </div>
   );
 }

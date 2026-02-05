@@ -332,4 +332,17 @@ app.post('/api/foglalas', (req, res) => {
         res.json({ message: "Sikeres foglalás!", foglalasId: result.insertId });
     });
 });
+// Aktuális foglaltság lekérése szolgáltatásonként
+app.get('/api/foglaltsag', (req, res) => {
+    const sql = `
+        SELECT szolgaltatas_id, SUM(letszam) as ossz_letszam 
+        FROM foglalas 
+        WHERE statusz != 'CANCELLED'
+        GROUP BY szolgaltatas_id
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Hiba a foglaltság lekérésekor" });
+        res.json(results);
+    });
+});
 app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));
