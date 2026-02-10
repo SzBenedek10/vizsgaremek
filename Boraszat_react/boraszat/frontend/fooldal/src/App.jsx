@@ -8,8 +8,11 @@ import SignUpSide from "./pages/SignUpSide.jsx";
 import { AuthProvider } from "./context/AuthContext"; 
 import Checkout from './pages/Checkout';
 import AdminDashboard from "./pages/AdminDashboard.jsx";
-import TastingCheckout from "./pages/TastingCheckout.jsx"; // <--- 1. ÚJ IMPORT
-
+import TastingCheckout from "./pages/TastingCheckout.jsx"; 
+import Contact  from "./pages/contact.jsx";
+import Terms from "./pages/Terms.jsx";       
+import Privacy from "./pages/Privacy.jsx";   
+import Shipping from "./pages/Shipping.jsx";  
 import Footer from "./components/footer.jsx"; 
 
 export default function App() {
@@ -24,9 +27,13 @@ export default function App() {
           <Route path="/signup" element={<SignUpSide />} />
           <Route path="/checkout" element={<Checkout />} /> 
           
-          {/* 2. ÚJ ROUTE A KÓSTOLÓ FOGLALÁSHOZ */}
           <Route path="/kostolo-foglalas" element={<TastingCheckout />} />
-          
+          <Route path="/kapcsolat" element={<Contact />} />
+          <Route path="/aszf" element={<Terms />} />
+          <Route path="/adatvedelem" element={<Privacy />} />
+          <Route path="/szallitas" element={<Shipping />} />
+
+
           <Route path="/admin" element={<AdminDashboard />} />
 
         </Route>

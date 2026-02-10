@@ -23,6 +23,7 @@ export default function MainLayout() {
         <Button onClick={() => navigate('/')} color="inherit" sx={{ fontWeight: 'bold' }}>Főoldal</Button>
         <Button onClick={() => navigate('/borrendeles')} color="inherit" sx={{ fontWeight: 'bold' }}>Borrendelés</Button>
         <Button onClick={() => navigate('/borkostolas')} color="inherit" sx={{ fontWeight: 'bold' }}>Borkostolás</Button>
+        <Button onClick={() => navigate('/kapcsolat')} color="inherit" sx={{ fontWeight: 'bold' }}>Kapcsolat</Button>
         
         
         <Box sx={{ position: 'absolute', right: 20 }}>

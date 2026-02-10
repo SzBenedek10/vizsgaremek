@@ -284,8 +284,52 @@ app.get('/api/borok/top', (req, res) => {
         res.json(results);
     });
 });
+app.get('/api/admin/szolgaltatasok', (req, res) => {
+    const sql = "SELECT * FROM szolgaltatas ORDER BY datum DESC"; // Dátum szerint csökkenő
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
 
-// TOP 3 legújabb bor (létrehozás dátuma alapján)
+// 2. Új kóstoló létrehozása
+app.post('/api/szolgaltatasok', (req, res) => {
+    const { nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv } = req.body;
+    const sql = "INSERT INTO szolgaltatas (nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    // Ha nincs megadva az aktiv, alapból legyen 1 (igaz)
+    const values = [nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv !== undefined ? aktiv : 1];
+    
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Hiba:", err);
+            return res.status(500).json({ error: "Hiba létrehozáskor" });
+        }
+        res.json({ message: "Szolgáltatás létrehozva", id: result.insertId });
+    });
+});
+
+
+app.put('/api/szolgaltatasok/:id', (req, res) => {
+    const id = req.params.id;
+    const { nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv } = req.body;
+    const sql = "UPDATE szolgaltatas SET nev=?, leiras=?, ar=?, kapacitas=?, datum=?, idotartam=?, extra=?, aktiv=? WHERE id=?";
+    const values = [nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv, id];
+
+    db.query(sql, values, (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba módosításkor" });
+        res.json({ message: "Szolgáltatás frissítve" });
+    });
+});
+
+
+app.delete('/api/szolgaltatasok/:id', (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM szolgaltatas WHERE id = ?", [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba törléskor" });
+        res.json({ message: "Törölve" });
+    });
+});
+
 app.get('/api/borok/new', (req, res) => {
     const sql = `SELECT * FROM bor ORDER BY created_at DESC LIMIT 3`;
     db.query(sql, (err, results) => {
@@ -345,4 +389,46 @@ app.get('/api/foglaltsag', (req, res) => {
         res.json(results);
     });
 });
+
+app.post('/api/contact', (req, res) => {
+    // Most már a userId-t is várjuk
+    const { userId, nev, email, targy, uzenet } = req.body;
+
+    if (!userId || !targy || !uzenet) {
+        return res.status(400).json({ error: "Hiányzó adatok!" });
+    }
+
+    // A user_id-t is beszúrjuk
+    const sql = "INSERT INTO uzenetek (user_id, nev, email, targy, uzenet) VALUES (?, ?, ?, ?, ?)";
+    
+    db.query(sql, [userId, nev, email, targy, uzenet], (err, result) => {
+        if (err) {
+            console.error("Hiba az üzenet mentésekor:", err);
+            return res.status(500).json({ error: "Szerver hiba történt." });
+        }
+        res.json({ message: "Köszönjük! Üzenetét megkaptuk." });
+    });
+});
+
+app.get('/api/cegadatok', (req, res) => {
+    const sql = "SELECT * FROM ceg_adatok LIMIT 1";
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Hiba a cégadatok lekérésekor:", err);
+            return res.status(500).json({ error: "Adatbázis hiba" });
+        }
+        // Ha nincs adat, küldjünk egy üres objektumot vagy alapértelmezett értéket
+        if (results.length === 0) {
+             return res.json({ 
+                 cim: "Nincs megadva", 
+                 telefon: "-", 
+                 email: "-", 
+                 nyitvatartas: "-" 
+             });
+        }
+        res.json(results[0]);
+    });
+});
+
+
 app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));

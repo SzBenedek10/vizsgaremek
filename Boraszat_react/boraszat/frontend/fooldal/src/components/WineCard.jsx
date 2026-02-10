@@ -23,7 +23,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   // Megkeressük a kiválasztott kiszerelés objektumot a listából
   // Ha még nincs betöltve a lista, használunk egy alapértelmezettet
   const aktualisKiszereles = kiszerelesek.find(k => k.id === selectedKiszerelesId) 
-                              || { id: 1, megnevezes: '0.75L Palack', szorzo: 1 };
+                              || { id: 1, megnevezes: '0.75L Palack', };
 
   // --- ÁR KALKULÁCIÓ ---
   // A bor.ar az ALAPÁR (1-es szorzóhoz). Ezt szorozzuk fel.

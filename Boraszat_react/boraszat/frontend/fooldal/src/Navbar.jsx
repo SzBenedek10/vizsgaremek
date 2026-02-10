@@ -6,6 +6,7 @@ import {
   Avatar, Menu, MenuItem, Tooltip 
 } from '@mui/material';
 
+
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext); //
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function Navbar() {
         <Button onClick={() => navigate('/')} color="inherit">Főoldal</Button>
         <Button onClick={() => navigate('/borrendeles')} color="inherit">Borrendelés</Button>
         <Button onClick={() => navigate('/borkostolas')} color="inherit">Borkostolás</Button>
+        <Button onClick={() => navigate('/kapcsolat')} color="inherit">Kapcsolat</Button>
 
         {/* Jobb felső sarok: Login Gomb vagy Avatar */}
         <Box sx={{ position: 'absolute', right: 20 }}>
