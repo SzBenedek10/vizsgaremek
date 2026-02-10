@@ -7,6 +7,8 @@ import axios from 'axios';
 import FeaturedWineCard from '../../components/FeaturedWineCard'; 
 import FeaturedTastingCard from '../../components/FeaturedTastingCard'; 
 import ReviewCard from '../../components/ReviewCard'; 
+// ÚJ IMPORT: A 3D Borosüveg
+import Wine3D from '../../components/Wine3D'; 
 
 export default function Home() {
   const navigate = useNavigate();
@@ -76,47 +78,78 @@ export default function Home() {
 
   return (
     <Box>
-      {/* 1. HERO SECTION */}
+      {/* 1. HERO SECTION (MODERNIZÁLT 3D-VEL) */}
       <Box 
         sx={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url("/images/hegykozseg.jpg")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          height: '70vh',
+          bgcolor: '#1a1a1a', // Sötét háttér a 3D-hez
+          color: 'white',
+          minHeight: '100vh', // Magasabb, hogy elférjen az üveg
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          textAlign: 'center',
+          overflow: 'hidden', // Hogy ne lógjon ki semmi
+          position: 'relative'
         }}
       >
-        <Container>
-          <Typography variant="h2" component="h1" sx={{ fontWeight: 'bold', mb: 2, fontFamily: 'serif', letterSpacing: 1 }}>
-            Üdvözlünk Szente Pincéjében!
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 4, fontWeight: 300, maxWidth: '800px', mx: 'auto' }}>
-            Ahol a családi hagyomány találkozik a modern borkészítéssel.
-          </Typography>
-          <Button 
-            variant="contained" 
-            size="large" 
-            onClick={() => navigate('/borrendeles')}
-            sx={{ 
-              bgcolor: '#722f37', 
-              '&:hover': { bgcolor: '#903b45' }, 
-              px: 6, py: 1.8, 
-              fontSize: '1.1rem',
-              borderRadius: '50px',
-              fontWeight: 'bold',
-              textTransform: 'none'
-            }}
-          >
-            Irány a webshop
-          </Button>
+        <Container maxWidth="xl">
+          <Grid container spacing={4} alignItems="center">
+            
+            {/* BAL OLDAL: SZÖVEG */}
+            <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'center', md: 'left' }, zIndex: 2 }}>
+              <Typography variant="h2" component="h1" sx={{ fontWeight: 'bold', mb: 2, fontFamily: 'serif', letterSpacing: 1, lineHeight: 1.2 }}>
+                Üdvözlünk <br/> <span>Szente Pincéjében!</span>
+              </Typography>
+              <Typography variant="h5" sx={{ mb: 4, fontWeight: 300, opacity: 0.9, maxWidth: '600px', mx: { xs: 'auto', md: 0 } }}>
+                Ahol a családi hagyomány találkozik a modern borkészítéssel.
+              </Typography>
+              
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'center', md: 'flex-start' } }}>
+                <Button 
+                    variant="contained" 
+                    size="large" 
+                    onClick={() => navigate('/borrendeles')}
+                    sx={{ 
+                    bgcolor: '#722f37', 
+                    '&:hover': { bgcolor: '#903b45' }, 
+                    px: 4, py: 1.5, 
+                    fontSize: '1.1rem',
+                    borderRadius: '50px',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    boxShadow: '0 4px 15px rgba(114, 47, 55, 0.4)'
+                    }}
+                >
+                    Irány a webshop
+                </Button>
+                <Button 
+                    variant="contained" 
+                    size="large" 
+                    onClick={() => navigate('/borkostolas')}
+                    sx={{ 
+                   bgcolor: '#722f37', 
+                    '&:hover': { bgcolor: '#903b45' }, 
+                    px: 4, py: 1.5, 
+                    fontSize: '1.1rem',
+                    borderRadius: '50px',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    boxShadow: '0 4px 15px rgba(114, 47, 55, 0.4)'
+                    }}
+                >
+                    Kóstoló foglalás
+                </Button>
+              </Box>
+            </Grid>
+
+            {/* JOBB OLDAL: 3D ANIMÁCIÓ */}
+            <Grid item xs={12} md={6} sx={{ height: { xs: '400px', md: '600px' }, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+               <Wine3D />
+            </Grid>
+
+          </Grid>
         </Container>
       </Box>
 
-      {/* 2. DINAMIKUS GRID */}
+      {/* 2. DINAMIKUS GRID (EZ MARADT A RÉGI) */}
       <Container maxWidth="lg" sx={{ py: 10, minHeight: '650px' }}>
         
         <Fade in={visible} timeout={500}>
@@ -131,7 +164,6 @@ export default function Home() {
         </Fade>
 
         <Fade in={visible} timeout={800}>
-            {/* justifyContent="center" miatt a 2 kártya középen lesz */}
             <Grid container spacing={3} justifyContent="center" alignItems="stretch">
                 {currentItems.length > 0 ? (
                     currentItems.map((item) => (
@@ -237,4 +269,4 @@ export default function Home() {
       </Container>
     </Box>
   );
-}
+}CDATASection
