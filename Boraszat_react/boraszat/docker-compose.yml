@@ -45,7 +45,7 @@ services:
     depends_on:
       - mysqldb
     # ÚJ: Ez teszi lehetővé, hogy a server.js módosítása azonnal hasson
-    command: npm run dev
+    command: node server.js
     volumes:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules

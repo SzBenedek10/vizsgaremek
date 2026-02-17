@@ -56,6 +56,10 @@ export default function BorKostolas() {
   return (
     <div className="shopPageWrap">
       <div className="shopContainer">
+         <header className="shopHeader">
+        <h1>Borkóstolás</h1>
+        <p>Foglajon borkóstolásra időpontot.</p>
+      </header>
         
         {/* BAL OLDAL: KOSÁR SÁV */}
         <section className="cartSection">

@@ -11,16 +11,14 @@ body {
   padding: 0;
   box-sizing: border-box;
   font-family: 'Roboto', sans-serif;
-  background-color: #121212; /* SÖTÉT HÁTTÉR GLOBÁLISAN */
+  background-color: #121212; 
   color: white;
 }
 
-/* Ezt a részt keresd meg és módosítsd: */
+
 .container {
-  margin: 0 auto; /* Vedd ki a nagy margót */
+  margin: 0 auto; 
   padding: 40px;
-  /* background-color: #fff;  <-- EZT TÖRÖLD VAGY KOMMENTELD KI */
-  /* box-shadow: ... <-- EZT IS TÖRÖLHETED, HA SÖTÉT OLDALT AKARSZ */
   position: relative;
   overflow: hidden;
   min-height: 100%;

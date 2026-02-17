@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom'; // <--- 1. IMPORTÁLD BE EZT
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -12,24 +13,12 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   const [db, setDb] = useState(1);
   const [selectedKiszerelesId, setSelectedKiszerelesId] = useState(1); 
   const { addToCart } = useCart();
+  const navigate = useNavigate(); // <--- 2. HASZNÁLD A HOOK-OT
 
-  // Alapértelmezés beállítása, amikor betölt a bor
-  useEffect(() => {
-    if (bor.kiszereles_id) {
-        setSelectedKiszerelesId(bor.kiszereles_id);
-    }
-  }, [bor.kiszereles_id]);
-
-  // Megkeressük a kiválasztott kiszerelés objektumot a listából
-  // Ha még nincs betöltve a lista, használunk egy alapértelmezettet
-  const aktualisKiszereles = kiszerelesek.find(k => k.id === selectedKiszerelesId) 
-                              || { id: 1, megnevezes: '0.75L Palack', };
-
-  // --- ÁR KALKULÁCIÓ ---
-  // A bor.ar az ALAPÁR (1-es szorzóhoz). Ezt szorozzuk fel.
-  const vegsoAr = Math.round(bor.ar * aktualisKiszereles.szorzo);
-
+  // ... (useEffect és getWineImage maradhat változatlanul) ...
+  // Másold vissza a getWineImage függvényedet ide!
   const getWineImage = (nev) => {
+    // ... a te kódod ...
     const n = nev.toLowerCase();
     if (n.includes("lesencei")) return "lacibetyar.jpg";
     if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
@@ -44,15 +33,31 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
     return "placeholder.jpg";
   };
 
-  const handleAddToCart = () => {
+  useEffect(() => {
+    if (bor.kiszereles_id) {
+        setSelectedKiszerelesId(bor.kiszereles_id);
+    }
+  }, [bor.kiszereles_id]);
+
+  const aktualisKiszereles = kiszerelesek.find(k => k.id === selectedKiszerelesId) 
+                              || { id: 1, megnevezes: '0.75L Palack', szorzo: 1 }; // Javítva: szorzo alapérték
+  const vegsoAr = Math.round(bor.ar * aktualisKiszereles.szorzo);
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation(); // Ez fontos lehet, ha az egész kártya kattintható lenne
     const tetel = {
         ...bor,
-        id: bor.id, // A bor ID marad
-        ar: vegsoAr, // A felszorzott ár megy a kosárba
-        kiszereles_nev: aktualisKiszereles.megnevezes, // Hogy lássuk a kosárban, mit vett
-        kiszereles_id: selectedKiszerelesId // Fontos: ezt is elmentjük, hogy a rendelésnél tudjuk
+        id: bor.id,
+        ar: vegsoAr,
+        kiszereles_nev: aktualisKiszereles.megnevezes,
+        kiszereles_id: selectedKiszerelesId
     };
     addToCart(tetel, db);
+  };
+
+  // 3. NAVIGÁCIÓS FÜGGVÉNY
+  const goToDetails = () => {
+    navigate(`/borok/${bor.id}`);
   };
 
   return (
@@ -64,7 +69,8 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
         position: 'relative'
       }}
     >
-      <Box sx={{ position: 'relative' }}>
+      {/* 4. A KÉP DOBOZA LEGYEN KATTINTHATÓ (cursor: pointer) */}
+      <Box sx={{ position: 'relative', cursor: 'pointer' }} onClick={goToDetails}>
         <CardMedia
           component="img"
           height="250"
@@ -73,7 +79,6 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
           onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }}
           sx={{ objectFit: 'cover' }}
         />
-        {/* Csak akkor mutatunk címkét, ha nagyobb kiszerelést választott */}
         {aktualisKiszereles.szorzo > 1 && (
           <Chip 
             label={aktualisKiszereles.megnevezes} 
@@ -84,9 +89,22 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
       </Box>
 
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <Typography variant="h6" sx={{ color: '#722f37', fontWeight: 'bold', lineHeight: 1.2, mb: 0.5 }}>
+        {/* 5. A CÍM IS LEGYEN KATTINTHATÓ */}
+        <Typography 
+            variant="h6" 
+            onClick={goToDetails}
+            sx={{ 
+                color: '#722f37', 
+                fontWeight: 'bold', 
+                lineHeight: 1.2, 
+                mb: 0.5, 
+                cursor: 'pointer',
+                '&:hover': { textDecoration: 'underline' } 
+            }}
+        >
           {bor.nev}
         </Typography>
+
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'bold' }}>
            Évjárat: {bor.evjarat}
         </Typography>
@@ -95,7 +113,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
           {bor.leiras}
         </Typography>
 
-        {/* --- KISZERELÉS VÁLASZTÓ --- */}
+        {/* ... A TÖBBI RÉSZ (Dropdown, Gombok) MARAD VÁLTOZATLAN ... */}
         <FormControl fullWidth size="small" sx={{ mb: 2, mt: 'auto' }}>
             <InputLabel>Kiszerelés</InputLabel>
             <Select
@@ -111,12 +129,10 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
             </Select>
         </FormControl>
 
-        {/* ÁR MEGJELENÍTÉS */}
         <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mb: 2 }}>
           {HUF.format(vegsoAr)} Ft
         </Typography>
 
-        {/* KOSÁR VEZÉRLŐK */}
         <Box sx={{ display: 'flex', gap: 1 }}>
           <FormControl size="small" sx={{ minWidth: 80 }}>
             <InputLabel>Db</InputLabel>

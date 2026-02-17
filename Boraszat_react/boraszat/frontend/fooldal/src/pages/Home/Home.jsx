@@ -3,28 +3,26 @@ import { Container, Box, Typography, Grid, Button, Fade } from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
-// --- KOMPONENSEK ---
+
 import FeaturedWineCard from '../../components/FeaturedWineCard'; 
 import FeaturedTastingCard from '../../components/FeaturedTastingCard'; 
 import ReviewCard from '../../components/ReviewCard'; 
-// ÚJ IMPORT: A 3D Borosüveg
-import Wine3D from '../../components/Wine3D'; 
+
+//import Wine3D from '../../components/Wine3D'; 
 
 export default function Home() {
   const navigate = useNavigate();
-  
-  // --- ÁLLAPOTOK ---
+ 
   const [topBorok, setTopBorok] = useState([]);
   const [newBorok, setNewBorok] = useState([]);
   const [szolgaltatasok, setSzolgaltatasok] = useState([]); 
 
-  // 0: Népszerű, 1: Új, 2: Kóstolók
+
   const [activeTab, setActiveTab] = useState(0); 
   const [visible, setVisible] = useState(true); 
 
-  // --- ADATOK LEKÉRÉSE ---
   useEffect(() => {
-    // Boroknál marad a 3 db
+  
     axios.get('http://localhost:5000/api/borok/top')
       .then(res => setTopBorok(res.data.slice(0, 3)))
       .catch(err => console.error(err));
@@ -33,13 +31,13 @@ export default function Home() {
       .then(res => setNewBorok(res.data.slice(0, 3)))
       .catch(err => console.error(err));
 
-    // SZOLGÁLTATÁSOK: Itt állítottam át 2-re!
+   
     axios.get('http://localhost:5000/api/szolgaltatasok')
       .then(res => setSzolgaltatasok(res.data.slice(0, 2))) 
       .catch(err => console.error(err));
   }, []);
 
-  // --- IDŐZÍTŐ ---
+  
   useEffect(() => {
     const interval = setInterval(() => {
       setVisible(false);
@@ -51,7 +49,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // --- TARTALOM KIVÁLASZTÁSA ---
+
   let currentItems = [];
   let currentTitle = "";
   let currentSubtitle = "";
@@ -78,15 +76,16 @@ export default function Home() {
 
   return (
     <Box>
-      {/* 1. HERO SECTION (MODERNIZÁLT 3D-VEL) */}
+      
       <Box 
         sx={{
-          bgcolor: '#1a1a1a', // Sötét háttér a 3D-hez
+         background: 'linear-gradient(135deg, #1a1a1a 0%, #2c0e0e 100%)',
+          
           color: 'white',
-          minHeight: '100vh', // Magasabb, hogy elférjen az üveg
-          display: 'flex',
+          minHeight: '100vh', 
+          display: 'flex', 
           alignItems: 'center',
-          overflow: 'hidden', // Hogy ne lógjon ki semmi
+          overflow: 'hidden', 
           position: 'relative'
         }}
       >
@@ -139,17 +138,15 @@ export default function Home() {
                 </Button>
               </Box>
             </Grid>
-
-            {/* JOBB OLDAL: 3D ANIMÁCIÓ */}
+            
             <Grid item xs={12} md={6} sx={{ height: { xs: '400px', md: '600px' }, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-               <Wine3D />
+               
             </Grid>
 
           </Grid>
         </Container>
       </Box>
 
-      {/* 2. DINAMIKUS GRID (EZ MARADT A RÉGI) */}
       <Container maxWidth="lg" sx={{ py: 10, minHeight: '650px' }}>
         
         <Fade in={visible} timeout={500}>
