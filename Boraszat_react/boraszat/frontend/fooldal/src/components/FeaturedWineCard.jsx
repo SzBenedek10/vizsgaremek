@@ -39,14 +39,13 @@ const FeaturedWineCard = ({ bor }) => {
         overflow: 'hidden'
       }}
     >
-      {/* 1. JAVÍTÁS: aspect-ratio (képarány) használata fix magasság helyett */}
       <CardMedia
         component="img"
         image={`/images/${getWineImage(bor.nev)}`} 
         alt={bor.nev}
         sx={{ 
             width: '100%', 
-            aspectRatio: '4/3', // Ettől lesz minden kép hajszálpontosan egyforma arányú
+            aspectRatio: '4/3',
             objectFit: 'cover' 
         }}
         onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }} 
@@ -74,7 +73,6 @@ const FeaturedWineCard = ({ bor }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  // 2. JAVÍTÁS: Ha egy szó nagyon hosszú, törje el, ne nyomja szét a kártya szélességét
                   wordBreak: 'break-word'
               }}
             >

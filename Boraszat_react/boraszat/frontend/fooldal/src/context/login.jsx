@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom'; // Add hozzá az átirányításhoz
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
@@ -14,17 +14,16 @@ const Login = () => {
         try {
             const res = await axios.post('http://localhost:5000/api/login', { 
                 email, 
-                password_hash: password // Ezt kapja meg a backend
+                password_hash: password 
             });
             
-            login(res.data.token, res.data.user); // Elmentjük a contextbe és localStorage-be
+            login(res.data.token, res.data.user); 
             alert("Üdvözlünk bent!");
-            navigate('/'); // Átirányítás a főoldalra
+            navigate('/'); 
         } catch (err) {
             alert(err.response?.data?.error || "Hiba történt");
         }
     };
-    // ... a többi maradhat
 
     return (
         <form onSubmit={handleSubmit}>

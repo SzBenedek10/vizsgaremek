@@ -8,7 +8,6 @@ const HUF = new Intl.NumberFormat("hu-HU");
 const FeaturedTastingCard = ({ csomag }) => {
   const navigate = useNavigate();
 
-  // Kép kiválasztó logika (ugyanaz, mint a TastingCard-ban)
   const getWineImage = (nev) => {
     const n = nev.toLowerCase();
     if (n.includes("pince")) return "pince3.jpg";
@@ -30,7 +29,6 @@ const FeaturedTastingCard = ({ csomag }) => {
       }}
     >
       <CardActionArea 
-        // Kattintásra átvisz a részletes oldalra
         onClick={() => navigate('/borkostolas')} 
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
       >
@@ -43,7 +41,6 @@ const FeaturedTastingCard = ({ csomag }) => {
             sx={{ objectFit: 'cover' }}
             onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }} 
             />
-            {/* Egy kis címke, hogy látszódjon: ez egy PROGRAM */}
             <Chip 
                 label="Élményprogram" 
                 size="small" 

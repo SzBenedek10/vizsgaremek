@@ -12,7 +12,6 @@ import {
 const HUF = new Intl.NumberFormat("hu-HU");
 
 export default function TastingCard({ csomag, onValaszt, isFull }) {
-  // A kártya stílusa, ha betelt
   const cardStyle = {
     height: '100%',
     display: 'flex',
@@ -21,13 +20,12 @@ export default function TastingCard({ csomag, onValaszt, isFull }) {
     '&:hover': {
       transform: !isFull ? 'scale(1.02)' : 'none',
     },
-    opacity: isFull ? 0.7 : 1, // Elhalványítás, ha betelt
+    opacity: isFull ? 0.7 : 1, 
     position: 'relative'
   };
 
   return (
     <Card sx={cardStyle}>
-      {/* Betelt jelzés a kép felett */}
       {isFull && (
         <Box sx={{
           position: 'absolute',

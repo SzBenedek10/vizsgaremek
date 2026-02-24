@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom'; // <--- 1. IMPORTÁLD BE EZT
+import { useNavigate } from 'react-router-dom'; 
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -13,12 +13,10 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   const [db, setDb] = useState(1);
   const [selectedKiszerelesId, setSelectedKiszerelesId] = useState(1); 
   const { addToCart } = useCart();
-  const navigate = useNavigate(); // <--- 2. HASZNÁLD A HOOK-OT
+  const navigate = useNavigate(); 
 
-  // ... (useEffect és getWineImage maradhat változatlanul) ...
-  // Másold vissza a getWineImage függvényedet ide!
   const getWineImage = (nev) => {
-    // ... a te kódod ...
+ 
     const n = nev.toLowerCase();
     if (n.includes("lesencei")) return "lacibetyar.jpg";
     if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
@@ -40,11 +38,11 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   }, [bor.kiszereles_id]);
 
   const aktualisKiszereles = kiszerelesek.find(k => k.id === selectedKiszerelesId) 
-                              || { id: 1, megnevezes: '0.75L Palack', szorzo: 1 }; // Javítva: szorzo alapérték
+                              || { id: 1, megnevezes: '0.75L Palack', szorzo: 1 };
   const vegsoAr = Math.round(bor.ar * aktualisKiszereles.szorzo);
 
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // Ez fontos lehet, ha az egész kártya kattintható lenne
+    e.stopPropagation(); 
     const tetel = {
         ...bor,
         id: bor.id,
@@ -55,7 +53,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
     addToCart(tetel, db);
   };
 
-  // 3. NAVIGÁCIÓS FÜGGVÉNY
+
   const goToDetails = () => {
     navigate(`/borok/${bor.id}`);
   };
@@ -69,7 +67,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
         position: 'relative'
       }}
     >
-      {/* 4. A KÉP DOBOZA LEGYEN KATTINTHATÓ (cursor: pointer) */}
+ 
       <Box sx={{ position: 'relative', cursor: 'pointer' }} onClick={goToDetails}>
         <CardMedia
           component="img"
@@ -89,7 +87,6 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
       </Box>
 
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* 5. A CÍM IS LEGYEN KATTINTHATÓ */}
         <Typography 
             variant="h6" 
             onClick={goToDetails}
@@ -123,7 +120,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
             >
                 {kiszerelesek.map((k) => (
                     <MenuItem key={k.id} value={k.id}>
-                        {k.megnevezes} {k.szorzo > 1 ? `(x${k.szorzo})` : ''}
+                        {k.megnevezes}
                     </MenuItem>
                 ))}
             </Select>

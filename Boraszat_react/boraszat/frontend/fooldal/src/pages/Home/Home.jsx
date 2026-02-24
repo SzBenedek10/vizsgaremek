@@ -18,7 +18,6 @@ export default function Home() {
   const [visible, setVisible] = useState(true); 
 
   useEffect(() => {
-    // VÁLTOZÁS: Itt most már csak 2-t kérünk le (slice(0, 2))
     axios.get('http://localhost:5000/api/borok/top')
       .then(res => setTopBorok(res.data.slice(0, 2)))
       .catch(err => console.error(err));

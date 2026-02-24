@@ -1,16 +1,10 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-
-// 1. Létrehozzuk a Context-et
 export const AuthContext = createContext();
-
-// 2. Exportáljuk a Hook-ot (Ezt hiányolta a hibaüzenet!)
 export const useAuth = () => useContext(AuthContext);
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
 
-  // Betöltéskor megnézzük, van-e mentett adat
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');

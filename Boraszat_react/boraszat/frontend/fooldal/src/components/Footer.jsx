@@ -7,7 +7,6 @@ export default function Footer() {
       <Container maxWidth="lg">
         <Grid container spacing={4}>
           
-          {/* 1. OSZLOP: Céginfó */}
           <Grid item xs={12} sm={4}>
             <Typography variant="h6" sx={{ color: '#ffd700', mb: 2, fontWeight: 'bold' }}>
               Pince Borászat

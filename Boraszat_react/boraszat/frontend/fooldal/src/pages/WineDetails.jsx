@@ -368,6 +368,7 @@ export default function WineDetails() {
 
           <Grid item xs={12} md={6}>
             {/* Jobb oldal - üresen hagyva vagy további tartalom */}
+            
           </Grid>
         </Grid>
       </Container>

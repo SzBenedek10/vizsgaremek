@@ -11,7 +11,6 @@ const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
-  // 🔹 1. Betöltés localStorage-ból
   const [cartItems, setCartItems] = useState(() => {
     try {
       const savedCart = localStorage.getItem("boraszat_cart");
@@ -32,10 +31,8 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem("boraszat_cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // 🔹 3. Kosárba adás (JAVÍTVA: id + kiszereles_id azonosítás)
   const addToCart = (product, amount) => {
     setCartItems((prevItems) => {
-      // Megnézzük, van-e már pontosan ilyen bor és kiszerelés a kosárban
       const existing = prevItems.find(
         (i) => i.id === product.id && i.kiszereles_id === product.kiszereles_id
       );
@@ -57,13 +54,9 @@ export const CartProvider = ({ children }) => {
         alert("Nincs ennyi készleten!");
         return prevItems;
       }
-
-      // Új tételként adjuk hozzá (a WineCard már a felszorzott árat küldi)
       return [...prevItems, { ...product, amount }];
     });
   };
-
-  // 🔹 4. Törlés (JAVÍTVA: kiszerelés alapján is szűrünk)
   const removeFromCart = (id, kiszereles_id) => {
     setCartItems((prev) => 
       prev.filter((item) => !(item.id === id && item.kiszereles_id === kiszereles_id))
