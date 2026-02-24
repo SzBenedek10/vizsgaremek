@@ -244,19 +244,20 @@ app.post('/api/borok', (req, res) => {
     });
 });
 
-// 4. Bor módosítása
 app.put('/api/borok/:id', (req, res) => {
     const id = req.params.id;
-    const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, alkoholfok } = req.body;
+    // Csak ezeket az alap adatokat kérjük el
+    const { nev, evjarat, ar, keszlet, leiras } = req.body;
 
-    const sql = `UPDATE bor SET 
-                 nev = ?, evjarat = ?, ar = ?, keszlet = ?, leiras = ?, bor_szin_id = ?, alkoholfok = ?
-                 WHERE id = ?`;
-
-    const values = [nev, evjarat, ar, keszlet, leiras, bor_szin_id, alkoholfok, id];
+    // Kivettük a bor_szin_id-t és az alkoholfokot a frissítésből!
+    const sql = `UPDATE bor SET nev = ?, evjarat = ?, ar = ?, keszlet = ?, leiras = ? WHERE id = ?`;
+    const values = [nev, evjarat, ar, keszlet, leiras, id];
 
     db.query(sql, values, (err, result) => {
-        if (err) return res.status(500).json({ error: "Hiba a módosításkor" });
+        if (err) {
+            console.error("SQL Hiba bor módosításakor:", err);
+            return res.status(500).json({ error: "Hiba a módosításkor" });
+        }
         res.json({ message: "Bor sikeresen frissítve!" });
     });
 });
