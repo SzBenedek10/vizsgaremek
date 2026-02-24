@@ -430,5 +430,88 @@ app.get('/api/cegadatok', (req, res) => {
     });
 });
 
+app.get('/api/rendeles/user/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const sql = "SELECT * FROM rendeles WHERE user_id = ? ORDER BY datum DESC";
+    
+    db.query(sql, [userId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbazis hiba a rendeleseknel" });
+        res.json(results);
+    });
+});
+
+app.get('/api/foglalas/user/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const sql = "SELECT f.*, sz.nev as szolgaltatas_nev FROM foglalas f LEFT JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id WHERE f.user_id = ? ORDER BY f.datum DESC";
+    
+    db.query(sql, [userId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbazis hiba a foglalasoknal" });
+        res.json(results);
+    });
+});
+
+app.get('/api/admin/uzenetek', (req, res) => {
+    const sql = "SELECT * FROM uzenetek ORDER BY datum DESC";
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba az üzenetek lekérésekor" });
+        res.json(results);
+    });
+});
+
+app.delete('/api/admin/uzenetek/:id', (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM uzenetek WHERE id = ?", [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba törléskor" });
+        res.json({ message: "Üzenet törölve" });
+    });
+});
+app.get('/api/admin/rendelesek', (req, res) => {
+    const sql = "SELECT * FROM rendeles ORDER BY datum DESC";
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+app.put('/api/admin/rendelesek/:id/statusz', (req, res) => {
+    const { statusz } = req.body;
+    db.query("UPDATE rendeles SET statusz = ? WHERE id = ?", [statusz, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: "Hiba a frissítéskor" });
+        res.json({ message: "Sikeres frissítés" });
+    });
+});
+
+app.get('/api/admin/foglalasok', (req, res) => {
+    const sql = `
+        SELECT f.*, sz.nev as szolgaltatas_nev, u.nev as user_nev, u.email as user_email 
+        FROM foglalas f 
+        LEFT JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id 
+        LEFT JOIN users u ON f.user_id = u.id 
+        ORDER BY f.foglalas_datuma DESC
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+app.put('/api/admin/foglalasok/:id/statusz', (req, res) => {
+    const { statusz } = req.body;
+    db.query("UPDATE foglalas SET statusz = ? WHERE id = ?", [statusz, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: "Hiba a frissítéskor" });
+        res.json({ message: "Sikeres frissítés" });
+    });
+})
+
+app.put('/api/admin/uzenetek/:id', (req, res) => {
+    const id = req.params.id;
+    const { nev, email, targy, uzenet } = req.body;
+    
+    const sql = "UPDATE uzenetek SET nev=?, email=?, targy=?, uzenet=? WHERE id=?";
+    db.query(sql, [nev, email, targy, uzenet, id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba módosításkor" });
+        res.json({ message: "Üzenet sikeresen frissítve!" });
+    });
+});
 
 app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));

@@ -168,7 +168,7 @@ export default function Navbar() {
     <>
       <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
         {cartItems.map((item) => (
-          <Box key={item.id} sx={{ display: 'flex', mb: 3, pb: 2, borderBottom: '1px dotted #ccc', alignItems: 'center' }}>
+            <Box key={`${item.id}-${item.kiszereles_id}`} sx={{ display: 'flex', mb: 3, pb: 2, borderBottom: '1px dotted #ccc', alignItems: 'center' }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography sx={{ fontWeight: 'bold', color: '#333' }}>{item.nev}</Typography>
               <Typography variant="body2" color="text.secondary">

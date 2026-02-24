@@ -19,7 +19,7 @@ import {
   Stack
 } from "@mui/material";
 
-// Ikonok (opcionális, de szebb tőle)
+// Ikonok
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -150,18 +150,14 @@ export default function Checkout() {
     </Container>
   );
 
-  if (!user) return <Container sx={{ mt: 8, textAlign: 'center' }}><Typography>Ellenőrzés...</Typography></Container>;
-
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <form onSubmit={handleOrder}>
         <Grid container spacing={3}>
           
-          {/* BAL OLDAL: CÍMEK */}
-          <Grid item xs={12} md={8}>
-            <Paper elevation={2} sx={{ p: 3, borderRadius: 3, mb: 3 }}>
-              
-              {/* SZÁMLÁZÁSI ADATOK FEJLÉC */}
+          {/* 1. SZÁMLÁZÁSI ADATOK (Teljes szélesség) */}
+          <Grid item xs={12}>
+            <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <ReceiptIcon sx={{ color: '#722f37', mr: 1 }} />
                 <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
@@ -199,8 +195,10 @@ export default function Checkout() {
                 </Grid>
               </Grid>
             </Paper>
+          </Grid>
 
-            {/* SZÁLLÍTÁSI ADATOK */}
+          {/* 2. SZÁLLÍTÁSI ADATOK (Teljes szélesség) */}
+          <Grid item xs={12}>
             <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <LocalShippingIcon sx={{ color: '#722f37', mr: 1 }} />
@@ -243,9 +241,9 @@ export default function Checkout() {
             </Paper>
           </Grid>
 
-          {/* JOBB OLDAL: ÖSSZESÍTŐ */}
-          <Grid item xs={12}> 
-            <Paper elevation={2} sx={{ p: 3, borderRadius: 3, mb: 3 }}>
+          {/* 3. ÖSSZESÍTŐ (Teljes szélesség) */}
+          <Grid item xs={12}>
+            <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
               <Typography variant="h6" gutterBottom sx={{color: '#722f37', fontWeight: 'bold'}}>
                 Rendelés összesítése
               </Typography>
@@ -253,8 +251,8 @@ export default function Checkout() {
               
               <Stack spacing={2} sx={{ mb: 2 }}>
                 {cartItems.map((item) => (
-                  <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                    <span style={{color: '#555'}}>{item.nev} <small>x{item.amount}</small></span>
+                  <Box key={`${item.id}-${item.kiszereles_id}`} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px' }}>
+                    <span style={{color: '#555'}}>{item.nev} <small style={{fontWeight: 'bold'}}>x{item.amount}</small></span>
                     <span style={{fontWeight: 'bold'}}>{HUF.format(item.ar * item.amount)} Ft</span>
                   </Box>
                 ))}
@@ -263,38 +261,40 @@ export default function Checkout() {
               <Divider sx={{ mb: 2 }} />
               
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6">Végösszeg:</Typography>
-                <Typography variant="h6" sx={{ color: '#722f37', fontWeight: 'bold' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Végösszeg:</Typography>
+                <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold' }}>
                   {HUF.format(totalAmount)} Ft
                 </Typography>
               </Box>
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                startIcon={<CheckCircleIcon />}
-                sx={{
-                  bgcolor: '#722f37',
-                  '&:hover': { bgcolor: '#5a252c' },
-                  py: 1.5,
-                  mb: 2,
-                  fontWeight: 'bold',
-                  borderRadius: 2
-                }}
-              >
-                Megrendelés elküldése
-              </Button>
+              {/* Gombok Stack-ben, alapértelmezett függőleges elrendezéssel */}
+              <Stack spacing={2}>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  startIcon={<CheckCircleIcon />}
+                  sx={{
+                    bgcolor: '#722f37',
+                    '&:hover': { bgcolor: '#5a252c' },
+                    py: 1.5,
+                    fontWeight: 'bold',
+                    borderRadius: 2
+                  }}
+                >
+                  Megrendelés elküldése
+                </Button>
 
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={() => navigate("/borrendeles")}
-                sx={{ color: '#555', borderColor: '#ddd', borderRadius: 2 }}
-              >
-                Vissza a vásárláshoz
-              </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<ArrowBackIcon />}
+                  onClick={() => navigate("/borrendeles")}
+                  sx={{ color: '#555', borderColor: '#ddd', borderRadius: 2 }}
+                >
+                  Vissza a vásárláshoz
+                </Button>
+              </Stack>
             </Paper>
           </Grid>
 

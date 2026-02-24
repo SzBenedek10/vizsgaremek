@@ -18,6 +18,7 @@ import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";   
 import Shipping from "./pages/Shipping.jsx";  
 import WineDetails from "./pages/WineDetails.jsx";
+import Profile from "./pages/Profile.jsx";
 
 const theme = createTheme({
   typography: {
@@ -71,7 +72,7 @@ export default function App() {
             <Route path="/adatvedelem" element={<Privacy />} />
             <Route path="/szallitas" element={<Shipping />} />
             <Route path="/borok/:id" element={<WineDetails />} />
-
+            <Route path="/profilom" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
           </Route>
 
