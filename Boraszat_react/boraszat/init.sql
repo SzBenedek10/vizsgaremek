@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mysqldb
--- Létrehozás ideje: 2026. Feb 10. 10:24
--- Kiszolgáló verziója: 8.0.45
+-- Létrehozás ideje: 2026. Feb 26. 20:04
+-- Kiszolgáló verziója: 8.0.44
 -- PHP verzió: 8.3.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -54,7 +54,8 @@ INSERT INTO `bor` (`id`, `bor_szin_id`, `nev`, `evjarat`, `ar`, `kiszereles_id`,
 (7, 2, 'Badacsonyi Cabernet Sauvignon', 2021, 4800, 1, 35, 14.00, 'Mélyvörös színű, erdei gyümölcsös jegyekkel bíró testes vörösbor.', '2026-01-27 10:50:43'),
 (8, 2, 'Badacsonyi Kékfrankos', 2022, 3400, 1, 70, 13.00, 'Fűszeres karakterű, gyümölcsös vörösbor a bazaltos lejtőkről.', '2026-01-27 10:50:43'),
 (22, 2, 'Lesencei Zsiványok', 2016, 4000, 1, 65, 12.00, 'A jó Laci betyár tiszteletére készült, az igaz zsiványoknak.', '2026-02-03 09:19:22'),
-(23, 3, 'Lecsó Lecsó', 2025, 3500, 1, 80, 15.00, 'Paprikasó, szó ami szó nekem kedvencem a lecsó.\nEgy kis eszem iszom, az a paradicsom,\na jó kedvem áztatom.', '2026-02-03 09:20:06');
+(23, 3, 'Lecsó Lecsó', 2025, 3500, 1, 80, 15.00, 'Paprikasó, szó ami szó nekem kedvencem a lecsó.\nEgy kis eszem iszom, az a paradicsom,\na jó kedvem áztatom.', '2026-02-03 09:20:06'),
+(24, 1, 'Teszt Bor', 2023, 5000, 1, 10, 0.00, 'Teszt', '2026-02-26 20:01:36');
 
 -- --------------------------------------------------------
 
@@ -84,18 +85,18 @@ INSERT INTO `bor_szin` (`id`, `nev`) VALUES
 
 CREATE TABLE `ceg_adatok` (
   `id` int NOT NULL,
-  `cim` varchar(255) COLLATE utf8mb4_hungarian_ci NOT NULL,
-  `telefon` varchar(50) COLLATE utf8mb4_hungarian_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_hungarian_ci NOT NULL,
-  `nyitvatartas` varchar(100) COLLATE utf8mb4_hungarian_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+  `cim` varchar(255) DEFAULT NULL,
+  `telefon` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `nyitvatartas` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- A tábla adatainak kiíratása `ceg_adatok`
 --
 
 INSERT INTO `ceg_adatok` (`id`, `cim`, `telefon`, `email`, `nyitvatartas`) VALUES
-(1, '8318 Lesencetomaj, Római út 12.', '+36 30 123 4567', 'info@szentepince.hu', 'Kedd - Vasárnap: 13:00 - 20:00');
+(1, '8318 Lesencetomaj, Római út 13.', '+36 30 123 4567', 'info@szentepinceszet.hu', 'H-P: 08:00 - 16:00');
 
 -- --------------------------------------------------------
 
@@ -254,7 +255,8 @@ INSERT INTO `szolgaltatas` (`id`, `nev`, `kapacitas`, `ar`, `leiras`, `aktiv`, `
 (1, 'BORKOSTOLÁS', 15, 7500, 'Prémium vörösbor kóstoló', 1, '2026-03-15', '02:00:00', 'Sajttál mellékelve'),
 (2, 'BORKOSTOLÁS', 10, 5500, 'Alapozó fehérbor válogatás', 1, '2026-03-20', '01:30:00', 'Pincevezetéssel'),
 (3, 'BORKOSTOLÁS', 20, 9500, 'Húsvéti borkülönlegességek', 1, '2026-04-05', '03:00:00', 'Ajándék pohár'),
-(7, 'BORKOSTOLÁS', 15, 5500, 'A legújabb boraink kerülnek porondra.', 1, '2026-03-12', '01:30:00', '');
+(7, 'Teszt Kóstoló', 10, 5000, 'Teszt', 1, NULL, NULL, NULL),
+(8, 'Teszt Kóstoló', 10, 5000, 'Teszt', 1, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -288,7 +290,8 @@ INSERT INTO `users` (`id`, `email`, `password_hash`, `role`, `nev`, `telefonszam
 (2, 'bencesinthavong@gmail.com', '$2b$10$oLF8hiELHvXbhrO6gWKIqO2UnwwxtWZm6KTjSLy6I6ptcg7kM02b6', 'USER', 'Sinthavong Bence', '06303216644', 'Magyarország', '8314', 'Vonyarcvashegy', 'Petőfi utca', '12', 1, '2026-01-21 21:26:54', NULL),
 (3, 'gibszjakab900@gmail.com', '$2b$10$NH239kEgofclOgUGBwsMQOQw2ikp9NHpNEq6dOic7YAdeeS1x2iSi', 'USER', 'Zongora', '06 203222', 'Magyarország', '', '', '', '', 1, '2026-01-22 09:22:42', NULL),
 (5, 'admin@gmail.com', '$2b$10$wEoWWETNHk9qGCdMN.Hu5.BjdsMTlrU/oJRQ71y2JaCUzLt.DgbQu', 'ADMIN', 'Admin', '06 2032221', 'Magyarország', '8360', 'Keszthely', 'Fő tér', '12', 1, '2026-01-27 10:13:51', NULL),
-(6, 'szikla@gmail.com', '$2b$10$Epe5ByWs8xhA/ma3lzsLwukae5lsHfYHnfVZxa/ea905FhmxW1LXG', 'USER', 'Szikla Szilárd', '06203214444', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 1, '2026-01-30 17:19:24', NULL);
+(6, 'szikla@gmail.com', '$2b$10$Epe5ByWs8xhA/ma3lzsLwukae5lsHfYHnfVZxa/ea905FhmxW1LXG', 'USER', 'Szikla Szilárd', '06203214444', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 1, '2026-01-30 17:19:24', NULL),
+(9, 'bence@gmail.com', '$2b$10$pNyYc1sUnv2emZLiOh1UBuBaA2HxMeNlL.20qg92Jf76G0ZQU/noW', 'USER', 'Sinthavong Bence', '06303216634', 'Magyarország', '8314', 'Vonyarcvashegy', 'Petőfi utca', '22', 1, '2026-02-22 20:41:07', NULL);
 
 -- --------------------------------------------------------
 
@@ -298,20 +301,20 @@ INSERT INTO `users` (`id`, `email`, `password_hash`, `role`, `nev`, `telefonszam
 
 CREATE TABLE `uzenetek` (
   `id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `nev` varchar(100) COLLATE utf8mb4_hungarian_ci NOT NULL,
-  `email` varchar(150) COLLATE utf8mb4_hungarian_ci NOT NULL,
-  `targy` varchar(200) COLLATE utf8mb4_hungarian_ci DEFAULT NULL,
-  `uzenet` text COLLATE utf8mb4_hungarian_ci NOT NULL,
-  `datum` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+  `user_id` int DEFAULT NULL,
+  `nev` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `targy` varchar(255) NOT NULL,
+  `uzenet` text NOT NULL,
+  `datum` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- A tábla adatainak kiíratása `uzenetek`
 --
 
 INSERT INTO `uzenetek` (`id`, `user_id`, `nev`, `email`, `targy`, `uzenet`, `datum`) VALUES
-(1, 5, 'Admin', 'admin@gmail.com', 'Rendelés', 'Nem jött meg a rendelésem!', '2026-02-10 09:52:53');
+(1, NULL, 'Teszt Vásárló', 'teszt@email.hu', 'Teszt Üzenet', 'Ez egy automatikusan generált próba üzenet.', '2026-02-26 20:04:03');
 
 --
 -- Indexek a kiírt táblákhoz
@@ -395,8 +398,7 @@ ALTER TABLE `users`
 -- A tábla indexei `uzenetek`
 --
 ALTER TABLE `uzenetek`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_uzenet_user` (`user_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- A kiírt táblák AUTO_INCREMENT értéke
@@ -406,7 +408,7 @@ ALTER TABLE `uzenetek`
 -- AUTO_INCREMENT a táblához `bor`
 --
 ALTER TABLE `bor`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT a táblához `bor_szin`
@@ -454,13 +456,13 @@ ALTER TABLE `rendeles_tetel`
 -- AUTO_INCREMENT a táblához `szolgaltatas`
 --
 ALTER TABLE `szolgaltatas`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT a táblához `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT a táblához `uzenetek`
@@ -504,12 +506,6 @@ ALTER TABLE `rendeles`
 ALTER TABLE `rendeles_tetel`
   ADD CONSTRAINT `rendeles_tetel_ibfk_1` FOREIGN KEY (`rendeles_id`) REFERENCES `rendeles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `rendeles_tetel_ibfk_2` FOREIGN KEY (`bor_id`) REFERENCES `bor` (`id`) ON UPDATE CASCADE;
-
---
--- Megkötések a táblához `uzenetek`
---
-ALTER TABLE `uzenetek`
-  ADD CONSTRAINT `fk_uzenet_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
