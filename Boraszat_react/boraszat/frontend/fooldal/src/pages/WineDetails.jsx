@@ -30,12 +30,11 @@ export default function WineDetails() {
   const [db, setDb] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  // --- ZENE ÁLLAPOTOK (EASTER EGG) ---
+
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [easterEggMusic, setEasterEggMusic] = useState(null); // Ez tárolja az aktuális zene elérési útját
+  const [easterEggMusic, setEasterEggMusic] = useState(null); 
 
-  // --- ADATLEKÉRÉS ---
   useEffect(() => {
     Promise.all([
       fetch("http://localhost:5000/api/borok").then(res => res.json()),
@@ -51,18 +50,18 @@ export default function WineDetails() {
           setSelectedKiszerelesId(kivalasztott.kiszereles_id);
         }
 
-        // --- MELYIK ZENÉT JÁTSSZUK LE? ---
+
         const nevLower = kivalasztott.nev.toLowerCase();
         
         if (nevLower.includes("lecsó")) {
           setEasterEggMusic("/lecso.mp3");
         } 
         else if (nevLower.includes("lesencei")) {
-          setEasterEggMusic("/lacibetyar.mp3"); // Laci betyár - Lesencei zsiványok!
+          setEasterEggMusic("/lacibetyar.mp3"); 
         } 
-        // IDE BÁRMIKOR ÍRHATSZ ÚJABB ELSE IF-ET EGY ÚJ BORHOZ!
+
         else {
-          setEasterEggMusic(null); // Normál bornál csend van
+          setEasterEggMusic(null); 
         }
       }
 
@@ -74,11 +73,11 @@ export default function WineDetails() {
     });
   }, [id]);
 
-  // --- ZENE AUTOMATIKUS INDÍTÁSA ---
+
   useEffect(() => {
     if (easterEggMusic && audioRef.current) {
-      // Csak akkor indul, ha van beállítva zene (easterEggMusic nem null)
-      audioRef.current.volume = 0.3; // 30%-os hangerő
+      
+      audioRef.current.volume = 0.3; 
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch(err => {
@@ -96,7 +95,7 @@ export default function WineDetails() {
     setIsPlaying(!isPlaying);
   };
 
-  // --- KÉP KEZELŐ ---
+
   const getWineImage = (nev) => {
     if (!nev) return "placeholder.jpg";
     const n = nev.toLowerCase();
@@ -138,10 +137,15 @@ export default function WineDetails() {
   };
 
   return (
+
+    
+          
+
+
+        
     <Box sx={{ py: 8, minHeight: '80vh', bgcolor: '#fdfbfb', position: 'relative' }}>
       
-      {/* --- ZENELEJÁTSZÓ ÉS GOMB --- */}
-      {/* Csak akkor jelenik meg, ha az easterEggMusic-ba betöltöttünk egy mp3-at */}
+
       {easterEggMusic && (
         <Box sx={{ position: 'fixed', bottom: 30, right: 30, zIndex: 9999 }}>
           <audio ref={audioRef} src={easterEggMusic} loop />
@@ -166,11 +170,25 @@ export default function WineDetails() {
         >
           Vissza a borokhoz
         </Button>
+        <Grid item xs={12} md={8} sx={{ pl: { md: 6 } }}> 
+            
+            <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', letterSpacing: 1 }}>
+              {bor.evjarat} • {bor.fajta || "Különlegesség"}
+            </Typography>
+            
+            <Typography variant="h3" sx={{ fontFamily: 'Playfair Display', fontWeight: 'bold', mb: 2, color: '#2c0e0e' }}>
+              {bor.nev}
+            </Typography>
 
+            <Typography paragraph sx={{ fontSize: '1.2rem', color: '#444', lineHeight: 1.8, mb: 5, maxWidth: '90%' }}>
+              {bor.leiras || "Ehhez a borhoz jelenleg nincs részletes leírás feltöltve. Kérjük, érdeklődjön elérhetőségeinken."}
+            </Typography>
+            </Grid>
+          <Divider sx={{ mb: 4 }} />
         <Grid container spacing={6} alignItems="flex-start">
           
-          {/* --- BAL OLDAL: INSTAGRAM STÍLUSÚ FEED --- */}
-          <Grid item xs={12} md={4}>
+          
+          <Grid item xs={12} md={6}>
             
             <Box 
               sx={{ 
@@ -192,8 +210,53 @@ export default function WineDetails() {
                 }}
               />
             </Box>
+            {/* A BOR JELLEMZŐI */}
+            <Box sx={{ mt: 6 }}>
+              <Typography variant="h5" sx={{ fontFamily: 'Playfair Display', fontWeight: 'bold', mb: 3, color: '#333', borderBottom: '2px solid #722f37', pb: 1, display: 'inline-block' }}>
+                A bor jellemzői
+              </Typography>
+              
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={6}>
+                  <Paper elevation={0} sx={{ p: 3, bgcolor: '#f5efef', borderRadius: 3, height: '100%' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#722f37', mb: 2 }}>Kóstolási jegyzetek</Typography>
+                    <Typography variant="body1" sx={{ color: '#555', lineHeight: 1.7 }}>
+                      {bor.reszletes_leiras || 
+                      "Ez a bor igazi gasztronómiai élményt nyújt. Fogyasztását 10-12°C-ra hűtve ajánljuk. Kiváló kísérője könnyed szárnyas ételeknek, halaknak, vagy akár egy kellemes baráti beszélgetésnek is. Illatában friss gyümölcsök és virágos jegyek fedezhetők fel, míg ízében a lendületes savak és a harmonikus lecsengés dominál."}
+                    </Typography>
+                  </Paper>
+                </Grid>
 
-            {/* INSTAGRAM INTERAKCIÓK */}
+                <Grid item xs={12} md={6}>
+                  <Stack spacing={2}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
+                      <Typography variant="body1" color="text.secondary">Alkoholfok</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{bor.alkoholfok ? `${bor.alkoholfok}%` : 'N/A'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
+                      <Typography variant="body1" color="text.secondary">Évjárat</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{bor.evjarat}</Typography>
+                    </Box>
+                     <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
+                      <Typography variant="body1" color="text.secondary">Készleten</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 'bold', color: bor.keszlet > 10 ? 'success.main' : 'error.main' }}>
+                        {bor.keszlet} db
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
+                      <Typography variant="body1" color="text.secondary">Ajánlott ételpárosítás</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                         {bor.bor_szin_id === 1 ? 'Halak, szárnyasok' : bor.bor_szin_id === 2 ? 'Vörös húsok, sajtok' : 'Saláták, tészták'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Box>
+
+            
+
+            
             <Box sx={{ mt: 2, px: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -248,25 +311,14 @@ export default function WineDetails() {
                 </Box>
             </Box>
           </Grid>
+          
 
-          {/* --- JOBB OLDAL: TERMÉK ADATOK --- */}
-          <Grid item xs={12} md={8} sx={{ pl: { md: 6 } }}> 
-            
-            <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', letterSpacing: 1 }}>
-              {bor.evjarat} • {bor.fajta || "Különlegesség"}
-            </Typography>
-            
-            <Typography variant="h3" sx={{ fontFamily: 'Playfair Display', fontWeight: 'bold', mb: 2, color: '#2c0e0e' }}>
-              {bor.nev}
-            </Typography>
+          
+          <Grid item xs={12} md={6}>
 
-            <Typography paragraph sx={{ fontSize: '1.2rem', color: '#444', lineHeight: 1.8, mb: 5, maxWidth: '90%' }}>
-              {bor.leiras || "Ehhez a borhoz jelenleg nincs részletes leírás feltöltve. Kérjük, érdeklődjön elérhetőségeinken."}
-            </Typography>
+           
 
-            <Divider sx={{ mb: 4 }} />
-
-            {/* VÁLASZTÓK ÉS ÁR */}
+      
             <Box sx={{ bgcolor: 'white', p: 4, borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
                 <Grid container spacing={3} alignItems="center">
                     <Grid item xs={12} sm={6}>
@@ -279,7 +331,7 @@ export default function WineDetails() {
                             >
                                 {kiszerelesek.map((k) => (
                                     <MenuItem key={k.id} value={k.id}>
-                                        {k.megnevezes} {k.szorzo > 1 ? `(x${k.szorzo})` : ''}
+                                        {k.megnevezes} 
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -323,50 +375,7 @@ export default function WineDetails() {
                 </Grid>
             </Box>
 
-            {/* A BOR JELLEMZŐI */}
-            <Box sx={{ mt: 6 }}>
-              <Typography variant="h5" sx={{ fontFamily: 'Playfair Display', fontWeight: 'bold', mb: 3, color: '#333', borderBottom: '2px solid #722f37', pb: 1, display: 'inline-block' }}>
-                A bor jellemzői
-              </Typography>
-              
-              <Grid container spacing={4}>
-                <Grid item xs={12} md={6}>
-                  <Paper elevation={0} sx={{ p: 3, bgcolor: '#f5efef', borderRadius: 3, height: '100%' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#722f37', mb: 2 }}>Kóstolási jegyzetek</Typography>
-                    <Typography variant="body1" sx={{ color: '#555', lineHeight: 1.7 }}>
-                      {bor.reszletes_leiras || 
-                      "Ez a bor igazi gasztronómiai élményt nyújt. Fogyasztását 10-12°C-ra hűtve ajánljuk. Kiváló kísérője könnyed szárnyas ételeknek, halaknak, vagy akár egy kellemes baráti beszélgetésnek is. Illatában friss gyümölcsök és virágos jegyek fedezhetők fel, míg ízében a lendületes savak és a harmonikus lecsengés dominál."}
-                    </Typography>
-                  </Paper>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <Stack spacing={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
-                      <Typography variant="body1" color="text.secondary">Alkoholfok</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{bor.alkoholfok ? `${bor.alkoholfok}%` : 'N/A'}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
-                      <Typography variant="body1" color="text.secondary">Évjárat</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{bor.evjarat}</Typography>
-                    </Box>
-                     <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
-                      <Typography variant="body1" color="text.secondary">Készleten</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold', color: bor.keszlet > 10 ? 'success.main' : 'error.main' }}>
-                        {bor.keszlet} db
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
-                      <Typography variant="body1" color="text.secondary">Ajánlott ételpárosítás</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                         {bor.bor_szin_id === 1 ? 'Halak, szárnyasok' : bor.bor_szin_id === 2 ? 'Vörös húsok, sajtok' : 'Saláták, tészták'}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-              </Grid>
-            </Box>
-
+            
           </Grid>
         </Grid>
       </Container>

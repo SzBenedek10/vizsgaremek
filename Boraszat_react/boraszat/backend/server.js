@@ -194,7 +194,7 @@ app.post("/api/rendeles", (req, res) => {
           const vasarloEmail = szamlazasi.email || 'teszt@teszt.hu'; 
 
           const mailOptions = {
-              from: '"Szente Pincészet" <A_TE_GMAIL_CIMED@gmail.com>', 
+              from: '"Szente Pincészet" <gibszjakab900@gmail.com>', 
               to: vasarloEmail, 
               subject: `Sikeres rendelés! (Azonosító: #${rendelesId})`,
               html: `
@@ -204,7 +204,7 @@ app.post("/api/rendeles", (req, res) => {
                     </div>
                     <div style="padding: 30px; background-color: #fdfbfb;">
                         <h2>Kedves ${szamlazasi.nev}!</h2>
-                        <p>Sikeresen megkaptuk a rendelésedet. <b>A mellékletben találod a hivatalos díjbekérőt PDF formátumban.</b></p>
+                        <p>Sikeresen megkaptuk a rendelésedet. <b>A mellékletben találod a hivatalos számlát PDF formátumban.</b></p>
                         <h3 style="border-bottom: 2px solid #722f37; padding-bottom: 8px; color: #2c0e0e;">Rendelés részletei (#${rendelesId})</h3>
                         <ul>${tetelekHtml}</ul>
                         <h2 style="color: #722f37;">Fizetendő végösszeg: ${new Intl.NumberFormat("hu-HU").format(vegosszeg)} Ft</h2>
@@ -215,7 +215,7 @@ app.post("/api/rendeles", (req, res) => {
               `,
               attachments: [
                   {
-                      filename: `Szente_Pinceszet_Dijbekero_${rendelesId}.pdf`,
+                      filename: `Szente_Pinceszet_Szamla_${rendelesId}.pdf`,
                       content: pdfData
                   }
               ]
@@ -235,31 +235,31 @@ app.post("/api/rendeles", (req, res) => {
 
       doc.fontSize(22).fillColor('#722f37').font('Helvetica-Bold').text('Számla', 50, 50);
       doc.fontSize(10).fillColor('#555555').font('Helvetica');
-      doc.text(`Azonosito: #${rendelesId}`, 50, 75);
-      doc.text(`Datum: ${new Date().toLocaleDateString('hu-HU')}`, 50, 90);
+      doc.text(`Azonosító: #${rendelesId}`, 50, 75);
+      doc.text(`Dátúm: ${new Date().toLocaleDateString('hu-HU')}`, 50, 90);
 
-      doc.fontSize(12).fillColor('#333333').font('Helvetica-Bold').text('Szente Pinceszet', 400, 50, { align: 'right' });
-      doc.fontSize(10).font('Helvetica').text('8318 Lesencetomaj, Romai ut 13.', 400, 65, { align: 'right' });
+      doc.fontSize(12).fillColor('#333333').font('Helvetica-Bold').text('Szente Pincészet', 400, 50, { align: 'right' });
+      doc.fontSize(10).font('Helvetica').text('8318 Lesencetomaj, Római ut 13.', 400, 65, { align: 'right' });
       doc.text('info@szentepinceszet.hu', 400, 80, { align: 'right' });
       doc.text('+36 30 123 4567', 400, 95, { align: 'right' });
 
  
       doc.moveTo(50, 120).lineTo(550, 120).lineWidth(1).strokeColor('#cccccc').stroke();
 
-      doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vasarlo adatai:', 50, 140);
+      doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 50, 140);
       doc.fontSize(10).fillColor('#333333').font('Helvetica');
-      doc.text(`Nev: ${safeText(szamlazasi.nev)}`, 50, 160);
-      doc.text(`Cim: ${safeText(szallitasi.irsz)} ${safeText(szallitasi.varos)}`, 50, 175);
+      doc.text(`Név: ${safeText(szamlazasi.nev)}`, 50, 160);
+      doc.text(`Cím: ${safeText(szallitasi.irsz)} ${safeText(szallitasi.varos)}`, 50, 175);
       doc.text(`${safeText(szallitasi.utca)} ${safeText(szallitasi.hazszam)}`, 50, 190);
 
     
       doc.moveTo(50, 220).lineTo(550, 220).strokeColor('#cccccc').stroke();
 
       doc.fontSize(10).fillColor('#722f37').font('Helvetica-Bold');
-      doc.text('Termek megnevezese', 50, 240);
-      doc.text('Mennyiseg', 300, 240, { width: 60, align: 'right' });
-      doc.text('Egysegar', 380, 240, { width: 80, align: 'right' });
-      doc.text('Osszesen', 470, 240, { width: 80, align: 'right' });
+      doc.text('Termék megnevezése', 50, 240);
+      doc.text('Mennyiség', 300, 240, { width: 60, align: 'right' });
+      doc.text('Egységár', 380, 240, { width: 80, align: 'right' });
+      doc.text('Összesen', 470, 240, { width: 80, align: 'right' });
 
    
       doc.moveTo(50, 255).lineTo(550, 255).strokeColor('#722f37').stroke();
@@ -281,14 +281,14 @@ app.post("/api/rendeles", (req, res) => {
     
       y += 10;
       doc.fontSize(14).fillColor('#722f37').font('Helvetica-Bold');
-      doc.text('Fizetendo vegossszeg:', 250, y, { width: 150, align: 'right' });
+      doc.text('Fizetendő végösszeg:', 250, y, { width: 150, align: 'right' });
       doc.text(`${new Intl.NumberFormat("hu-HU").format(vegosszeg)} Ft`, 410, y, { width: 140, align: 'right' });
 
      
       y += 60;
       doc.fontSize(10).fillColor('#888888').font('Helvetica');
-      doc.text('Fizetesi mod: Utanvet (keszpenz vagy bankkartya a futarnal)', 50, y, { align: 'center' });
-      doc.text('Koszonyjuk, hogy a mi borainkat valasztottad!', 50, y + 15, { align: 'center' });
+      doc.text('Fizetési mód: Utánvét (készpénz vagy bankkártya a futárnál)', 50, y, { align: 'center' });
+      doc.text('Köszönyjük, hogy a mi borainkat választottad!', 50, y + 15, { align: 'center' });
 
       doc.end();
       res.json({ msg: "Rendelés sikeresen rögzítve!", orderId: rendelesId });
