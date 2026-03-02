@@ -68,8 +68,6 @@ export default function Home() {
 
   return (
     <Box>
-      
-      {/* --- FŐKÉPERNYŐ (HERO SECTION) --- */}
       <Box 
         sx={{
           background: 'linear-gradient(135deg, #1a1a1a 0%, #2c0e0e 100%)',
@@ -84,8 +82,6 @@ export default function Home() {
       >
         <Container maxWidth="xl">
           <Grid container spacing={4} alignItems="center">
-            
-            {/* BAL OLDAL: SZÖVEG ÉS GOMBOK */}
             <Grid item xs={12} lg={4} sx={{ textAlign: { xs: 'center', lg: 'left' }, zIndex: 2 }}>
               <Typography variant="h2" component="h1" sx={{ fontWeight: 'bold', mb: 2, fontFamily: 'serif', letterSpacing: 1, lineHeight: 1.2 }}>
                 Üdvözlünk <br/> <span>Szente Pincéjében!</span>
@@ -132,8 +128,6 @@ export default function Home() {
                 </Button>
               </Box>
             </Grid>
-            
-            {/* JOBB OLDAL: 2 KÁRTYA */}
             <Grid item xs={12} lg={8} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 2 }}>
                 
                 <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.03)', p: {xs: 2, md: 4}, borderRadius: 4, backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -170,8 +164,6 @@ export default function Home() {
                           )}
                       </Grid>
                   </Fade>
-
-                  {/* Lapozó pöttyök */}
                   <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 1.5 }}>
                       {[0, 1, 2].map((index) => (
                           <Box 
@@ -201,8 +193,6 @@ export default function Home() {
           </Grid>
         </Container>
       </Box>
-
-      {/* --- BEMUTATKOZÁS --- */}
       <Box sx={{ bgcolor: '#fdfbfb', py: 10 }}>
         <Container maxWidth="lg">
           <Grid container spacing={8} alignItems="center">
@@ -245,20 +235,6 @@ export default function Home() {
           </Grid>
         </Container>
       </Box>
-
-      {/* --- VÉLEMÉNYEK --- */}
-      <Container maxWidth="lg" sx={{ py: 10 }}>
-        <Typography variant="h4" align="center" sx={{ color: '#722f37', fontWeight: 'bold', mb: 6, fontFamily: 'serif' }}>
-          Akik már minket választottak
-        </Typography>
-        <Grid container spacing={4}>
-          {reviews.map((review, index) => (
-            <Grid item xs={12} md={4} key={index}>
-              <ReviewCard {...review} />
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
     </Box>
   );
 }

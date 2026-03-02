@@ -18,7 +18,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   const getWineImage = (nev) => {
  
     const n = nev.toLowerCase();
-    if (n.includes("lesencei")) return "lacibetyar.jpg";
+    if (n.includes("lesencei")) return "";
     if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
     if (n.includes("lecsó")) return "lecsó.jpg";
     if (n.includes("olaszrizling")) return "rizling.jpg";

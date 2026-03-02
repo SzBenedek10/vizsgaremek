@@ -40,13 +40,8 @@ export default function Shipping() {
                 <CreditCardIcon sx={{ fontSize: 40, color: '#722f37', mr: 2 }} />
                 <Typography variant="h5" fontWeight="bold">Fizetés</Typography>
               </Box>
-              <Typography paragraph>
-                Webáruházunkban többféle fizetési mód közül választhat:
-              </Typography>
               <ul style={{ lineHeight: '1.8' }}>
-                <li><strong>Bankkártya:</strong> SimplePay rendszeren keresztül (Biztonságos).</li>
                 <li><strong>Utánvét:</strong> Fizetés a futárnál készpénzzel vagy kártyával (+300 Ft kezelési költség).</li>
-                <li><strong>Előre utalás:</strong> A rendelés visszaigazolása után küldjük a díjbekérőt.</li>
               </ul>
             </Paper>
           </Grid>

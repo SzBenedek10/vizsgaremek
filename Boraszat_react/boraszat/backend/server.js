@@ -587,6 +587,38 @@ app.put('/api/admin/foglalasok/:id/statusz', (req, res) => {
         res.json({ message: "Sikeres frissítés" });
     });
 })
+app.get('/api/borok/:id/ertekelesek', (req, res) => {
+    const borId = req.params.id;
+    const sql = `
+        SELECT e.id, e.ertekeles as rating, e.szoveg as text, 
+               DATE_FORMAT(e.datum, '%Y-%m-%d %H:%i') as date, 
+               u.nev as user
+        FROM ertekelesek e
+        JOIN users u ON e.user_id = u.id
+        WHERE e.bor_id = ?
+        ORDER BY e.datum DESC
+    `;
+    
+    db.query(sql, [borId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Hiba az értékelések lekérésekor" });
+        res.json(results);
+    });
+});
+
+
+app.post('/api/ertekelesek', (req, res) => {
+    const { bor_id, user_id, ertekeles, szoveg } = req.body;
+
+    if (!user_id) return res.status(401).json({ error: "Be kell jelentkezned a hozzászóláshoz!" });
+    if (!szoveg) return res.status(400).json({ error: "A hozzászólás nem lehet üres!" });
+
+    const sql = "INSERT INTO ertekelesek (bor_id, user_id, ertekeles, szoveg) VALUES (?, ?, ?, ?)";
+    
+    db.query(sql, [bor_id, user_id, ertekeles || 5, szoveg], (err, result) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba a mentéskor" });
+        res.json({ message: "Sikeres hozzászólás!" });
+    });
+});
 
 app.put('/api/admin/uzenetek/:id', (req, res) => {
     const id = req.params.id;
