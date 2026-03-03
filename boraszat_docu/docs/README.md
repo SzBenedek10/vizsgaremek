@@ -1,89 +1,80 @@
 ---
 slug: /
 sidebar_label: 'Bemutatkozás'
+sidebar_position: 1
 ---
 
-# 🍷 vizsgaremek
+# 🍷 Borászat Webalkalmazás - Vizsgaremek
 
-:::info Résztvevők
-Szoftverfejlesztő és tesztelő záróvizsga remeke.
-**Résztvevők:** Sinthavong Bence és Szente Benedek Rafael
+:::info Projekt adatok
+**Intézmény:** Premontrei Szakgimnázium és Technikum, Keszthely (2026)  
+**Szak:** Szoftverfejlesztő és tesztelő szak (5-0613-12-03)  
+**Készítette:** Sinthavong Bence, Szente Benedek Rafael  
 :::
 
-## 🎯 Vizsgaremek célkitűzése
+## 🎯 Motiváció és Célkitűzés
 
-A vizsgaremek célja egy borászatot bemutató és borértékesítést támogató webalkalmazás elkészítése, amely lehetőséget ad a felhasználóknak borok böngészésére, rendelés leadására, valamint borászati programokra / kóstolókra történő foglalásra.  
-Az alkalmazás felhasználóbarát felületet biztosít a vásárlóknak, és egy adminisztrációs oldalt a borászat számára a termékek és rendelések kezeléséhez.
+Választásunkat elsősorban a személyes érintettség és a helyi értékek iránti elkötelezettség vezérelte. Mindketten a Balaton-felvidék és a Badacsonyi borvidék közvetlen közelében nőttünk fel, így a szőlőművelés és a borkészítés hagyománya nem csupán egy távoli iparág, hanem a mindennapjaink részét képező kulturális örökség számunkra. 
 
----
-
-## 📋 Feladat leírása, bemutatása
-
-Az alkalmazás egy magán borászat számára készül, amelynek célja az online jelenlét erősítése és a vásárlási folyamat digitalizálása.  
-**A webalkalmazás fő funkciói:**
-
-* 📦 a borászat és a borok bemutatása (leírás, ár, kategória, évjárat, készlet)
-* 🛒 online rendelés és rendeléskezelés
-* 📅 foglalások kezelése (például borkóstoló, pincelátogatás)
-* 🔐 regisztráció/bejelentkezés, jogosultságkezelés (felhasználó vs. admin)
-* 💻 admin oldalon termékek, rendelések és foglalások kezelése
+Azt tapasztaltuk, hogy bár a Balaton környéki borászatok magas színvonalú termékekkel rendelkeznek, a kisebb, családi pincészetek gyakran láthatatlanok maradnak az online térben. Fő célkitűzésünk egy olyan komplex szoftverrendszer kifejlesztése, amely hidat képez a tradicionális borászat és a modern fogyasztó között. Egy olyan közösségi és kereskedelmi csomópontot terveztünk, ahol a helyi termelők nemcsak boraikat értékesíthetik, hanem teljes körű élménycsomagot – szállást és borkóstolást – is kínálhatnak.
 
 ---
 
-## 🚀 Tervezett vállalásaim
+## 📋 A webalkalmazás fő funkciói
+
+Az alkalmazás egy magán borászat számára készül, amelynek célja az online jelenlét erősítése és a vásárlási folyamat digitalizálása. 
+
+**Fő modulok és lehetőségek:**
+* 📦 **Kínálat bemutatása:** borok leírása, ára, kategóriája, évjárata és készletinformációk.
+* 🛒 **Webshop:** online rendelés leadása, kosár és rendeléskezelés.
+* 📅 **Élménycsomagok:** foglalások kezelése (például borkóstoló, pincelátogatás).
+* 🔐 **Biztonság:** regisztráció/bejelentkezés, jogosultságkezelés (felhasználó vs. admin).
+* 💻 **Adminisztráció:** termékek, rendelések és foglalások átlátható menedzselése a borászat számára.
+
+---
+
+## 🚀 Tervezett vállalásaink
+
+Szoftverfejlesztő és -tesztelő szakos hallgatókként kiemelt fontosságú számunkra, hogy a rendszer ne csak esztétikus, hanem technológiailag is stabil, biztonságos és skálázható legyen.
 
 ### 💻 Frontend
 
 | Kategória | Feladatok |
 | :--- | :--- |
-| **Felhasználókezelés** | regisztráció, bejelentkezés, kijelentkezés; profil adatok megtekintése / módosítása |
-| **Borok megjelenítése** | borlista szűréssel (szőlőfajta, ár, típus, évjárat); bor részletes oldal (leírás, készlet, ár) |
-| **Bor rendelés** | kosár funkció; rendelés leadása; rendelési státusz megjelenítése (pl. feldolgozás alatt, kiszállítva) |
-| **Foglalások** | elérhető időpontok megtekintése; foglalás rögzítése és lemondása; foglalások listázása a felhasználónak |
+| **Felhasználókezelés** | Regisztráció, bejelentkezés, kijelentkezés; profil adatok megtekintése / módosítása. |
+| **Borok megjelenítése** | Borlista szűréssel (szőlőfajta, ár, típus, évjárat); bor részletes oldal (leírás, készlet, ár). |
+| **Rendelés** | Kosár funkció; rendelés leadása; rendelési státusz megjelenítése (pl. feldolgozás alatt, kiszállítva). |
+| **Foglalások** | Elérhető időpontok megtekintése; foglalás rögzítése és lemondása; saját foglalások listázása. |
 
 ### ⚙️ Backend
-
-**Backend kiszolgáló kialakítása**
-* REST API végpontok a frontend kiszolgálására
-* hitelesítés és jogosultságkezelés (pl. JWT token)
-
-**Technológiai vállalás**
-* Node.js / ASP.NET alapú kiszolgáló (attól függően melyiket választod a végén)
-* naplózás és hibakezelés
+* **Kiszolgáló:** REST API végpontok a frontend kiszolgálására.
+* **Technológia:** Node.js / ASP.NET alapú kiszolgáló felépítése.
+* **Biztonság:** Hitelesítés és jogosultságkezelés (pl. JWT token segítségével).
+* **Stabilitás:** Rendszeres naplózás és megbízható hibakezelés.
 
 ---
 
 ## 📊 Adatbázistervezés
 
-A rendszerhez relációs adatbázis készül (pl. MySQL), amely tartalmazza többek között az alábbi táblákat:
+A rendszerhez egy megbízható relációs adatbázis készült, amely biztosítja az adatok következetességét és a gyors lekérdezhetőséget.
 
 :::tip Adatbázis Struktúra
-Az adatbázis sémája az alábbi főbb táblákból áll:
-* **`users`**: Felhasználói adatok, hitelesítés és szerepkörök (`role`).
-* **`bor` & `bor_szin`**: Borok adatai (évjárat, alkohol, ár) és kategóriái.
+Az adatbázis sémája 11 főbb táblából áll, többek között:
+* **`users`**: Felhasználói adatok, hitelesítés és szerepkörök.
+* **`bor` & `bor_szin`**: Borok adatai (évjárat, alkohol, ár, készlet) és kategóriái.
 * **`rendeles` & `rendeles_tetel`**: Rendelések fejléce és a hozzájuk tartozó tételek.
-* **`fizetes`**: Tranzakciók adatai és státuszai (`statusz`, `fizetesi_mod`).
-* **`szolgaltatas` & `foglalas`**: Borkóstolók, szállások adatai és a hozzájuk tartozó foglalások.
+* **`fizetes`**: Tranzakciók adatai és státuszai.
+* **`szolgaltatas` & `foglalas`**: Borkóstolók, események adatai és a hozzájuk tartozó foglalások.
 :::
-![Adatbázis séma](/img/tablak_kapcsolat.png)
 
-**Az adatbázis célja, hogy biztosítsa:**
-1.  az adatok következetességét (kulcsok, kapcsolatok)
-2.  a gyors lekérdezhetőséget (indexek, normalizálás)
-3.  a későbbi bővíthetőséget
+![Adatbázis séma](/img/adatbazis.png)
 
 
 ---
 
 ## 🧪 Tesztelés
 
-A projektben mind backend, mind frontend oldali tesztek készülnek, hogy a működés megbízható legyen.
+A projektben mind backend, mind frontend oldali tesztek készülnek, hogy a működés a felhasználók számára zökkenőmentes legyen.
 
-### 🔴 Backend tesztek
-* egységtesztek és integrációs tesztek (pl. NUNIT, ha ASP.NET; Node esetén Jest/Mocha)
-* API végpontok helyes működésének ellenőrzése
-* adatbázis műveletek tesztelése
-
-### 🔵 Frontend tesztek
-* automatizált UI tesztek **Selenium** segítségével
-* alap funkciók tesztelése: regisztráció, belépés, kosár, rendelés, foglalás
+* 🔴 **Backend tesztek:** Egységtesztek és integrációs tesztek; API végpontok és adatbázis műveletek helyes működésének ellenőrzése.
+* 🔵 **Frontend tesztek:** Automatizált UI tesztek **Selenium** segítségével; alapfunkciók (regisztráció, belépés, kosár, rendelés, foglalás) végigkattintása.
