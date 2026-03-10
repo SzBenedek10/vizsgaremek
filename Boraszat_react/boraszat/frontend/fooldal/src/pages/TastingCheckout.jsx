@@ -3,26 +3,19 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from 'sweetalert2';
 
-// UI Komponensek - Szóról szóra a Checkout.jsx-ből
+// MUI Komponensek
 import {
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-  Box,
-  FormControlLabel,
-  Checkbox,
-  Divider,
-  Stack
+  Container, Paper, Typography, TextField, Button, Grid,
+  Box, Divider, Stack, FormControlLabel, Checkbox
 } from "@mui/material";
 
 // Ikonok
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PersonIcon from '@mui/icons-material/Person';
-import EventIcon from '@mui/icons-material/Event';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CommentIcon from '@mui/icons-material/Comment';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -30,11 +23,9 @@ export default function TastingCheckout() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // A borkóstoló oldalról átadott adatok
-  const cart = location.state?.cart || [];
+  const selectedPackage = location.state?.selectedPackage;
 
-  const [useProfileData, setUseProfileData] = useState(false);
+  const [sameAsProfile, setSameAsProfile] = useState(true);
   const [formData, setFormData] = useState({
     nev: "",
     email: "",
@@ -42,185 +33,158 @@ export default function TastingCheckout() {
     megjegyzes: ""
   });
 
-  // Ellenőrzés: ha nincs bejelentkezve vagy üres a kosár, takarodjon vissza
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    } else if (cart.length === 0) {
-      navigate("/borkostolas");
-    }
-  }, [user, cart, navigate]);
+    if (!user) { navigate('/login'); return; }
+    if (!selectedPackage) { navigate("/borkostolas"); return; }
 
-  // Profil adatok betöltése - Pontosan a Checkout.jsx logikája
-  const handleCheckboxChange = (e) => {
-    const isChecked = e.target.checked;
-    setUseProfileData(isChecked);
-    if (isChecked && user) {
-      setFormData({
+    if (sameAsProfile) {
+      setFormData(prev => ({
+        ...prev,
         nev: user.nev || "",
         email: user.email || "",
-        tel: user.telefonszam || "",
-        megjegyzes: formData.megjegyzes
-      });
-    } else {
-      setFormData({ nev: "", email: "", tel: "", megjegyzes: "" });
+        tel: user.telefonszam || ""
+      }));
     }
+  }, [user, selectedPackage, navigate, sameAsProfile]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  // --- CSAK A DÁTUM MEGJELENÍTÉSE (ÓRA NÉLKÜL) ---
+  const getOnlyDate = () => {
+    const rawDate = selectedPackage?.idopont || selectedPackage?.datum;
+    if (!rawDate) return "Nincs megadva";
+    
+    const d = new Date(rawDate);
+    const ev = d.getFullYear();
+    const honapok = [
+      "január", "február", "március", "április", "május", "június",
+      "július", "augusztus", "szeptember", "október", "november", "december"
+    ];
+    const honapNev = honapok[d.getMonth()];
+    const nap = d.getDate();
+
+    // Csak az évet, hónapot és napot adjuk vissza
+    return `${ev}. ${honapNev} ${nap}.`;
   };
 
-  const totalAmount = cart.reduce((sum, item) => sum + (item.ar * item.selectedLetszam), 0);
-
-  // Beküldés
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const bookingData = {
-      user_id: user.id,
-      nev: formData.nev,
-      email: formData.email,
-      telefon: formData.tel,
+    const foglalasAdatok = {
+      userId: user.id,
+      szolgaltatasId: selectedPackage.id,
+      letszam: selectedPackage.letszam,
+      datum: selectedPackage?.idopont || selectedPackage?.datum,
+      idotartam: 120, 
+      osszeg: selectedPackage.ar * selectedPackage.letszam,
       megjegyzes: formData.megjegyzes,
-      tetelek: cart.map(item => ({
-        id: item.id,
-        letszam: item.selectedLetszam,
-        ar: item.ar
-      })),
-      total: totalAmount
+      ugyfelNev: formData.nev,
+      ugyfelEmail: formData.email,
+      ugyfelTel: formData.tel
     };
 
     try {
       const response = await fetch("http://localhost:5000/api/foglalas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
+        body: JSON.stringify(foglalasAdatok)
       });
 
       if (response.ok) {
-        Swal.fire({
-          title: 'Sikeres foglalás!',
-          text: 'Várjuk szeretettel!',
-          icon: 'success',
-          confirmButtonColor: '#722f37'
-        });
+        await Swal.fire("Siker!", "Foglalásod rögzítettük!", "success");
         navigate("/profil");
       } else {
-        throw new Error("Szerver hiba történt.");
+        const errorData = await response.json();
+        Swal.fire("Hiba", errorData.error || "Hiba történt", "error");
       }
-    } catch (err) {
-      Swal.fire('Hiba!', 'Nem sikerült elküldeni a foglalást.', 'error');
+    } catch (error) {
+      Swal.fire("Hiba", "Hálózati hiba történt", "error");
     }
   };
 
+  if (!selectedPackage || !user) return null;
+
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#722f37', fontWeight: 'bold', mb: 4 }}>
-        Foglalás adatai
-      </Typography>
-
       <form onSubmit={handleSubmit}>
         <Grid container spacing={4}>
-          
-          {/* BAL OLDAL - ADATOK */}
           <Grid item xs={12} md={7}>
-            <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <PersonIcon sx={{ color: '#722f37', mr: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Személyes adatok</Typography>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1.5 }}>
+                <PersonIcon sx={{ color: '#722f37' }} />
+                <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold' }}>Foglaló adatai</Typography>
               </Box>
 
               <FormControlLabel
-                control={<Checkbox checked={useProfileData} onChange={handleCheckboxChange} />}
-                label="Profil adatok használata"
-                sx={{ mb: 2 }}
+                control={<Checkbox checked={sameAsProfile} onChange={(e) => setSameAsProfile(e.target.checked)} sx={{ color: '#722f37', '&.Mui-checked': { color: '#722f37' } }} />}
+                label="Profiladatok használata"
+                sx={{ mb: 3 }}
               />
 
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField fullWidth label="Név" name="nev" value={formData.nev} onChange={handleInputChange} required variant="outlined" />
+              <Stack spacing={3} sx={{ mb: 5 }}>
+                <TextField label="Név" name="nev" fullWidth required value={formData.nev} onChange={handleChange} disabled={sameAsProfile} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}><TextField label="Email" name="email" fullWidth required value={formData.email} onChange={handleChange} disabled={sameAsProfile} /></Grid>
+                  <Grid item xs={12} sm={6}><TextField label="Telefon" name="tel" fullWidth required value={formData.tel} onChange={handleChange} disabled={sameAsProfile} /></Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleInputChange} required type="email" />
+              </Stack>
+
+              <Divider sx={{ mb: 4 }} />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1.5 }}>
+                <CalendarMonthIcon sx={{ color: '#722f37' }} />
+                <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold' }}>Részletek</Typography>
+              </Box>
+
+              <Grid container spacing={2} sx={{ mb: 5 }}>
+                <Grid item xs={12} sm={7}>
+                  <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #eee', height: '100%' }}>
+                    <Typography variant="caption" color="text.secondary" display="block">Választott dátum</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{getOnlyDate()}</Typography>
+                  </Box>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Telefon" name="tel" value={formData.tel} onChange={handleInputChange} required />
+                <Grid item xs={12} sm={5}>
+                  <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #eee', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <AccessTimeIcon sx={{ fontSize: '1rem', color: '#722f37' }} />
+                      <Typography variant="caption" color="text.secondary">Program hossza</Typography>
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>2 óra</Typography>
+                  </Box>
                 </Grid>
               </Grid>
-            </Paper>
 
-            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <EventIcon sx={{ color: '#722f37', mr: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Választott program</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1.5 }}>
+                <CommentIcon sx={{ color: '#722f37' }} />
+                <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold' }}>Megjegyzés</Typography>
               </Box>
-
-              {cart.map((item) => (
-                <Box key={item.id} sx={{ mb: 2, p: 2, border: '1px solid #eee', borderRadius: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">{item.nev}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Létszám: {item.selectedLetszam} fő | Ár: {HUF.format(item.ar)} Ft / fő
-                  </Typography>
-                </Box>
-              ))}
-
-              <TextField
-                fullWidth label="Megjegyzés" name="megjegyzes" multiline rows={2}
-                value={formData.megjegyzes} onChange={handleInputChange} sx={{ mt: 2 }}
-              />
+              <TextField label="Van-e bármilyen egyéb kérése?" name="megjegyzes" multiline rows={3} fullWidth value={formData.megjegyzes} onChange={handleChange} />
             </Paper>
           </Grid>
 
-          {/* JOBB OLDAL - ÖSSZEGZÉS (Checkout.jsx stílus) */}
           <Grid item xs={12} md={5}>
-            <Paper elevation={3} sx={{ p: 4, borderRadius: 3, position: 'sticky', top: 20 }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Fizetendő</Typography>
-              <Divider sx={{ mb: 3 }} />
-
-              <Stack spacing={2} sx={{ mb: 4 }}>
-                {cart.map(item => (
-                  <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body1">{item.nev}</Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {HUF.format(item.ar * item.selectedLetszam)} Ft
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-
-              <Divider sx={{ mb: 2 }} />
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Összesen:</Typography>
-                <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold' }}>
-                  {HUF.format(totalAmount)} Ft
-                </Typography>
+            <Paper elevation={4} sx={{ p: 4, borderRadius: 3, border: '1px solid #722f37', position: 'sticky', top: 20 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1.5 }}>
+                <ReceiptIcon sx={{ color: '#722f37' }} />
+                <Typography variant="h6" sx={{ color: '#722f37', fontWeight: 'bold' }}>Összegzés</Typography>
               </Box>
-
-              <Stack spacing={2}>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  startIcon={<CheckCircleIcon />}
-                  sx={{ bgcolor: '#722f37', py: 1.5, fontWeight: 'bold', borderRadius: 2 }}
-                >
-                  Foglalás véglegesítése
-                </Button>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => navigate("/borkostolas")}
-                  sx={{ color: '#555', borderColor: '#ddd' }}
-                >
-                  Módosítás
-                </Button>
+              <Stack spacing={2} sx={{ mb: 3 }}>
+                <Typography variant="h6" fontWeight="bold">{selectedPackage.nev}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography>Létszám:</Typography>
+                  <Typography fontWeight="bold">{selectedPackage.letszam} fő</Typography>
+                </Box>
+                <Divider />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 1 }}>
+                  <Typography variant="h6">Végösszeg:</Typography>
+                  <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold' }}>{HUF.format(selectedPackage.ar * selectedPackage.letszam)} Ft</Typography>
+                </Box>
               </Stack>
+              <Button type="submit" fullWidth variant="contained" startIcon={<CheckCircleIcon />} sx={{ bgcolor: '#722f37', '&:hover': { bgcolor: '#5a252c' }, py: 1.8, fontWeight: 'bold', borderRadius: 2 }}>Foglalás véglegesítése</Button>
             </Paper>
           </Grid>
-
         </Grid>
       </form>
     </Container>
