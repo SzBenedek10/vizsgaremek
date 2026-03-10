@@ -438,7 +438,7 @@ app.get('/api/szolgaltatasok', (req, res) => {
   });
 });
 
-app.post('/api/foglalas', (req, res) => {
+/*app.post('/api/foglalas', (req, res) => {
     const { userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes } = req.body;
 
     if (!userId || !szolgaltatasId || !datum) {
@@ -460,7 +460,7 @@ app.post('/api/foglalas', (req, res) => {
         }
         res.json({ message: "Sikeres foglalás!", foglalasId: result.insertId });
     });
-});
+});*/
 
 app.get('/api/foglaltsag', (req, res) => {
     const sql = `
@@ -617,6 +617,30 @@ app.post('/api/ertekelesek', (req, res) => {
     db.query(sql, [bor_id, user_id, ertekeles || 5, szoveg], (err, result) => {
         if (err) return res.status(500).json({ error: "Adatbázis hiba a mentéskor" });
         res.json({ message: "Sikeres hozzászólás!" });
+    });
+});
+app.post('/api/foglalas', (req, res) => {
+    const { userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes } = req.body;
+
+    // Alapvető validáció
+    if (!userId || !szolgaltatasId || !datum || !letszam) {
+        return res.status(400).json({ error: "Hiányzó adatok! Kérjük töltsön ki minden mezőt." });
+    }
+
+    const sql = `
+        INSERT INTO foglalas 
+        (user_id, szolgaltatas_id, letszam, datum, idotartam, osszeg, statusz, megjegyzes, foglalas_datuma) 
+        VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, NOW())
+    `;
+
+    const values = [userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Hiba a foglalás mentésekor:", err);
+            return res.status(500).json({ error: "Adatbázis hiba történt a mentés során." });
+        }
+        res.json({ message: "Sikeres foglalás!", foglalasId: result.insertId });
     });
 });
 
