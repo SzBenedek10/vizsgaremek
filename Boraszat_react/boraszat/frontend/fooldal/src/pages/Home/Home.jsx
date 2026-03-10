@@ -84,7 +84,7 @@ export default function Home() {
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} lg={4} sx={{ textAlign: { xs: 'center', lg: 'left' }, zIndex: 2 }}>
               <Typography variant="h2" component="h1" sx={{ fontWeight: 'bold', mb: 2, fontFamily: 'serif', letterSpacing: 1, lineHeight: 1.2 }}>
-                Üdvözlünk <br/> <span>Szente Pincéjében!</span>
+                Üdvözlünk <br/> <span>A Szente Pincészetben!</span>
               </Typography>
               <Typography variant="h5" sx={{ mb: 4, fontWeight: 300, opacity: 0.9, maxWidth: '600px', mx: { xs: 'auto', lg: 0 } }}>
                 Ahol a családi hagyomány találkozik a modern borkészítéssel.

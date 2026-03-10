@@ -1,14 +1,16 @@
 import React, { useContext } from 'react';
 import { Container, Box, Typography, TextField, Button, Paper } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { AuthContext } from '../context/AuthContext'; //
-import Swal from 'sweetalert2'; // Importáld a SweetAlert2-t!
+import { AuthContext } from '../context/AuthContext'; 
+import Swal from 'sweetalert2'; 
 
 export default function SignInSide() {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext); //
+  const location = useLocation(); 
+  const from = location.state?.from || '/'; 
+  const { login } = useContext(AuthContext); 
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -37,7 +39,7 @@ export default function SignInSide() {
     if (res.data.user.role === 'ADMIN') {
         navigate('/admin'); // Ha admin, irány a dashboard
     } else {
-        navigate('/'); // Ha sima user, irány a főoldal
+        navigate(from); // Ha sima user, irány a főoldal
     }
   });
 

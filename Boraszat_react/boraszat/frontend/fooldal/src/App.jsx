@@ -1,6 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from "react-router-dom";
-// FONTOS: Ezeket importáld a @mui/material-ból:
+import { Routes, Route, Navigate,} from "react-router-dom";
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 
 import MainLayout from "./MainLayout.jsx";

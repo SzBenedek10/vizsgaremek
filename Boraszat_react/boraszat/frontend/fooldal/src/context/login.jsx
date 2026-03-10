@@ -1,13 +1,18 @@
 import { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // 1. useLocation hozzáadása
 import axios from 'axios';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { login } = useContext(AuthContext);
+    
     const navigate = useNavigate();
+    const location = useLocation(); // 2. location lekérése
+
+    // 3. Megnézzük, honnan jött a felhasználó. Ha nem jött sehonnan, akkor alapértelmezetten a főoldalra ('/') küldjük.
+    const from = location.state?.from || '/';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,7 +24,9 @@ const Login = () => {
             
             login(res.data.token, res.data.user); 
             alert("Üdvözlünk bent!");
-            navigate('/'); 
+            
+            // 4. A '/' helyett a 'from' változóba irányítjuk át!
+            navigate(from); 
         } catch (err) {
             alert(err.response?.data?.error || "Hiba történt");
         }
@@ -33,3 +40,5 @@ const Login = () => {
         </form>
     );
 };
+
+export default Login;
