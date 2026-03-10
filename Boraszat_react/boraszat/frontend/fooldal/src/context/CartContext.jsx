@@ -13,10 +13,10 @@ export const useCart = () => useContext(CartContext);
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const savedCart = localStorage.getItem("boraszat_cart");
+      const savedCart = sessionStorage.getItem("boraszat_cart");
       return savedCart ? JSON.parse(savedCart) : [];
     } catch (err) {
-      console.error("LocalStorage hiba:", err);
+      console.error("SessionStorage hiba:", err);
       return [];
     }
   });
@@ -28,7 +28,7 @@ export const CartProvider = ({ children }) => {
       isHydrated.current = true;
       return;
     }
-    localStorage.setItem("boraszat_cart", JSON.stringify(cartItems));
+    sessionStorage.setItem("boraszat_cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
   const addToCart = (product, amount) => {
@@ -65,7 +65,7 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => {
     setCartItems([]);
-    localStorage.removeItem("boraszat_cart");
+    sessionStorage.removeItem("boraszat_cart");
   };
 
   const totalAmount = cartItems.reduce(

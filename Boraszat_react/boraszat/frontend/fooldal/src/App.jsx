@@ -12,12 +12,13 @@ import { AuthProvider } from "./context/AuthContext";
 import Checkout from './pages/Checkout';
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import TastingCheckout from "./pages/TastingCheckout.jsx"; 
-import Contact  from "./pages/contact.jsx";
+import Contact  from "./pages/Contact.jsx";
 import Terms from "./pages/Terms.jsx";       
 import Privacy from "./pages/Privacy.jsx";   
 import Shipping from "./pages/Shipping.jsx";  
 import WineDetails from "./pages/WineDetails.jsx";
 import Profile from "./pages/Profile.jsx";
+import About from './pages/About';
 
 const theme = createTheme({
   typography: {
@@ -52,6 +53,7 @@ const theme = createTheme({
 export default function App() {
   return (
    
+   
     <ThemeProvider theme={theme}>
       <CssBaseline />
       
@@ -61,6 +63,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/borrendeles" element={<BorRendeles />} />
             <Route path="/borkostolas" element={<BorKostolas />} />
+            <Route path="/about" element={<About />} />
             <Route path="/login" element={<SignInSide />} />
             <Route path="/signup" element={<SignUpSide />} />
             <Route path="/checkout" element={<Checkout />} /> 

@@ -9,14 +9,12 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      # Ha FEJLESZTÉS alatt állandóan frissíteni akarod az adatokat, 
-      # érdemes lehet kivenni a db_data-t, vagy mindig down -v-vel indítani.
       - db_data:/var/lib/mysql 
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    # Fontos: Adjunk neki egy kis időt az induláshoz
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root"]
+      interval: 5s
+      timeout: 5s
       retries: 10
 
   phpmyadmin:
@@ -31,7 +29,7 @@ services:
       PMA_ARBITRARY: 1
     depends_on:
       mysqldb:
-        condition: service_healthy # Megvárja, amíg a MySQL tényleg kész van
+        condition: service_healthy
 
   api:
     build: ./backend
@@ -44,7 +42,6 @@ services:
       DB_NAME: boraszat
     depends_on:
       - mysqldb
-    # ÚJ: Ez teszi lehetővé, hogy a server.js módosítása azonnal hasson
     command: node server.js
     volumes:
       - ./backend:/usr/src/app
@@ -58,7 +55,6 @@ services:
     tty: true
     depends_on:
       - api
-    # ÚJ: Ez teszi lehetővé, hogy a React fájlok módosítása azonnal látsszon a böngészőben
     volumes:
       - ./frontend/fooldal:/usr/src/app
       - /usr/src/app/node_modules

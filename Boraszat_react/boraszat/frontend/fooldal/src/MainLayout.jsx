@@ -5,6 +5,8 @@ import Footer from './components/footer'; // Feltételezem, a footer maradt a co
 
 export default function MainLayout() {
   return (
+
+    
     <Box sx={{ 
       display: 'flex', 
       flexDirection: 'column', 

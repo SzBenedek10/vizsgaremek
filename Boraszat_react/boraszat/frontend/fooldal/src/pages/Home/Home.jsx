@@ -223,7 +223,7 @@ export default function Home() {
               </Typography>
               <Button 
                 variant="outlined" 
-                onClick={() => navigate('/bortura')}
+                onClick={() => navigate('/about')}
                 sx={{ 
                   color: '#722f37', borderColor: '#722f37', borderRadius: '30px', px: 4, py: 1, fontWeight: 'bold', textTransform: 'none',
                   '&:hover': { bgcolor: '#722f37', color: 'white', borderColor: '#722f37' }

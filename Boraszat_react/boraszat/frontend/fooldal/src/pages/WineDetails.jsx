@@ -155,7 +155,7 @@ export default function WineDetails() {
   const handleAddReview = async () => {
     if (newReviewText.trim() === '') return;
 
-    const storedUser = localStorage.getItem('user');
+    const storedUser = sessionStorage.getItem('user');
     if (!storedUser) {
         alert("Kérjük, jelentkezz be a hozzászóláshoz!");
         return;
@@ -409,8 +409,8 @@ export default function WineDetails() {
                 )}
             </Box>
 
-            {/* HOZZÁSZÓLÁS MEZŐ */}
-            {localStorage.getItem('user') ? (
+            
+            {sessionStorage.getItem('user') ? (
                 <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid #efefef' }}>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ml: 1 }}>
