@@ -221,9 +221,7 @@ export default function About() {
           sx={{ maxHeight: '90vh', maxWidth: '90vw', objectFit: 'contain', boxShadow: '0 0 50px rgba(0,0,0,0.5)' }}
         />
         
-        <Typography sx={{ position: 'absolute', bottom: 40, color: 'white', fontFamily: 'Playfair Display', fontSize: '1.5rem', letterSpacing: 2 }}>
-           {dynamicGalleryImages[currentImageIndex]?.title}
-        </Typography>
+       
 
       </Dialog>
     </Box>

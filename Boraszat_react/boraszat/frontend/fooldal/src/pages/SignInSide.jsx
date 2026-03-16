@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext'; 
 import Swal from 'sweetalert2'; 
+import { Axios } from 'axios';
 
 export default function SignInSide() {
   const navigate = useNavigate();

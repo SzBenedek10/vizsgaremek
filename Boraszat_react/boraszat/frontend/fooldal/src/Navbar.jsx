@@ -42,14 +42,13 @@ export default function Navbar() {
       if (storedUser && loginTime) {
         const currentTime = new Date().getTime();
         
-        // TESZT: Most 10 másodperc (10 * 1000). Élesben írd át: 60 * 60 * 1000 (1 óra)
-        const idokorlat = 10 * 1000; 
+        const idokorlat = 60 * 60 * 1000; 
 
         if (currentTime - parseInt(loginTime) > idokorlat) {
           sessionStorage.removeItem('user');
           sessionStorage.removeItem('loginTime');
           sessionStorage.removeItem('token');
-          setLogoutDialogOpen(true); // <--- CSÚNYA ALERT HELYETT GYÖNYÖRŰ ABLAK MEGYITÁSA
+          setLogoutDialogOpen(true); 
         }
       }
     };
