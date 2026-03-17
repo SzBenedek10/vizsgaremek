@@ -46,40 +46,93 @@ export default function BorKostolas() {
     <div className="shopPageWrap">
       <div className="shopContainer">
         <section className="cartSection">
-          <div className="cartCard">
-            <h2>Kiválasztott program</h2>
+          <div className="cartCard" style={{ padding: '25px', borderRadius: '15px' }}>
+            <h2 style={{ fontSize: '1.6rem', marginBottom: '25px', fontWeight: '600' }}>
+              Kiválasztott program
+            </h2>
+
             {!valasztott ? (
-              <p className="emptyCartMsg">Válasszon a kóstolók közül!</p>
+              <p className="emptyCartMsg" style={{ textAlign: 'center', color: '#888', padding: '20px 0' }}>
+                Válasszon a kóstolók közül!
+              </p>
             ) : (
-              <ul className="cartList">
-                <li className="cartItem" style={{flexDirection:'column', alignItems:'flex-start'}}>
-                  <strong>{valasztott.nev}</strong>
-                  <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'10px'}}>
-                    <button onClick={() => updateLetszam(valasztott.letszam - 1)}>-</button>
-                    <span>{valasztott.letszam} fő</span>
-                    <button onClick={() => updateLetszam(valasztott.letszam + 1)}>+</button>
+              <div className="cartList">
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ 
+                    fontSize: '1.1rem', 
+                    margin: '0 0 15px 0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1px',
+                    color: '#333'
+                  }}>
+                    {valasztott.nev}
+                  </h3>
+
+                  {/* Létszámválasztó kontrollerek */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      border: '1px solid #ddd', 
+                      borderRadius: '6px',
+                      backgroundColor: '#fff'
+                    }}>
+                      <button 
+                        onClick={() => updateLetszam(valasztott.letszam - 1)}
+                        style={{ width: '35px', height: '35px', border: 'none', background: '#f8f8f8', cursor: 'pointer', fontSize: '1.2rem' }}
+                      >-</button>
+                      <span style={{ padding: '0 15px', fontWeight: '500', minWidth: '45px', textAlign: 'center' }}>
+                        {valasztott.letszam} fő
+                      </span>
+                      <button 
+                        onClick={() => updateLetszam(valasztott.letszam + 1)}
+                        style={{ width: '35px', height: '35px', border: 'none', background: '#f8f8f8', cursor: 'pointer', fontSize: '1.2rem' }}
+                      >+</button>
+                    </div>
                   </div>
-                  <small style={{color:'red', marginTop:'5px'}}>
+
+                  <p style={{ color: '#e63946', fontSize: '0.9rem', marginTop: '12px', fontWeight: '500' }}>
                     Még {valasztott.kapacitas - (foglaltsag[valasztott.id] || 0)} szabad hely
-                  </small>
-                </li>
-                <li className="totalPrice">
-                  Összesen: {HUF.format(valasztott.ar * valasztott.letszam)} Ft
-                </li>
+                  </p>
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '700' }}>Összesen:</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: '800', color: '#722f37' }}>
+                    {HUF.format(valasztott.ar * valasztott.letszam)} Ft
+                  </span>
+                </div>
+
                 <button 
                   className="checkoutBtn"
-                  style={{marginTop:'20px', width:'100%', padding:'12px', backgroundColor:'#722f37', color:'white', border:'none', borderRadius:'5px', cursor:'pointer'}}
+                  style={{
+                    width: '100%', 
+                    padding: '14px', 
+                    backgroundColor: '#722f37', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px', 
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '1.05rem',
+                    boxShadow: '0 4px 10px rgba(114, 47, 55, 0.2)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#5a252c'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#722f37'}
                   onClick={() => navigate("/kostolo-foglalas", { state: { selectedPackage: valasztott } })}
                 >
                   Tovább a foglaláshoz
                 </button>
-              </ul>
+              </div>
             )}
           </div>
         </section>
 
         <section className="wineSelection">
-          <div className="wineGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+          <div className="wineGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '25px' }}>
             {csomagok.map((csomag) => (
               <TastingCard 
                 key={csomag.id} 
