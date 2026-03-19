@@ -18,7 +18,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   const getWineImage = (nev) => {
  
     const n = nev.toLowerCase();
-    if (n.includes("lesencei")) return "";
+    if (n.includes("lesencei")) return "lacibetyar.jpg";
     if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
     if (n.includes("lecsó")) return "lecsó.jpg";
     if (n.includes("olaszrizling")) return "rizling.jpg";
@@ -61,7 +61,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   return (
     <Card 
       sx={{ 
-        height: '100%', display: 'flex', flexDirection: 'column', 
+        height: '100%', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         borderRadius: 3, transition: '0.3s',
         '&:hover': { transform: 'translateY(-5px)', boxShadow: '0 8px 20px rgba(114, 47, 55, 0.2)' },
         position: 'relative'
@@ -86,64 +86,79 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
         )}
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <Typography 
-            variant="h6" 
-            onClick={goToDetails}
-            sx={{ 
-                color: '#722f37', 
-                fontWeight: 'bold', 
-                lineHeight: 1.2, 
-                mb: 0.5, 
-                cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' } 
-            }}
-        >
-          {bor.nev}
-        </Typography>
-
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 'bold' }}>
-           Évjárat: {bor.evjarat}
-        </Typography>
+      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 3 }}>
         
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, flexGrow: 1 }}>
-          {bor.leiras}
-        </Typography>
+        {/* FELSŐ RÉSZ: Információk */}
+        <Box>
+          <Typography 
+              variant="h6" 
+              onClick={goToDetails}
+              sx={{ 
+                  color: '#722f37', 
+                  fontWeight: 'bold', 
+                  lineHeight: 1.2, 
+                  mb: 1, 
+                  cursor: 'pointer',
+                  '&:hover': { textDecoration: 'underline' },
+                  wordBreak: 'break-word'
+              }}
+          >
+            {bor.nev}
+          </Typography>
 
-        {/* ... A TÖBBI RÉSZ (Dropdown, Gombok) MARAD VÁLTOZATLAN ... */}
-        <FormControl fullWidth size="small" sx={{ mb: 2, mt: 'auto' }}>
-            <InputLabel>Kiszerelés</InputLabel>
-            <Select
-                value={selectedKiszerelesId}
-                label="Kiszerelés"
-                onChange={(e) => setSelectedKiszerelesId(e.target.value)}
-            >
-                {kiszerelesek.map((k) => (
-                    <MenuItem key={k.id} value={k.id}>
-                        {k.megnevezes}
-                    </MenuItem>
-                ))}
-            </Select>
-        </FormControl>
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+             Évjárat: {bor.evjarat}
+          </Typography>
+          
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              minHeight: '4.5em', // Fix magasság kb. 3 sornak, hogy egységes legyen
+              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis',
+              mb: 2
+            }}
+          >
+            {bor.leiras}
+          </Typography>
+        </Box>
 
-        <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mb: 2 }}>
-          {HUF.format(vegsoAr)} Ft
-        </Typography>
-
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <FormControl size="small" sx={{ minWidth: 80 }}>
-            <InputLabel>Db</InputLabel>
-            <Select value={db} label="Db" onChange={(e) => setDb(Number(e.target.value))}>
-              {[1, 2, 3, 4, 5, 6, 12].map((n) => <MenuItem key={n} value={n}>{n} db</MenuItem>)}
-            </Select>
+        {/* ALSÓ RÉSZ: Interakciók (Alulra igazítva) */}
+        <Box sx={{ mt: 'auto' }}>
+          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+              <InputLabel>Kiszerelés</InputLabel>
+              <Select
+                  value={selectedKiszerelesId}
+                  label="Kiszerelés"
+                  onChange={(e) => setSelectedKiszerelesId(e.target.value)}
+              >
+                  {kiszerelesek.map((k) => (
+                      <MenuItem key={k.id} value={k.id}>
+                          {k.megnevezes}
+                      </MenuItem>
+                  ))}
+              </Select>
           </FormControl>
 
-          <Button 
-            variant="contained" fullWidth startIcon={<ShoppingCartIcon />} onClick={handleAddToCart}
-            sx={{ bgcolor: '#722f37', '&:hover': { bgcolor: '#5a252c' }, fontWeight: 'bold' }}
-          >
-            Kosárba
-          </Button>
+          <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mb: 2 }}>
+            {HUF.format(vegsoAr)} Ft
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <FormControl size="small" sx={{ minWidth: 80 }}>
+              <InputLabel>Db</InputLabel>
+              <Select value={db} label="Db" onChange={(e) => setDb(Number(e.target.value))}>
+                {[1, 2, 3, 4, 5, 6, 12].map((n) => <MenuItem key={n} value={n}>{n} db</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            <Button 
+              variant="contained" fullWidth startIcon={<ShoppingCartIcon />} onClick={handleAddToCart}
+              sx={{ bgcolor: '#722f37', '&:hover': { bgcolor: '#5a252c' }, fontWeight: 'bold' }}
+            >
+              Kosárba
+            </Button>
+          </Box>
         </Box>
       </CardContent>
     </Card>
