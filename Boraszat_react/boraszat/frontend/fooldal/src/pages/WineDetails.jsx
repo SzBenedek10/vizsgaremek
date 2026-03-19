@@ -19,7 +19,7 @@ export default function WineDetails() {
   const { id } = useParams(); 
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useCart();
+  const { addToCart, setIsCartOpen } = useCart();
   
   const [bor, setBor] = useState(null);
   const [kiszerelesek, setKiszerelesek] = useState([]);
@@ -210,6 +210,8 @@ export default function WineDetails() {
         kiszereles_id: selectedKiszerelesId
     };
     addToCart(tetel, db);
+
+    setIsCartOpen(true);
   };
 
   return (

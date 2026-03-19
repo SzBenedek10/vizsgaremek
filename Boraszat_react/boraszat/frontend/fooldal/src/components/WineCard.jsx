@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, CardContent, CardMedia, Typography, Button, Box, 
-  Select, MenuItem, FormControl, InputLabel, Chip 
-} from '@mui/material';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom'; 
+import './Wine.css'; // Ne felejtsd el beimportálni a CSS fájlt!
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -16,7 +13,6 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
   const navigate = useNavigate(); 
 
   const getWineImage = (nev) => {
- 
     const n = nev.toLowerCase();
     if (n.includes("lesencei")) return "lacibetyar.jpg";
     if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
@@ -37,7 +33,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
     }
   }, [bor.kiszereles_id]);
 
-  const aktualisKiszereles = kiszerelesek.find(k => k.id === selectedKiszerelesId) 
+  const aktualisKiszereles = kiszerelesek.find(k => k.id === Number(selectedKiszerelesId)) 
                               || { id: 1, megnevezes: '0.75L Palack', szorzo: 1 };
   const vegsoAr = Math.round(bor.ar * aktualisKiszereles.szorzo);
 
@@ -51,116 +47,57 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
         kiszereles_id: selectedKiszerelesId
     };
     addToCart(tetel, db);
+    if (onAddToCart) {
+      onAddToCart();
+    }
+  
   };
-
 
   const goToDetails = () => {
     navigate(`/borok/${bor.id}`);
   };
 
   return (
-    <Card 
-      sx={{ 
-        height: '100%', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        borderRadius: 3, transition: '0.3s',
-        '&:hover': { transform: 'translateY(-5px)', boxShadow: '0 8px 20px rgba(114, 47, 55, 0.2)' },
-        position: 'relative'
-      }}
-    >
- 
-      <Box sx={{ position: 'relative', cursor: 'pointer' }} onClick={goToDetails}>
-        <CardMedia
-          component="img"
-          height="250"
-          image={`/images/${getWineImage(bor.nev)}`}
-          alt={bor.nev}
+    <div className="wine-card">
+      {/* FIX 250px magas képtartó */}
+      <div className="wine-image-container" onClick={goToDetails}>
+        <img 
+          src={`/images/${getWineImage(bor.nev)}`} 
+          alt={bor.nev} 
           onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }}
-          sx={{ objectFit: 'cover' }}
         />
         {aktualisKiszereles.szorzo > 1 && (
-          <Chip 
-            label={aktualisKiszereles.megnevezes} 
-            color="secondary" size="small"
-            sx={{ position: 'absolute', top: 10, right: 10, bgcolor: '#722f37', fontWeight: 'bold' }} 
-          />
+          <span className="wine-chip">{aktualisKiszereles.megnevezes}</span>
         )}
-      </Box>
+      </div>
 
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 3 }}>
+      {/* Kártya tartalma - flex-grow-val nyúlik */}
+      <div className="wine-content">
         
-        {/* FELSŐ RÉSZ: Információk */}
-        <Box>
-          <Typography 
-              variant="h6" 
-              onClick={goToDetails}
-              sx={{ 
-                  color: '#722f37', 
-                  fontWeight: 'bold', 
-                  lineHeight: 1.2, 
-                  mb: 1, 
-                  cursor: 'pointer',
-                  '&:hover': { textDecoration: 'underline' },
-                  wordBreak: 'break-word'
-              }}
-          >
-            {bor.nev}
-          </Typography>
-
-          <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+        {/* Szöveges rész, ez foglalja el a maradék helyet */}
+        <div className="wine-info">
+          <h3 className="wine-title" onClick={goToDetails}>{bor.nev}</h3>
+          <p style={{ fontWeight: 'bold', color: '#555', margin: '0 0 10px 0', fontSize: '0.9rem' }}>
              Évjárat: {bor.evjarat}
-          </Typography>
+          </p>
+          <p className="wine-desc">{bor.leiras}</p>
+        </div>
+
+        {/* Gombok és ár - a "margin-top: auto" mindig legalulra nyomja */}
+        <div className="wine-actions">
           
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            sx={{ 
-              minHeight: '4.5em', // Fix magasság kb. 3 sornak, hogy egységes legyen
-              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis',
-              mb: 2
-            }}
-          >
-            {bor.leiras}
-          </Typography>
-        </Box>
+         
+          
 
-        {/* ALSÓ RÉSZ: Interakciók (Alulra igazítva) */}
-        <Box sx={{ mt: 'auto' }}>
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-              <InputLabel>Kiszerelés</InputLabel>
-              <Select
-                  value={selectedKiszerelesId}
-                  label="Kiszerelés"
-                  onChange={(e) => setSelectedKiszerelesId(e.target.value)}
-              >
-                  {kiszerelesek.map((k) => (
-                      <MenuItem key={k.id} value={k.id}>
-                          {k.megnevezes}
-                      </MenuItem>
-                  ))}
-              </Select>
-          </FormControl>
+          <div className="wine-price">{HUF.format(vegsoAr)} Ft</div>
 
-          <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mb: 2 }}>
-            {HUF.format(vegsoAr)} Ft
-          </Typography>
+        
 
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <FormControl size="small" sx={{ minWidth: 80 }}>
-              <InputLabel>Db</InputLabel>
-              <Select value={db} label="Db" onChange={(e) => setDb(Number(e.target.value))}>
-                {[1, 2, 3, 4, 5, 6, 12].map((n) => <MenuItem key={n} value={n}>{n} db</MenuItem>)}
-              </Select>
-            </FormControl>
+            
+          </div>
+        </div>
 
-            <Button 
-              variant="contained" fullWidth startIcon={<ShoppingCartIcon />} onClick={handleAddToCart}
-              sx={{ bgcolor: '#722f37', '&:hover': { bgcolor: '#5a252c' }, fontWeight: 'bold' }}
-            >
-              Kosárba
-            </Button>
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
+      </div>
+    
   );
 }

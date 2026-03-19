@@ -5,22 +5,31 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   AppBar, Toolbar, Button, Box, IconButton, 
   Avatar, Menu, MenuItem, Tooltip, Badge, Typography, Drawer, List, ListItem, ListItemText,
-  Dialog, DialogTitle, DialogContent, DialogActions // <-- ÚJ IMPORTOK AZ ELEGÁNS ABLAKHOZ
+  Dialog, DialogTitle, DialogContent, DialogActions 
 } from '@mui/material';
+
+// IKONOK
 import MenuIcon from '@mui/icons-material/Menu';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import WineBarIcon from '@mui/icons-material/WineBar';
+// ÚJ IKONOK A KOSÁRHOZ:
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+
+// Pénz formázó
+const HUF = new Intl.NumberFormat("hu-HU");
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
-  const { cartItems } = useCart(); 
+  
+  // BEKÉRTÜK AZ addToCart és removeFromCart FÜGGVÉNYEKET IS!
+  const { cartItems, isCartOpen, setIsCartOpen, addToCart, removeFromCart } = useCart(); 
+  
   const navigate = useNavigate();
   const location = useLocation();
-  const [cartOpen, setCartOpen] = useState(false);
 
-  // ÚJ: Állapot az elegáns kijelentkezés ablakhoz
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-
   const cartItemCount = cartItems ? cartItems.reduce((total, item) => total + item.amount, 0) : 0;
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -33,7 +42,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // BIZTONSÁGI ŐR
   useEffect(() => {
     const checkSession = () => {
       const storedUser = sessionStorage.getItem('user');
@@ -41,7 +49,6 @@ export default function Navbar() {
 
       if (storedUser && loginTime) {
         const currentTime = new Date().getTime();
-        
         const idokorlat = 60 * 60 * 1000; 
 
         if (currentTime - parseInt(loginTime) > idokorlat) {
@@ -69,10 +76,9 @@ export default function Navbar() {
     navigate('/');
   };
 
-  // Amikor rákattint a felugró ablak "Újra bejelentkezem" gombjára
   const handleDialogClose = () => {
     setLogoutDialogOpen(false);
-    logout(); // Biztonság kedvéért a Context-ből is kiléptetjük
+    logout(); 
     navigate('/login');
   };
 
@@ -124,7 +130,8 @@ export default function Navbar() {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={() => setCartOpen(true)} sx={{ color: '#722f37', mr: 1 }}>
+            
+            <IconButton onClick={() => setIsCartOpen(true)} sx={{ color: '#722f37', mr: 1 }}>
               <Badge badgeContent={cartItemCount} sx={{ '& .MuiBadge-badge': { backgroundColor: '#722f37', color: 'white' } }}>
                 <ShoppingCartIcon />
               </Badge>
@@ -177,65 +184,108 @@ export default function Navbar() {
         </List>
       </Drawer>
 
-      {/* KOSÁR OLDALSÓ PANEL */}
+      {/* KOSÁR OLDALSÓ PANEL (FRISSÍTVE GOMBOKKAL) */}
       <Drawer 
         anchor="right" 
-        open={cartOpen} 
-        onClose={() => setCartOpen(false)}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 400 }, p: 3, bgcolor: '#fdfbfb' } }}
-      >
-        <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mb: 3, fontFamily: 'serif', borderBottom: '1px solid #ddd', pb: 2 }}>
-          Kosár tartalma
-        </Typography>
+        open={isCartOpen} 
+        onClose={() => setIsCartOpen(false)}
+      > 
+        <Box sx={{ width: { xs: '100vw', sm: 400 }, p: 3, bgcolor: '#fdfbfb', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold', mb: 3, fontFamily: 'serif', borderBottom: '1px solid #ddd', pb: 2 }}>
+            Kosár tartalma
+          </Typography>
 
-        {cartItems.length === 0 ? (
-          <Box sx={{ textAlign: 'center', mt: 10 }}>
-            <Typography color="text.secondary">A kosarad jelenleg üres.</Typography>
-            <Button onClick={() => {setCartOpen(false); navigate('/borrendeles');}} sx={{ mt: 2, color: '#722f37' }}>
-              Irány a webshop
-            </Button>
-          </Box>
-        ) : (
-          <>
-            <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-              {cartItems.map((item) => (
-                  <Box key={`${item.id}-${item.kiszereles_id}`} sx={{ display: 'flex', mb: 3, pb: 2, borderBottom: '1px dotted #ccc', alignItems: 'center' }}>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography sx={{ fontWeight: 'bold', color: '#333' }}>{item.nev}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.amount} x {item.ar} Ft
-                    </Typography>
-                  </Box>
-                  <Typography sx={{ fontWeight: 'bold', color: '#722f37' }}>
-                    {item.amount * item.ar} Ft
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-
-            <Box sx={{ pt: 3, borderTop: '2px solid #722f37' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6">Összesen:</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#722f37' }}>
-                  {cartItems.reduce((sum, item) => sum + (item.ar * item.amount), 0)} Ft
-                </Typography>
-              </Box>
-              <Button 
-                fullWidth 
-                variant="contained" 
-                onClick={() => {setCartOpen(false); navigate('/Checkout');}}
-                sx={{ bgcolor: '#722f37', py: 1.5, borderRadius: '30px', fontWeight: 'bold', '&:hover': { bgcolor: '#5a252c' } }}
-              >
-                Tovább a pénztárhoz
+          {cartItems.length === 0 ? (
+            <Box sx={{ textAlign: 'center', mt: 10 }}>
+              <Typography color="text.secondary">A kosarad jelenleg üres.</Typography>
+              <Button onClick={() => { setIsCartOpen(false); navigate('/borrendeles'); }} sx={{ mt: 2, color: '#722f37' }}>
+                Irány a webshop
               </Button>
             </Box>
-          </>
-        )}
+          ) : (
+            <>
+              <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+                {cartItems.map((item) => (
+                    <Box key={`${item.id}-${item.kiszereles_id}`} sx={{ display: 'flex', mb: 3, pb: 2, borderBottom: '1px dotted #ccc', alignItems: 'center' }}>
+                    
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography sx={{ fontWeight: 'bold', color: '#333' }}>{item.nev}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {item.kiszereles_nev || 'Palack'} • {HUF.format(item.ar)} Ft/db
+                      </Typography>
+
+                      {/* MENNYISÉG SZABÁLYOZÓ GOMBOK */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => {
+                            // Ha csak 1 db van és csökkenteni akarja, akkor töröljük a sorból!
+                            if (item.amount <= 1) {
+                              removeFromCart(item.id, item.kiszereles_id);
+                            } else {
+                              addToCart(item, -1); // Visszaadunk -1-et, ami levon egyet!
+                            }
+                          }}
+                          sx={{ bgcolor: '#f5f5f5', '&:hover': { bgcolor: '#e0e0e0' } }}
+                        >
+                          <RemoveIcon fontSize="small" />
+                        </IconButton>
+                        
+                        <Typography sx={{ fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>
+                          {item.amount}
+                        </Typography>
+                        
+                        <IconButton 
+                          size="small" 
+                          onClick={() => addToCart(item, 1)}
+                          sx={{ bgcolor: '#f5f5f5', '&:hover': { bgcolor: '#e0e0e0' } }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
+
+                    {/* TÖRLÉS KUKA ÉS ÁR */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                      <Typography sx={{ fontWeight: 'bold', color: '#722f37' }}>
+                        {HUF.format(item.amount * item.ar)} Ft
+                      </Typography>
+                      <IconButton 
+                        size="small" 
+                        onClick={() => removeFromCart(item.id, item.kiszereles_id)}
+                        sx={{ color: '#d32f2f', '&:hover': { bgcolor: '#ffebee' } }}
+                        title="Törlés a kosárból"
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+
+                  </Box>
+                ))}
+              </Box>
+
+              <Box sx={{ pt: 3, borderTop: '2px solid #722f37', mt: 'auto' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                  <Typography variant="h6">Összesen:</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#722f37' }}>
+                    {HUF.format(cartItems.reduce((sum, item) => sum + (item.ar * item.amount), 0))} Ft
+                  </Typography>
+                </Box>
+                <Button 
+                  fullWidth 
+                  variant="contained" 
+                  onClick={() => { setIsCartOpen(false); navigate('/Checkout'); }}
+                  sx={{ bgcolor: '#722f37', py: 1.5, borderRadius: '30px', fontWeight: 'bold', '&:hover': { bgcolor: '#5a252c' } }}
+                >
+                  Tovább a pénztárhoz
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
       </Drawer>
 
-      {/* ======================================================== */}
       {/* ELEGÁNS KIJELENTKEZÉS FIGYELMEZTETŐ ABLAK (MODAL) */}
-      {/* ======================================================== */}
       <Dialog 
         open={logoutDialogOpen} 
         PaperProps={{ 

@@ -11,6 +11,9 @@ const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
+  // 1. ÚJ: Ez az állapot tárolja, hogy épp nyitva van-e a kosár panel a Navbarban
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   const [cartItems, setCartItems] = useState(() => {
     try {
       const savedCart = sessionStorage.getItem("boraszat_cart");
@@ -57,6 +60,7 @@ export const CartProvider = ({ children }) => {
       return [...prevItems, { ...product, amount }];
     });
   };
+
   const removeFromCart = (id, kiszereles_id) => {
     setCartItems((prev) => 
       prev.filter((item) => !(item.id === id && item.kiszereles_id === kiszereles_id))
@@ -81,6 +85,9 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         clearCart,
         totalAmount,
+        // 2. ÚJ: Átadjuk az értékeket, hogy más komponensek (WineCard, Navbar) is lássák
+        isCartOpen,
+        setIsCartOpen,
       }}
     >
       {children}

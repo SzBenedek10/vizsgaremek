@@ -12,7 +12,6 @@ app.use(cors());
 
 const db = mysql.createPool({
     host: process.env.NODE_ENV === 'test' ? 'localhost' : 'mysqldb',
-    //host: 'localhost',
     user: 'root',
     password: '',
     database: 'boraszat',
