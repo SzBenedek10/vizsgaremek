@@ -5,22 +5,6 @@ import { useNavigate } from 'react-router-dom';
 const FeaturedWineCard = ({ bor }) => {
   const navigate = useNavigate();
 
-  const getWineImage = (nev) => {
-    if (!nev) return "placeholder.jpg"; 
-    const n = nev.toLowerCase();
-    if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
-    if (n.includes("olaszrizling")) return "rizling.jpg";
-    if (n.includes("szürkebarát")) return "szurkebarat.jpg";
-    if (n.includes("rózsakő")) return "rozsako.jpg";
-    if (n.includes("rosé")) return "rose.jpg";
-    if (n.includes("cabernet")) return "cabernet.jpg";
-    if (n.includes("kékfrankos")) return "kekfrankos.jpg";
-    if (n.includes("muskotály")) return "muskotaly.jpg";
-    if (n.includes("lesencei")) return "lacibetyar.jpg";
-    if (n.includes("lecsó")) return "lecsó.jpg";
-    return "placeholder.jpg"; 
-  };
-
   return (
     <Card 
       onClick={() => navigate('/borrendeles')} 
@@ -41,7 +25,7 @@ const FeaturedWineCard = ({ bor }) => {
     >
       <CardMedia
         component="img"
-        image={`/images/${getWineImage(bor.nev)}`} 
+        image={bor.kep ? `http://localhost:5000${bor.kep}` : "/images/placeholder.jpg"} 
         alt={bor.nev}
         sx={{ 
             width: '100%', 

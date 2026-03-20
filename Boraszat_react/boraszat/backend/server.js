@@ -6,19 +6,44 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = "nagyon_titkos_kulcs_123"; 
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // KULCS: Megnöveltük a limitet a Base64 képek miatt!
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
+app.use('/images', express.static(path.join(__dirname, 'public/borok'))); // Képek kiszolgálása a public/borok könyvtárból
 
-const db = mysql.createPool({
-    host: process.env.NODE_ENV === 'test' ? 'localhost' : 'mysqldb',
-    user: 'root',
-    password: '',
-    database: 'boraszat',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+const uploadDir = path.join(__dirname, 'public/borok');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Beállítjuk, hova és milyen néven mentse a képeket
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir); // Ide menti (backend/public/images)
+  },
+  filename: function (req, file, cb) {
+    // Generálunk egy egyedi nevet: timestamp + kiterjesztés (pl. 167890123.jpg)
+    const uniqueSuffix = Date.now() + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname)); 
+  }
 });
+
+const upload = multer({ storage: storage })
+const db = mysql.createPool({
+  host: 'szente-pince-gibszjakab900-28a1.c.aivencloud.com',
+  port: 14888,
+  user: 'avnadmin',
+  password: 'AVNS_vZV7YDKwkZ4YM_eXDER', 
+  database: 'defaultdb',
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -37,9 +62,7 @@ db.getConnection((err, connection) => {
 });
 
 app.post('/api/register', async (req, res) => {
-    
     console.log("Beérkező adatok:", req.body);
-
     const { email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam } = req.body;
 
     if (!email || !password_hash || !nev) {
@@ -59,7 +82,6 @@ app.post('/api/register', async (req, res) => {
         db.query(sql, values, (err, result) => {
             if (err) {
                 console.error("MYSQL HIBA:", err.sqlMessage);
-               
                 return res.status(500).json({ error: "Adatbázis hiba: " + err.sqlMessage });
             }
             res.status(201).json({ message: 'Sikeres regisztráció!' });
@@ -69,7 +91,6 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ error: 'Belső szerverhiba történt.' });
     }
 });
-
 
 app.post('/api/login', (req, res) => {
     const { email, password_hash } = req.body; 
@@ -104,7 +125,15 @@ app.post('/api/login', (req, res) => {
     });
 });
 
+// --- ÚJ: Bor Színek Lekérése ---
+app.get('/api/bor-szinek', (req, res) => {
+    db.query('SELECT id, nev FROM bor_szin', (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
 
+// --- MÓDOSÍTVA: Hozzáadva a `kep` és a `bor_szin_id` a lekérdezéshez ---
 app.get('/api/borok', (req, res) => {
   const sql = `
     SELECT 
@@ -114,6 +143,9 @@ app.get('/api/borok', (req, res) => {
       b.ar, 
       b.leiras, 
       b.keszlet, 
+      b.kep,
+      b.bor_szin_id,
+      b.alkoholfok,
       k.megnevezes AS kiszereles_nev, 
       k.szorzo 
     FROM bor b
@@ -140,7 +172,6 @@ app.get('/api/kiszerelesek', (req, res) => {
         res.json(results);
     });
 });
-
 
 app.post("/api/rendeles", (req, res) => {
   const { userId, szamlazasi, szallitasi, tetelek, vegosszeg } = req.body;
@@ -174,13 +205,10 @@ app.post("/api/rendeles", (req, res) => {
     db.query(sqlTetel, [tetelValues], (err, resultItems) => {
       if (err) return res.status(500).json({ msg: "Hiba a tételek mentésekor." });
 
-      
       tetelek.forEach(item => {
         const sqlUpdateStock = "UPDATE bor SET keszlet = keszlet - ? WHERE id = ?";
         db.query(sqlUpdateStock, [item.amount, item.id]);
       });
-      
-    
       
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
       let buffers = [];
@@ -226,7 +254,6 @@ app.post("/api/rendeles", (req, res) => {
           });
       });
 
-   
       const safeText = (text) => {
           if(!text) return '';
           return text.replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
@@ -242,7 +269,6 @@ app.post("/api/rendeles", (req, res) => {
       doc.text('info@szentepinceszet.hu', 400, 80, { align: 'right' });
       doc.text('+36 30 123 4567', 400, 95, { align: 'right' });
 
- 
       doc.moveTo(50, 120).lineTo(550, 120).lineWidth(1).strokeColor('#cccccc').stroke();
 
       doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 50, 140);
@@ -251,7 +277,6 @@ app.post("/api/rendeles", (req, res) => {
       doc.text(`Cím: ${safeText(szallitasi.irsz)} ${safeText(szallitasi.varos)}`, 50, 175);
       doc.text(`${safeText(szallitasi.utca)} ${safeText(szallitasi.hazszam)}`, 50, 190);
 
-    
       doc.moveTo(50, 220).lineTo(550, 220).strokeColor('#cccccc').stroke();
 
       doc.fontSize(10).fillColor('#722f37').font('Helvetica-Bold');
@@ -260,9 +285,7 @@ app.post("/api/rendeles", (req, res) => {
       doc.text('Egységár', 380, 240, { width: 80, align: 'right' });
       doc.text('Összesen', 470, 240, { width: 80, align: 'right' });
 
-   
       doc.moveTo(50, 255).lineTo(550, 255).strokeColor('#722f37').stroke();
-
       
       doc.font('Helvetica').fillColor('#333333');
       let y = 270;
@@ -277,13 +300,11 @@ app.post("/api/rendeles", (req, res) => {
           doc.moveTo(50, y - 5).lineTo(550, y - 5).lineWidth(0.5).strokeColor('#eeeeee').stroke();
       });
 
-    
       y += 10;
       doc.fontSize(14).fillColor('#722f37').font('Helvetica-Bold');
       doc.text('Fizetendő végösszeg:', 250, y, { width: 150, align: 'right' });
       doc.text(`${new Intl.NumberFormat("hu-HU").format(vegosszeg)} Ft`, 410, y, { width: 140, align: 'right' });
 
-     
       y += 60;
       doc.fontSize(10).fillColor('#888888').font('Helvetica');
       doc.text('Fizetési mód: Utánvét (készpénz vagy bankkártya a futárnál)', 50, y, { align: 'center' });
@@ -295,7 +316,6 @@ app.post("/api/rendeles", (req, res) => {
   });
 });
 
-
 app.get('/api/users', (req, res) => {
     const sql = "SELECT id, nev, email, role, telefonszam, is_active FROM users";
     db.query(sql, (err, results) => {
@@ -303,7 +323,6 @@ app.get('/api/users', (req, res) => {
         res.json(results);
     });
 });
-
 
 app.delete('/api/users/:id', (req, res) => {
     const id = req.params.id;
@@ -316,36 +335,42 @@ app.delete('/api/users/:id', (req, res) => {
     });
 });
 
-
-
-app.post('/api/borok', (req, res) => {
+app.post('/api/borok', upload.single('kep'), (req, res) => {
     const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
     
-    const sql = `INSERT INTO bor (nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    // Ha jött fájl, a Multer elmentette, mi csak a nevét (pl. /images/123.jpg) mentjük az adatbázisba!
+    const kepUrl = req.file ? `/images/${req.file.filename}` : null;
+    
+    const sql = `INSERT INTO bor (nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok, kep) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    const values = [nev, evjarat, ar, keszlet, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0];
+    const values = [nev, evjarat, ar, keszlet || 0, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0, kepUrl];
 
     db.query(sql, values, (err, result) => {
-        if (err) {
-            console.error("Hiba bor hozzáadásakor:", err);
-            return res.status(500).json({ error: "Adatbázis hiba" });
-        }
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
         res.json({ message: "Bor sikeresen hozzáadva!", id: result.insertId });
     });
 });
 
-app.put('/api/borok/:id', (req, res) => {
+// --- PROFI BOR MÓDOSÍTÁSA ---
+app.put('/api/borok/:id', upload.single('kep'), (req, res) => {
     const id = req.params.id;
-    const { nev, evjarat, ar, keszlet, leiras } = req.body;
-    const sql = `UPDATE bor SET nev = ?, evjarat = ?, ar = ?, keszlet = ?, leiras = ? WHERE id = ?`;
-    const values = [nev, evjarat, ar, keszlet, leiras, id];
+    const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
+    
+    // Csak akkor frissítjük a képet az adatbázisban, ha a felhasználó töltött fel újat!
+    let sql = `UPDATE bor SET nev=?, evjarat=?, ar=?, keszlet=?, leiras=?, bor_szin_id=?, kiszereles_id=?, alkoholfok=?`;
+    let values = [nev, evjarat, ar, keszlet || 0, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0];
+
+    if (req.file) {
+        sql += `, kep=?`;
+        values.push(`/images/${req.file.filename}`);
+    }
+    
+    sql += ` WHERE id=?`;
+    values.push(id);
 
     db.query(sql, values, (err, result) => {
-        if (err) {
-            console.error("SQL Hiba bor módosításakor:", err);
-            return res.status(500).json({ error: "Hiba a módosításkor" });
-        }
+        if (err) return res.status(500).json({ error: "Hiba a módosításkor" });
         res.json({ message: "Bor sikeresen frissítve!" });
     });
 });
@@ -372,6 +397,7 @@ app.get('/api/borok/top', (req, res) => {
         res.json(results);
     });
 });
+
 app.get('/api/admin/szolgaltatasok', (req, res) => {
     const sql = "SELECT * FROM szolgaltatas ORDER BY datum DESC"; 
     db.query(sql, (err, results) => {
@@ -379,7 +405,6 @@ app.get('/api/admin/szolgaltatasok', (req, res) => {
         res.json(results);
     });
 });
-
 
 app.post('/api/szolgaltatasok', (req, res) => {
     const { nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv } = req.body;
@@ -395,7 +420,6 @@ app.post('/api/szolgaltatasok', (req, res) => {
     });
 });
 
-
 app.put('/api/szolgaltatasok/:id', (req, res) => {
     const id = req.params.id;
     const { nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv } = req.body;
@@ -407,7 +431,6 @@ app.put('/api/szolgaltatasok/:id', (req, res) => {
         res.json({ message: "Szolgáltatás frissítve" });
     });
 });
-
 
 app.delete('/api/szolgaltatasok/:id', (req, res) => {
     const id = req.params.id;
@@ -437,30 +460,6 @@ app.get('/api/szolgaltatasok', (req, res) => {
   });
 });
 
-/*app.post('/api/foglalas', (req, res) => {
-    const { userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes } = req.body;
-
-    if (!userId || !szolgaltatasId || !datum) {
-        return res.status(400).json({ error: "Hiányzó adatok!" });
-    }
-
-    const sql = `
-        INSERT INTO foglalas 
-        (user_id, szolgaltatas_id, letszam, datum, idotartam, osszeg, statusz, megjegyzes, foglalas_datuma) 
-        VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, NOW())
-    `;
-
-    const values = [userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes];
-
-    db.query(sql, values, (err, result) => {
-        if (err) {
-            console.error("Hiba a foglalás mentésekor:", err);
-            return res.status(500).json({ error: "Adatbázis hiba" });
-        }
-        res.json({ message: "Sikeres foglalás!", foglalasId: result.insertId });
-    });
-});*/
-
 app.get('/api/foglaltsag', (req, res) => {
     const sql = `
         SELECT szolgaltatas_id, SUM(letszam) as ossz_letszam 
@@ -475,14 +474,12 @@ app.get('/api/foglaltsag', (req, res) => {
 });
 
 app.post('/api/contact', (req, res) => {
-    
     const { userId, nev, email, targy, uzenet } = req.body;
 
     if (!userId || !targy || !uzenet) {
         return res.status(400).json({ error: "Hiányzó adatok!" });
     }
 
-   
     const sql = "INSERT INTO uzenetek (user_id, nev, email, targy, uzenet) VALUES (?, ?, ?, ?, ?)";
     
     db.query(sql, [userId, nev, email, targy, uzenet], (err, result) => {
@@ -549,6 +546,7 @@ app.delete('/api/admin/uzenetek/:id', (req, res) => {
         res.json({ message: "Üzenet törölve" });
     });
 });
+
 app.get('/api/admin/rendelesek', (req, res) => {
     const sql = "SELECT * FROM rendeles ORDER BY datum DESC";
     db.query(sql, (err, results) => {
@@ -586,6 +584,7 @@ app.put('/api/admin/foglalasok/:id/statusz', (req, res) => {
         res.json({ message: "Sikeres frissítés" });
     });
 })
+
 app.get('/api/borok/:id/ertekelesek', (req, res) => {
     const borId = req.params.id;
     const sql = `
@@ -604,7 +603,6 @@ app.get('/api/borok/:id/ertekelesek', (req, res) => {
     });
 });
 
-
 app.post('/api/ertekelesek', (req, res) => {
     const { bor_id, user_id, ertekeles, szoveg } = req.body;
 
@@ -618,10 +616,10 @@ app.post('/api/ertekelesek', (req, res) => {
         res.json({ message: "Sikeres hozzászólás!" });
     });
 });
+
 app.post('/api/foglalas', (req, res) => {
     const { userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes } = req.body;
 
-    // Alapvető validáció
     if (!userId || !szolgaltatasId || !datum || !letszam) {
         return res.status(400).json({ error: "Hiányzó adatok! Kérjük töltsön ki minden mezőt." });
     }
@@ -653,6 +651,7 @@ app.put('/api/admin/uzenetek/:id', (req, res) => {
         res.json({ message: "Üzenet sikeresen frissítve!" });
     });
 });
+
 if (process.env.NODE_ENV !== 'test') {
     app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));
 }

@@ -92,22 +92,6 @@ export default function WineDetails() {
     setIsPlaying(!isPlaying);
   };
 
-  const getWineImage = (nev) => {
-    if (!nev) return "placeholder.jpg";
-    const n = nev.toLowerCase();
-    if (n.includes("lesencei")) return "lacibetyar.jpg";
-    if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
-    if (n.includes("lecsó")) return "lecsó.jpg";
-    if (n.includes("olaszrizling")) return "rizling.jpg";
-    if (n.includes("szürkebarát")) return "szurkebarat.jpg";
-    if (n.includes("rózsakő")) return "rozsako.jpg";
-    if (n.includes("rosé")) return "rose.jpg";
-    if (n.includes("cabernet")) return "cabernet.jpg";
-    if (n.includes("kékfrankos")) return "kekfrankos.jpg";
-    if (n.includes("muskotály")) return "muskotaly.jpg";
-    return "placeholder.jpg";
-  };
-
   // Okos ételpárosítás generátor
   const getFoodPairing = (borInfo) => {
     if (!borInfo) return "";
@@ -260,7 +244,14 @@ export default function WineDetails() {
         }}>
           
           <Box sx={{ flex: '1 1 0', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <Box component="img" src={`/images/${getWineImage(bor.nev)}`} alt={bor.nev} onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }} sx={{ width: 'auto', maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+              {/* ITT TÖRTÉNT A VÁLTOZÁS: */}
+              <Box 
+                component="img" 
+                src={bor.kep ? `http://localhost:5000${bor.kep}` : "/images/placeholder.jpg"}
+                alt={bor.nev} 
+                onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }} 
+                sx={{ width: 'auto', maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }} 
+              />
           </Box>
 
           <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' }, borderColor: '#ddd', borderWidth: '1px' }} />
@@ -296,7 +287,7 @@ export default function WineDetails() {
                         "{getTastingNotes(bor)}" 
                     </Typography>
                 </Box>
-            </Stack>
+             </Stack>
           </Box>
         </Box>
 

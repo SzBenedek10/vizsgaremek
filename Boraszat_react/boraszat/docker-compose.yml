@@ -1,21 +1,23 @@
 
 services:
-  mysqldb:
-    image: mysql:8.0
-    restart: always
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      MYSQL_DATABASE: boraszat
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql 
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+  
+  #mysqldb:
+    #image: mysql:8.0
+    #restart: always
+    #environment:
+      #MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      #MYSQL_DATABASE: boraszat
+    #ports:
+     # - "3306:3306"
+    #volumes:
+     # - db_data:/var/lib/mysql 
+      #- ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    #healthcheck:
+     # test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root"]
+      #interval: 5s
+      #timeout: 5s
+      #retries: 10
+      
 
   phpmyadmin:
     image: phpmyadmin
@@ -23,13 +25,8 @@ services:
     ports:
       - "8081:80"
     environment:
-      PMA_HOST: mysqldb
-      PMA_USER: root
-      PMA_PASSWORD: ""
-      PMA_ARBITRARY: 1
-    depends_on:
-      mysqldb:
-        condition: service_healthy
+      - PMA_HOST=szente-pince-gibszjakab900-28a1.c.aivencloud.com
+      - PMA_PORT=14888
 
   api:
     build: ./backend
@@ -40,8 +37,7 @@ services:
       DB_USER: root
       DB_PASSWORD: ""
       DB_NAME: boraszat
-    depends_on:
-      - mysqldb
+
     command: node server.js
     volumes:
       - ./backend:/usr/src/app

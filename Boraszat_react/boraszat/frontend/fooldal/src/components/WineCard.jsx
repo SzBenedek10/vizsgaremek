@@ -6,26 +6,11 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
-export default function WineCard({ bor, kiszerelesek = [] }) {
+export default function WineCard({ bor, kiszerelesek = [], onAddToCart }) {
   const [db, setDb] = useState(1);
   const [selectedKiszerelesId, setSelectedKiszerelesId] = useState(1); 
   const { addToCart } = useCart();
   const navigate = useNavigate(); 
-
-  const getWineImage = (nev) => {
-    const n = nev.toLowerCase();
-    if (n.includes("lesencei")) return "lacibetyar.jpg";
-    if (n.includes("kéknyelvű")) return "keknyelvu.jpg";
-    if (n.includes("lecsó")) return "lecsó.jpg";
-    if (n.includes("olaszrizling")) return "rizling.jpg";
-    if (n.includes("szürkebarát")) return "szurkebarat.jpg";
-    if (n.includes("rózsakő")) return "rozsako.jpg";
-    if (n.includes("rosé")) return "rose.jpg";
-    if (n.includes("cabernet")) return "cabernet.jpg";
-    if (n.includes("kékfrankos")) return "kekfrankos.jpg";
-    if (n.includes("muskotály")) return "muskotaly.jpg";
-    return "placeholder.jpg";
-  };
 
   useEffect(() => {
     if (bor.kiszereles_id) {
@@ -62,7 +47,7 @@ export default function WineCard({ bor, kiszerelesek = [] }) {
       {/* FIX 250px magas képtartó */}
       <div className="wine-image-container" onClick={goToDetails}>
         <img 
-          src={`/images/${getWineImage(bor.nev)}`} 
+          src={bor.kep ? `http://localhost:5000${bor.kep}` : "/images/placeholder.jpg"}
           alt={bor.nev} 
           onError={(e) => { e.currentTarget.src = "/images/placeholder.jpg"; }}
         />
