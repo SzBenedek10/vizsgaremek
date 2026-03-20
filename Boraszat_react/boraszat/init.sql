@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mysqldb
--- Létrehozás ideje: 2026. Már 02. 09:25
--- Kiszolgáló verziója: 8.0.45
+-- Létrehozás ideje: 2026. Már 20. 08:32
+-- Kiszolgáló verziója: 8.0.44
 -- PHP verzió: 8.3.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -46,13 +46,14 @@ CREATE TABLE `bor` (
 
 INSERT INTO `bor` (`id`, `bor_szin_id`, `nev`, `evjarat`, `ar`, `kiszereles_id`, `keszlet`, `alkoholfok`, `leiras`, `created_at`) VALUES
 (1, 1, 'Badacsonyi Kéknyelvű', 2022, 4500, 1, 6, 12.50, 'Hungaricum, vulkanikus talajról származó elegáns fehérbor.', '2026-01-27 10:50:43'),
-(2, 1, 'Badacsonyi Olaszrizling', 2023, 2800, 3, 119, 11.50, 'Mandulás utóízű, friss és üde klasszikus Badacsonyi bor.', '2026-01-27 10:50:43'),
+(2, 1, 'Badacsonyi Olaszrizling', 2023, 2800, 3, 118, 11.50, 'Mandulás utóízű, friss és üde klasszikus Badacsonyi bor.', '2026-01-27 10:50:43'),
 (3, 1, 'Badacsonyi Szürkebarát', 2022, 3200, 1, 85, 13.00, 'Testes, krémes textúrájú fehérbor, az aszú közeli élményért.', '2026-01-27 10:50:43'),
 (4, 1, 'Rózsakő', 2022, 3600, 5, 40, 12.00, 'A Kéknyelvű és a Budai Zöld keresztezéséből született ritkaság.', '2026-01-27 10:50:43'),
 (5, 1, 'Ottonel Muskotály', 2023, 2900, 1, 60, 11.00, 'Illatos, intenzív virágos jegyekkel rendelkező könnyed fehérbor.', '2026-01-27 10:50:43'),
 (6, 3, 'Badacsonyi Pinot Noir Rosé', 2023, 2600, 1, 100, 12.00, 'Epres illatú, ropogós savakkal rendelkező nyári frissítő.', '2026-01-27 10:50:43'),
 (22, 2, 'Lesencei Zsiványok', 2016, 4000, 1, 64, 12.00, 'A jó Laci betyár tiszteletére készült, az igaz zsiványoknak.', '2026-02-03 09:19:22'),
-(23, 3, 'Lecsó Lecsó', 2025, 3500, 1, 78, 15.00, 'Paprikasó, szó ami szó nekem kedvencem a lecsó.\nEgy kis eszem iszom, az a paradicsom,\na jó kedvem áztatom.', '2026-02-03 09:20:06');
+(23, 3, 'Lecsó Lecsó', 2025, 3500, 1, 78, 15.00, 'Paprikasó, szó ami szó nekem kedvencem a lecsó.\nEgy kis eszem iszom, az a paradicsom,\na jó kedvem áztatom.', '2026-02-03 09:20:06'),
+(25, 1, 'Lőre', 2020, 2200, 1, 45, 0.00, 'Lőre, te cudar Lőre', '2026-03-20 08:22:46');
 
 -- --------------------------------------------------------
 
@@ -222,7 +223,8 @@ INSERT INTO `rendeles` (`id`, `user_id`, `szaml_nev`, `szaml_orszag`, `szaml_irs
 (4, 6, 'Szikla Szilárd', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 'Szikla Szilárd', '2026-01-30 17:44:36', 'FELDOLGOZAS', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 0, 9000, NULL),
 (5, 6, 'Szikla Szilárd', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 'Szikla Szilárd', '2026-01-30 18:11:34', 'FELDOLGOZAS', 'Magyarország', '8315', 'Gyenesdiás', 'Hunyadi János Utca', '22', 0, 7300, NULL),
 (6, 7, 'Kovács József', 'Magyarország', '8312', 'Balatonederics', 'Bor utca', '11', 'Kovács József', '2026-02-27 11:24:48', 'FELDOLGOZAS', 'Magyarország', '8312', 'Balatonederics', 'Bor utca', '11', 0, 15500, NULL),
-(7, 5, 'Admin', 'Magyarország', '8360', 'Keszthely', 'Fő tér', '12', 'Admin', '2026-03-02 08:25:34', 'KISZALLITVA', 'Magyarország', '8360', 'Keszthely', 'Fő tér', '12', 0, 8000, NULL);
+(7, 5, 'Admin', 'Magyarország', '8360', 'Keszthely', 'Fő tér', '12', 'Admin', '2026-03-02 08:25:34', 'KISZALLITVA', 'Magyarország', '8360', 'Keszthely', 'Fő tér', '12', 0, 8000, NULL),
+(8, 7, 'Kovács József', 'Magyarország', '8312', 'Balatonederics', 'Bor utca', '11', 'Kovács József', '2026-03-20 08:15:41', 'FELDOLGOZAS', 'Magyarország', '8312', 'Balatonederics', 'Bor utca', '11', 0, 2800, NULL);
 
 -- --------------------------------------------------------
 
@@ -252,7 +254,8 @@ INSERT INTO `rendeles_tetel` (`id`, `rendeles_id`, `bor_id`, `mennyiseg`, `egyse
 (11, 6, 23, 1, 3500),
 (12, 6, 22, 1, 12000),
 (13, 7, 23, 1, 3500),
-(14, 7, 1, 1, 4500);
+(14, 7, 1, 1, 4500),
+(15, 8, 2, 1, 2800);
 
 -- --------------------------------------------------------
 
@@ -440,7 +443,7 @@ ALTER TABLE `uzenetek`
 -- AUTO_INCREMENT a táblához `bor`
 --
 ALTER TABLE `bor`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT a táblához `bor_szin`
@@ -482,13 +485,13 @@ ALTER TABLE `kiszereles`
 -- AUTO_INCREMENT a táblához `rendeles`
 --
 ALTER TABLE `rendeles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT a táblához `rendeles_tetel`
 --
 ALTER TABLE `rendeles_tetel`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT a táblához `szolgaltatas`
