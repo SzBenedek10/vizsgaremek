@@ -20,6 +20,7 @@ import WineDetails from "./pages/WineDetails.jsx";
 import Profile from "./pages/Profile.jsx";
 import About from './pages/About';
 
+
 const theme = createTheme({
   typography: {
   
@@ -58,7 +59,9 @@ export default function App() {
       <CssBaseline />
       
       <AuthProvider>
+        
         <Routes>
+          
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/borrendeles" element={<BorRendeles />} />

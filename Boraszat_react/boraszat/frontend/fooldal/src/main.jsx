@@ -4,16 +4,16 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './index.css';
 import { CssBaseline } from '@mui/material';
-
-// IMPORTÁLD BE MINDKÉT CONTEXTET:
+import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider } from './context/AuthContext.jsx'; 
-import { CartProvider } from './context/CartContext.jsx'; // <--- EZ HIÁNYZOTT
+import { CartProvider } from './context/CartContext.jsx'; 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
 
-    <AuthProvider> {/* 1. Bejelentkezés kezelése (legyen a legkülső) */}
-      <BrowserRouter> {/* 2. Router */}
-        <CartProvider> {/* 3. Kosár kezelése (belül, hogy elérje a routert ha kell) */}
+    <AuthProvider> 
+      <BrowserRouter> 
+       <ScrollToTop />
+        <CartProvider> 
           <CssBaseline />
           <App />
         </CartProvider>

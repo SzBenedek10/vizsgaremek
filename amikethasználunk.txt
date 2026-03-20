@@ -1,2 +1,4 @@
 multer backend
 npm install multer
+
+az uj oldalon minmdig felülre ugorjon
