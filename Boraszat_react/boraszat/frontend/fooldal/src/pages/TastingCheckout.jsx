@@ -14,7 +14,8 @@ import {
   FormControlLabel,
   Checkbox,
   Divider,
-  Stack
+  Stack,
+  IconButton
 } from "@mui/material";
 
 // Ikonok
@@ -24,6 +25,9 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonIcon from '@mui/icons-material/Person';
+import GroupsIcon from '@mui/icons-material/Groups';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -33,12 +37,19 @@ export default function TastingCheckout() {
   const location = useLocation();
   const selectedPackage = location.state?.selectedPackage;
 
+  // Állapotok
   const [sameAsProfile, setSameAsProfile] = useState(true);
+  const [letszam, setLetszam] = useState(selectedPackage?.letszam || 1);
   const [formData, setFormData] = useState({
     nev: "", email: "", tel: "",
     irsz: "", varos: "", utca: "", hazszam: "",
     megjegyzes: ""
   });
+
+  // A maximálisan foglalható helyek száma
+  const maxSzabad = selectedPackage?.maxSzabad || selectedPackage?.kapacitas || 10;
+  // A még szabadon maradó helyek száma a választott létszám után
+  const maradekHely = maxSzabad - letszam;
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
@@ -62,12 +73,25 @@ export default function TastingCheckout() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Létszám növelése és csökkentése (védelemmel)
+  const handleIncrement = () => {
+    if (letszam < maxSzabad) {
+      setLetszam(prev => prev + 1);
+    }
+  };
+
+  const handleDecrement = () => {
+    if (letszam > 1) {
+      setLetszam(prev => prev - 1);
+    }
+  };
+
+  // Dátum formázása
   const getOnlyDate = () => {
     const rawDate = selectedPackage?.idopont || selectedPackage?.datum;
     if (!rawDate) return "Nincs megadva";
     const d = new Date(rawDate);
-    const honapok = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
-    return `${d.getFullYear()}. ${honapok[d.getMonth()]} ${d.getDate()}.`;
+    return d.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric' }) + ".";
   };
 
   const handleSubmit = async (e) => {
@@ -75,23 +99,16 @@ export default function TastingCheckout() {
     if (!selectedPackage || !user) return; 
 
     const nyersDatum = selectedPackage?.idopont || selectedPackage?.datum || new Date().toISOString();
-    const mysqlDatum = new Date(nyersDatum).toISOString().slice(0, 19).replace('T', ' ');
+    const mysqlDatum = new Date(nyersDatum).toISOString().split('T')[0];
 
     const foglalasAdatok = {
       userId: user.id,
       szolgaltatasId: selectedPackage.id,
-      letszam: selectedPackage.letszam,
+      letszam: letszam, 
       datum: mysqlDatum, 
-      idotartam: 120, 
-      osszeg: selectedPackage.ar * selectedPackage.letszam,
-      megjegyzes: formData.megjegyzes,
-      ugyfelNev: formData.nev,
-      ugyfelEmail: formData.email,
-      ugyfelTel: formData.tel,
-      ugyfelIrsz: formData.irsz,
-      ugyfelVaros: formData.varos,
-      ugyfelUtca: formData.utca,
-      ugyfelHazszam: formData.hazszam
+      idotartam: selectedPackage.idotartam || "02:00:00", 
+      osszeg: selectedPackage.ar * letszam,
+      megjegyzes: formData.megjegyzes
     };
 
     try {
@@ -123,7 +140,6 @@ export default function TastingCheckout() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <form onSubmit={handleSubmit}>
-        {/* FŐ ELRENDEZÉS: FLEXBOX */}
         <Box sx={{ 
           display: 'flex', 
           flexDirection: { xs: 'column', md: 'row' }, 
@@ -131,16 +147,15 @@ export default function TastingCheckout() {
           alignItems: 'flex-start' 
         }}>
           
-          {/* BAL OLDAL: ADATOK (Szélesség: 65%) */}
+          {/* BAL OLDAL: ADATOK */}
           <Box sx={{ flex: '0 1 65%', width: '100%' }}>
             <Stack spacing={3}>
               
-              {/* Számlázási adatok doboz */}
               <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
                   <ReceiptIcon sx={{ color: '#722f37' }} />
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    Számlázási adatok
+                    Kapcsolattartási adatok
                   </Typography>
                 </Box>
 
@@ -150,16 +165,15 @@ export default function TastingCheckout() {
                   sx={{ mb: 2 }}
                 />
 
-                {/* Inputok 3 oszlopos rácsban */}
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 1.5 }}>
                   <Box sx={{ gridColumn: 'span 4' }}>
-                    <TextField fullWidth label="Teljes név" name="nev" value={formData.nev} onChange={handleChange} size="small" disabled={sameAsProfile} />
+                    <TextField fullWidth label="Teljes név" name="nev" value={formData.nev} onChange={handleChange} size="small" disabled={sameAsProfile} required />
                   </Box>
                   <Box sx={{ gridColumn: 'span 4' }}>
-                    <TextField fullWidth label="Email cím" name="email" value={formData.email} onChange={handleChange} size="small" disabled={sameAsProfile} />
+                    <TextField fullWidth label="Email cím" name="email" value={formData.email} onChange={handleChange} size="small" disabled={sameAsProfile} required />
                   </Box>
                   <Box sx={{ gridColumn: 'span 4' }}>
-                    <TextField fullWidth label="Telefonszám" name="tel" value={formData.tel} onChange={handleChange} size="small" disabled={sameAsProfile} />
+                    <TextField fullWidth label="Telefonszám" name="tel" value={formData.tel} onChange={handleChange} size="small" disabled={sameAsProfile} required />
                   </Box>
                   
                   <Box sx={{ gridColumn: 'span 3' }}>
@@ -177,7 +191,6 @@ export default function TastingCheckout() {
                 </Box>
               </Paper>
 
-              {/* Megjegyzés doboz */}
               <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
                   <PersonIcon sx={{ color: '#722f37' }} />
@@ -187,7 +200,7 @@ export default function TastingCheckout() {
                 </Box>
                 <TextField 
                   fullWidth multiline rows={2} 
-                  placeholder="Van-e bármilyen egyéb kérése?" 
+                  placeholder="Van-e bármilyen egyéb kérése? (pl. ételallergia, egyedi igények)" 
                   name="megjegyzes" value={formData.megjegyzes} onChange={handleChange} 
                   size="small"
                 />
@@ -195,7 +208,7 @@ export default function TastingCheckout() {
             </Stack>
           </Box>
 
-          {/* JOBB OLDAL: ÖSSZESÍTŐ (Szélesség: 35%) */}
+          {/* JOBB OLDAL: ÖSSZESÍTŐ */}
           <Box sx={{ flex: '0 1 35%', width: '100%', position: { md: 'sticky' }, top: 20 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 3, borderTop: '4px solid #722f37' }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
@@ -204,30 +217,105 @@ export default function TastingCheckout() {
               
               <Divider sx={{ mb: 2 }} />
 
-              <Stack spacing={1} sx={{ mb: 3 }}>
+              <Stack spacing={1} sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body1" sx={{ fontWeight: 500 }}>{selectedPackage?.nev}</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{HUF.format(selectedPackage?.ar)} Ft / fő</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#722f37' }}>{HUF.format(selectedPackage?.ar)} Ft / fő</Typography>
                 </Box>
                 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mt: 1 }}>
                    <CalendarMonthIcon sx={{ fontSize: 18 }} />
                    <Typography variant="body2">{getOnlyDate()}</Typography>
-                   <Typography variant="body2" sx={{ ml: 'auto' }}>{selectedPackage?.letszam} fő</Typography>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
                   <AccessTimeIcon sx={{ fontSize: 18 }} />
-                  <Typography variant="body2">Program hossza: 2 óra</Typography>
+                  <Typography variant="body2">Kezdés: {selectedPackage?.idotartam || "14:00:00"}</Typography>
                 </Box>
               </Stack>
+
+              {/* LÉTSZÁMVÁLASZTÓ ÉS MARADÉK HELYEK */}
+              <Box sx={{ mb: 3 }}>
+                {/* Fehér doboz a kiválasztónak */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  p: 1.5, 
+                  bgcolor: '#fdfbfb', 
+                  borderRadius: 2, 
+                  border: '1px solid',
+                  borderColor: maradekHely === 0 ? '#ffcdd2' : '#e0e0e0', // Pirosas keret, ha megtelt
+                  transition: '0.3s'
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <GroupsIcon sx={{ fontSize: 22, color: '#722f37' }} />
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#333' }}>
+                      Résztvevők száma:
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <IconButton 
+                      size="small" 
+                      onClick={handleDecrement} 
+                      disabled={letszam <= 1}
+                      sx={{ 
+                        bgcolor: '#fff', 
+                        border: '1px solid #ddd', 
+                        '&:hover': { bgcolor: '#f0f0f0' },
+                        '&.Mui-disabled': { bgcolor: '#fafafa', color: '#ccc' }
+                      }}
+                    >
+                      <RemoveIcon fontSize="small" />
+                    </IconButton>
+                    
+                    <Typography variant="body1" sx={{ fontWeight: 'bold', minWidth: '24px', textAlign: 'center' }}>
+                      {letszam}
+                    </Typography>
+                    
+                    <IconButton 
+                      size="small" 
+                      onClick={handleIncrement} 
+                      disabled={letszam >= maxSzabad} // Gomb letiltása, ha betelt
+                      sx={{ 
+                        bgcolor: '#fff', 
+                        border: '1px solid #ddd', 
+                        '&:hover': { bgcolor: '#f0f0f0' },
+                        '&.Mui-disabled': { bgcolor: '#fafafa', color: '#ccc' } 
+                      }}
+                    >
+                      <AddIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+                
+                {/* Dinamikus, elegáns maradék hely kiírása */}
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    display: 'block', 
+                    textAlign: 'right', 
+                    color: maradekHely === 0 ? '#d32f2f' : '#722f37', // Ha 0, akkor élénkebb piros
+                    fontWeight: maradekHely === 0 ? 'bold' : '500', 
+                    fontStyle: maradekHely === 0 ? 'normal' : 'italic',
+                    mt: 0.5,
+                    pr: 1,
+                    transition: '0.3s'
+                  }}
+                >
+                  {maradekHely === 0 
+                    ? "Nincsen több szabad hely" 
+                    : `Még ${maradekHely} szabad hely maradt`}
+                </Typography>
+              </Box>
 
               <Divider sx={{ mb: 2 }} />
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Végösszeg:</Typography>
                 <Typography variant="h5" sx={{ color: '#722f37', fontWeight: 'bold' }}>
-                   {HUF.format(selectedPackage?.ar * selectedPackage?.letszam)} Ft
+                   {HUF.format(selectedPackage?.ar * letszam)} Ft
                 </Typography>
               </Box>
 
@@ -243,7 +331,8 @@ export default function TastingCheckout() {
                     py: 1.5,
                     fontWeight: 'bold',
                     borderRadius: 2,
-                    textTransform: 'none'
+                    textTransform: 'none',
+                    fontSize: '1.05rem'
                   }}
                 >
                   Foglalás véglegesítése

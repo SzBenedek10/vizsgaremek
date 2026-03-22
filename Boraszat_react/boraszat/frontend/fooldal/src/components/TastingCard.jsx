@@ -1,153 +1,100 @@
 import React from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardMedia, 
-  Typography, 
-  Button, 
-  Box, 
-  Chip 
-} from '@mui/material';
+import { Box, Typography, Button, Paper, Divider } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
-export default function TastingCard({ csomag, onValaszt, isFull }) {
-  const cardStyle = {
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    transition: 'transform 0.2s',
-    '&:hover': {
-      transform: !isFull ? 'scale(1.02)' : 'none',
-    },
-    opacity: isFull ? 0.8 : 1, 
-    position: 'relative',
-    boxShadow: 3,
-    borderRadius: 2,
-    overflow: 'hidden'
-  };
-
-  // Dátum formázása magyarosra
+export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
+  
+  // Dátum formázása: 2026-03-20 -> 2026. március 20.
   const formatDatum = (dateString) => {
-    if (!dateString) return "Nincs megadva";
-    return new Date(dateString).toLocaleDateString('hu-HU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  // Időtartam formázása (pl. 02:00:00 -> 2 óra)
-  const formatIdotartam = (timeString) => {
-    if (!timeString) return "";
-    const parts = timeString.split(':');
-    const hours = parseInt(parts[0], 10);
-    return `${hours} óra`;
+    if (!dateString) return "Hamarosan";
+    const d = new Date(dateString);
+    return d.toLocaleDateString('hu-HU', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }) + ".";
   };
 
   return (
-    <Card sx={cardStyle}>
-      {/* Betelt jelzés a kártya sarkában */}
-      {isFull && (
-        <Box sx={{
-          position: 'absolute',
-          top: 20,
-          right: -30,
-          bgcolor: '#d32f2f',
-          color: 'white',
-          px: 5,
-          py: 0.5,
-          transform: 'rotate(45deg)',
-          zIndex: 1,
-          fontWeight: 'bold',
-          boxShadow: 3
-        }}>
-          BETELT
-        </Box>
-      )}
+    <Paper 
+      elevation={2} 
+      sx={{ 
+        borderRadius: 3, 
+        overflow: 'hidden', 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        transition: 'transform 0.3s',
+        '&:hover': { transform: 'translateY(-5px)' }
+      }}
+    >
+      {/* KÉP BETÖLTÉSE A SZERVERRŐL */}
+      <Box sx={{ height: 200, bgcolor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img 
+          // Ha van kép az adatbázisban, azt tölti be, különben egy alapértelmezett képet
+          src={csomag.kep ? `http://localhost:5000${csomag.kep}` : "/images/tasting-placeholder.jpg"} 
+          alt={csomag.nev}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => { 
+            // Hibakezelés, ha a kép egyáltalán nem töltődik be
+            e.target.src = "https://via.placeholder.com/400x250?text=Borkostolo"; 
+          }}
+        />
+      </Box>
 
-      <CardMedia
-        component="img"
-        height="200"
-        image={csomag.kep_url || "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=2070&auto=format&fit=crop"}
-        alt={csomag.nev}
-      />
-      
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
-        <Typography gutterBottom variant="h5" component="div" sx={{ color: '#722f37', fontWeight: 'bold' }}>
+      <Box sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#333' }}>
           {csomag.nev}
         </Typography>
-        
-        <Box sx={{ mb: 2 }}>
-          {/* Időpont sor */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, color: 'text.secondary' }}>
-            <CalendarMonthIcon fontSize="small" />
-            <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-              {formatDatum(csomag.datum)}
-            </Typography>
-          </Box>
-          
-          {/* Időtartam sor */}
-          {csomag.idotartam && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
-              <AccessTimeIcon fontSize="small" />
-              <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-                Időtartam: {formatIdotartam(csomag.idotartam)}
-              </Typography>
-            </Box>
-          )}
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#666', mb: 0.5 }}>
+          <CalendarMonthIcon sx={{ fontSize: 18, color: '#722f37' }} />
+          {/* Itt hívjuk meg a formázó függvényt */}
+          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            {formatDatum(csomag.datum)}
+          </Typography>
         </Box>
-        
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3, flexGrow: 1, lineHeight: 1.6 }}>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#666', mb: 2 }}>
+          <AccessTimeIcon sx={{ fontSize: 18, color: '#722f37' }} />
+          <Typography variant="body2">{csomag.idotartam || "2:00:00"}</Typography>
+        </Box>
+
+        <Typography variant="body2" sx={{ color: '#777', mb: 3, flexGrow: 1 }}>
           {csomag.leiras}
         </Typography>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto', pt: 2, borderTop: '1px solid #eee' }}>
-          <Typography variant="h6" sx={{ color: '#722f37', fontWeight: 'bold' }}>
-            {HUF.format(csomag.ar)} Ft / fő
+        <Divider sx={{ mb: 2 }} />
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#722f37' }}>
+            {HUF.format(csomag.ar)} Ft
           </Typography>
-          <Chip 
-            label={`Max: ${csomag.kapacitas} fő`} 
-            size="small" 
-            variant="outlined" 
-            sx={{ fontWeight: 'bold' }}
-          />
+          <Typography variant="caption" sx={{ color: isFull ? 'error.main' : 'success.main', fontWeight: 'bold' }}>
+            {isFull ? "BETELT" : `SZABAD (${szabadHely} hely)`}
+          </Typography>
         </Box>
 
-        {isFull ? (
-          <Button 
-            variant="contained" 
-            disabled 
-            fullWidth 
-            sx={{ 
-              mt: 2, 
-              bgcolor: '#ccc !important',
-              color: 'white !important',
-              py: 1.2
-            }}
-          >
-            Sajnos ez a túra betelt
-          </Button>
-        ) : (
-          <Button 
-            variant="contained" 
-            fullWidth 
-            onClick={() => onValaszt(csomag)}
-            sx={{ 
-              mt: 2, 
-              bgcolor: '#722f37', 
-              '&:hover': { bgcolor: '#5a252c' },
-              py: 1.2,
-              fontWeight: 'bold',
-              borderRadius: 1.5
-            }}
-          >
-            Kosárba teszem
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+        <Button 
+          fullWidth 
+          variant="contained" 
+          disabled={isFull}
+          onClick={() => onValaszt(csomag)}
+          sx={{ 
+            bgcolor: '#722f37', 
+            '&:hover': { bgcolor: '#5a252c' },
+            fontWeight: 'bold',
+            borderRadius: 2,
+            textTransform: 'none',
+            py: 1
+          }}
+        >
+          {isFull ? "Megtelt" : "Foglalás"}
+        </Button>
+      </Box>
+    </Paper>
   );
 }
