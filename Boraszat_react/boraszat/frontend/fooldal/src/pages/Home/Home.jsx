@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Box, Typography, Grid, Button, Fade } from '@mui/material';
+import { Container, Box, Typography, Grid, Button, Fade, Paper } from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
+// Ikonok a "Miért válassz minket" részhez
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import Diversity1Icon from '@mui/icons-material/Diversity1';
+
 import FeaturedWineCard from '../../components/FeaturedWineCard'; 
 import FeaturedTastingCard from '../../components/FeaturedTastingCard'; 
-import ReviewCard from '../../components/ReviewCard'; 
 
 export default function Home() {
   const navigate = useNavigate();
@@ -60,51 +64,117 @@ export default function Home() {
     currentSubtitle = "Kóstolók, pincelátogatás és gasztronómiai kalandok.";
   }
 
-  const reviews = [
-    { nev: "Kovács Péter", szoveg: "A Kéknyelvű egyszerűen fantasztikus! Gyors szállítás.", csillag: 5 },
-    { nev: "Nagy Anna", szoveg: "Nagyon finom borok, igazi balatoni ízvilág.", csillag: 5 },
-    { nev: "Szabó Gábor", szoveg: "Ajándékba vettem egy válogatást, nagy sikert aratott.", csillag: 4 }
+  const features = [
+    { icon: <LocalShippingIcon sx={{ fontSize: 45 }} />, title: 'Gyors szállítás', desc: 'Akár 2 munkanapon belül nálad a bor.' },
+    { icon: <WorkspacePremiumIcon sx={{ fontSize: 45 }} />, title: 'Prémium minőség', desc: 'Saját birtokról, gondos odafigyeléssel.' },
+    { icon: <Diversity1Icon sx={{ fontSize: 45 }} />, title: 'Családi pincészet', desc: 'Több generációs tapasztalat és szenvedély.' }
   ];
 
   return (
     <Box>
+      {/* ========================================== */}
+      {/* 1. FEJLÉC (HERO) SZEKCIÓ - Balra igazítva, Garamond betűtípussal */}
+      {/* ========================================== */}
       <Box 
         sx={{
-          background: 'linear-gradient(135deg, #1a1a1a 0%, #2c0e0e 100%)',
-          color: 'white',
-          minHeight: '100vh', 
+          minHeight: '80vh', 
           display: 'flex', 
           alignItems: 'center',
           overflow: 'hidden', 
           position: 'relative',
-          py: { xs: 8, md: 0 } 
+          py: { xs: 8, md: 0 },
+          bgcolor: '#111',
+          
+          mx: { xs: 2, md: 4, lg: 6 }, 
+          mt: { xs: 2, md: 4 },        
+          mb: 4,                       
+          borderRadius: 6,             
+          boxShadow: '0 15px 40px rgba(0,0,0,0.2)' 
         }}
       >
-        <Container maxWidth="xl">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} lg={4} sx={{ textAlign: { xs: 'center', lg: 'left' }, zIndex: 2 }}>
-              <Typography variant="h2" component="h1" sx={{ fontWeight: 'bold', mb: 2, fontFamily: 'serif', letterSpacing: 1, lineHeight: 1.2 }}>
-                Üdvözlünk <br/> <span>A Szente Pincészetben!</span>
+        {/* HÁTTÉR VIDEÓ */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover', 
+            zIndex: 0,
+            transform: 'scale(1.1)' 
+          }}
+        >
+          <source src="/videos/bg.mp4" type="video/mp4" />
+        </video>
+
+        {/* TISZTA SÖTÉTÍTŐ RÉTEG */}
+        <Box 
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            bgcolor: 'rgba(0, 0, 0, 0.65)', 
+            zIndex: 1
+          }}
+        />
+
+        {/* TARTALOM (Z-index: 2) - Balra igazítva! */}
+        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
+          {/* Adtam neki egy kis bal oldali behúzást (pl), hogy asztali gépen ne tapadjon rá a legszélére */}
+          <Box sx={{ textAlign: 'left', pl: { xs: 0, md: 4, lg: 8 } }}> 
+              <Typography 
+                variant="h1" 
+                component="h1" 
+                sx={{ 
+                  color: '#ffffff', 
+                  fontWeight: 'bold', 
+                  mb: 2, 
+                  fontFamily: '"Garamond", serif', // Garamond beállítása
+                  letterSpacing: 1, 
+                  lineHeight: 1.1, 
+                  fontSize: {xs: '3rem', md: '5rem'} 
+                }}
+              >
+                Üdvözlünk <br/> A Szente Pincészetben!
               </Typography>
-              <Typography variant="h5" sx={{ mb: 4, fontWeight: 300, opacity: 0.9, maxWidth: '600px', mx: { xs: 'auto', lg: 0 } }}>
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  color: '#ffffff', 
+                  mb: 6, 
+                  fontWeight: 300, 
+                  opacity: 0.9, 
+                  maxWidth: '800px', 
+                  fontFamily: '"Garamond", serif' // Alcím is Garamond lett
+                }}
+              >
                 Ahol a családi hagyomány találkozik a modern borkészítéssel.
               </Typography>
               
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'center', lg: 'flex-start' }, flexWrap: 'wrap' }}>
+              {/* Gombok balra igazítása (justifyContent: 'flex-start') */}
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
                 <Button 
                     variant="contained" 
                     size="large" 
                     onClick={() => navigate('/borrendeles')}
                     sx={{ 
                       bgcolor: '#722f37', 
-                      color: 'white',
+                      color: '#ffffff',
                       '&:hover': { bgcolor: '#903b45' }, 
-                      px: 4, py: 1.5, 
-                      fontSize: '1.1rem',
+                      px: 5, py: 2, 
+                      fontSize: '1.2rem',
                       borderRadius: '50px',
                       fontWeight: 'bold',
                       textTransform: 'none',
-                      boxShadow: '0 4px 15px rgba(114, 47, 55, 0.4)'
+                      boxShadow: '0 4px 20px rgba(114, 47, 55, 0.5)',
+                      fontFamily: '"Garamond", serif' // Gomb betűtípusa is Garamond
                     }}
                 >
                     Irány a webshop
@@ -114,86 +184,129 @@ export default function Home() {
                     size="large" 
                     onClick={() => navigate('/borkostolas')}
                     sx={{ 
-                      color: 'white',
-                      borderColor: 'rgba(255,255,255,0.5)',
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'white' }, 
-                      px: 4, py: 1.5, 
-                      fontSize: '1.1rem',
+                      color: '#ffffff',
+                      borderColor: 'rgba(255,255,255,0.7)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', borderColor: '#ffffff' }, 
+                      px: 5, py: 2, 
+                      fontSize: '1.2rem',
                       borderRadius: '50px',
                       fontWeight: 'bold',
                       textTransform: 'none',
+                      fontFamily: '"Garamond", serif' // Gomb betűtípusa is Garamond
                     }}
                 >
                     Kóstoló foglalás
                 </Button>
               </Box>
-            </Grid>
-            <Grid item xs={12} lg={8} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 2 }}>
-                
-                <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.03)', p: {xs: 2, md: 4}, borderRadius: 4, backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  
-                  <Fade in={visible} timeout={1000}>
-                      <Box sx={{ mb: 4, textAlign: 'center' }}>
-                          <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold', mb: 1, textTransform: 'uppercase', letterSpacing: 2 }}>
-                              {currentTitle}
-                          </Typography>
-                          <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem', fontStyle: 'italic' }}>
-                              {currentSubtitle}
-                          </Typography>
-                      </Box>
-                  </Fade>
+          </Box>
+        </Container>
+      </Box>
 
-                  <Fade in={visible} timeout={1500}>
-                      <Grid container spacing={4} justifyContent="center" alignItems="stretch">
-                          {currentItems.length > 0 ? (
-                              currentItems.map((item) => (
-                                  <Grid item key={item.id} xs={12} sm={6} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
-                                      <Box sx={{ width: '100%', maxWidth: '340px', height: '100%' }}>
-                                          {activeTab === 2 ? (
-                                              <FeaturedTastingCard csomag={item} />
-                                          ) : (
-                                              <FeaturedWineCard bor={item} />
-                                          )}
-                                      </Box>
-                                  </Grid>
-                              ))
-                          ) : (
-                              <Typography sx={{ mt: 4, color: '#aaa', width: '100%', textAlign: 'center' }}>
-                                  Adatok betöltése...
-                              </Typography>
-                          )}
-                      </Grid>
-                  </Fade>
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, gap: 1.5 }}>
-                      {[0, 1, 2].map((index) => (
-                          <Box 
-                              key={index}
-                              onClick={() => { 
-                                  if (activeTab !== index) {
-                                      setVisible(false); 
-                                      setTimeout(() => { setActiveTab(index); setVisible(true); }, 200);
-                                  }
-                              }} 
-                              sx={{ 
-                                  width: 12, 
-                                  height: 12, 
-                                  borderRadius: '50%', 
-                                  bgcolor: activeTab === index ? 'white' : 'rgba(255,255,255,0.3)', 
-                                  transition: '0.5s',
-                                  cursor: 'pointer',
-                                  '&:hover': { bgcolor: 'white' }
-                              }} 
-                          />
-                      ))}
+      {/* ========================================== */}
+      {/* 1.5 KIEMELT AJÁNLATOK KARUSSZEL (Fehér háttérrel) */}
+      {/* ========================================== */}
+      <Box sx={{ bgcolor: '#ffffff', py: {xs: 8, md: 12} }}>
+        <Container maxWidth="lg">
+          <Fade in={visible} timeout={1000}>
+              <Box sx={{ mb: 8, textAlign: 'center' }}>
+                  <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: 2 }}>
+                      Ajánlataink
+                  </Typography>
+                  <Typography variant="h3" sx={{ color: '#1a1a1a', fontWeight: 'bold', mb: 2, mt: 1, fontFamily: 'serif' }}>
+                      {currentTitle}
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#555', fontWeight: 300, fontStyle: 'italic', maxWidth: '700px', mx: 'auto' }}>
+                      {currentSubtitle}
+                  </Typography>
+              </Box>
+          </Fade>
+
+          <Fade in={visible} timeout={1500}>
+              <Grid container spacing={4} justifyContent="center" alignItems="stretch">
+                  {currentItems.length > 0 ? (
+                      currentItems.map((item) => (
+                          <Grid item key={item.id} xs={12} sm={6} sx={{ display: 'flex', justifyContent: 'center' }}>
+                              <Box sx={{ width: '100%', maxWidth: '380px', height: '100%' }}>
+                                  {activeTab === 2 ? (
+                                      <FeaturedTastingCard csomag={item} />
+                                  ) : (
+                                      <FeaturedWineCard bor={item} />
+                                  )}
+                              </Box>
+                          </Grid>
+                      ))
+                  ) : (
+                      <Typography sx={{ mt: 4, color: '#999', width: '100%', textAlign: 'center' }}>
+                          Adatok betöltése...
+                      </Typography>
+                  )}
+              </Grid>
+          </Fade>
+
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, gap: 1.5 }}>
+              {[0, 1, 2].map((index) => (
+                  <Box 
+                      key={index}
+                      onClick={() => { 
+                          if (activeTab !== index) {
+                              setVisible(false); 
+                              setTimeout(() => { setActiveTab(index); setVisible(true); }, 200);
+                          }
+                      }} 
+                      sx={{ 
+                          width: 14, 
+                          height: 14, 
+                          borderRadius: '50%', 
+                          bgcolor: activeTab === index ? '#722f37' : '#e0e0e0', 
+                          transition: '0.3s',
+                          cursor: 'pointer',
+                          '&:hover': { bgcolor: '#722f37' }
+                      }} 
+                  />
+              ))}
+          </Box>
+        </Container>
+      </Box>
+
+      {/* ========================================== */}
+      {/* 2. MIÉRT VÁLASSZ MINKET? */}
+      {/* ========================================== */}
+      <Box sx={{ bgcolor: '#fbfbfb', py: 8, borderTop: '1px solid #efefef', borderBottom: '1px solid #efefef' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4} justifyContent="center">
+            {features.map((feat, index) => (
+              <Grid item xs={12} sm={4} md={4} key={index}>
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    textAlign: 'center', 
+                    p: 3, 
+                    height: '100%',
+                    bgcolor: 'transparent',
+                    transition: 'transform 0.3s',
+                    '&:hover': { transform: 'translateY(-5px)' }
+                  }}
+                >
+                  <Box sx={{ color: '#722f37', mb: 2, display: 'flex', justifyContent: 'center' }}>
+                    {feat.icon}
                   </Box>
-
-                </Box>
-            </Grid>
-
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#333', fontFamily: 'serif' }}>
+                    {feat.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
+                    {feat.desc}
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
           </Grid>
         </Container>
       </Box>
-      <Box sx={{ bgcolor: '#fdfbfb', py: 10 }}>
+
+      {/* ========================================== */}
+      {/* 3. RÓLUNK SZEKCIÓ */}
+      {/* ========================================== */}
+      <Box sx={{ bgcolor: '#ffffff', py: 10 }}>
         <Container maxWidth="lg">
           <Grid container spacing={8} alignItems="center">
             <Grid item xs={12} md={6}>
@@ -214,18 +327,18 @@ export default function Home() {
               <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', letterSpacing: 2 }}>
                 Rólunk
               </Typography>
-              <Typography variant="h4" sx={{ color: '#333', fontWeight: 'bold', mb: 3, mt: 1, fontFamily: 'serif' }}>
+              <Typography variant="h3" sx={{ color: '#333', fontWeight: 'bold', mb: 3, mt: 1, fontFamily: 'serif' }}>
                 Hagyomány és Szenvedély
               </Typography>
-              <Typography paragraph sx={{ fontSize: '1.1rem', color: '#555', lineHeight: 1.8, mb: 3 }}>
+              <Typography paragraph sx={{ fontSize: '1.1rem', color: '#555', lineHeight: 1.8, mb: 4 }}>
                 Pincészetünk a Balaton-felvidék szívében, vulkanikus tanúhegyek ölelésében található. 
-                Hiszünk abban, hogy a bor nem csupán ital, hanem a táj és az ember közös alkotása.
+                Hiszünk abban, hogy a bor nem csupán ital, hanem a táj és az ember közös alkotása. Célunk, hogy minden palackban átadjuk ezt a páratlan természeti örökséget.
               </Typography>
               <Button 
                 variant="outlined" 
                 onClick={() => navigate('/about')}
                 sx={{ 
-                  color: '#722f37', borderColor: '#722f37', borderRadius: '30px', px: 4, py: 1, fontWeight: 'bold', textTransform: 'none',
+                  color: '#722f37', borderColor: '#722f37', borderRadius: '30px', px: 4, py: 1.2, fontWeight: 'bold', textTransform: 'none', fontSize: '1rem',
                   '&:hover': { bgcolor: '#722f37', color: 'white', borderColor: '#722f37' }
                 }}
               >
