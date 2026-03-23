@@ -67,7 +67,7 @@ A webalkalmazás fő funkciói:
 - hitelesítés és jogosultságkezelés (pl. JWT token)
 
 #### Technológiai vállalás
-- Node.js / ASP.NET alapú kiszolgáló (attól függően melyiket választod a végén)
+- Node.js alapú kiszolgáló (attól függően melyiket választod a végén)
 - naplózás és hibakezelés
 
 
@@ -95,7 +95,7 @@ Az adatbázis célja, hogy biztosítsa:
 A projektben mind backend, mind frontend oldali tesztek készülnek, hogy a működés megbízható legyen.
 
 ### Backend tesztek
-- egységtesztek és integrációs tesztek (pl. NUNIT, ha ASP.NET; Node esetén Jest/Mocha)
+- egységtesztek és integrációs tesztek Node esetén Jest.
 - API végpontok helyes működésének ellenőrzése
 - adatbázis műveletek tesztelése
 
