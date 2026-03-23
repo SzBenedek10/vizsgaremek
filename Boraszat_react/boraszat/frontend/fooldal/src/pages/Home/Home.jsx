@@ -106,7 +106,7 @@ export default function Home() {
             transform: 'scale(1.1)' 
           }}
         >
-          <source src="/videos/bg.mp4" type="video/mp4" />
+          <source src="/videos/A jó LaciBetyár Löre.mp4" type="video/mp4" />
         </video>
 
       
