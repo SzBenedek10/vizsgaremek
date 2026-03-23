@@ -71,10 +71,7 @@ export default function Home() {
   ];
 
   return (
-    <Box>
-      {/* ========================================== */}
-      {/* 1. FEJLÉC (HERO) SZEKCIÓ - Balra igazítva, Garamond betűtípussal */}
-      {/* ========================================== */}
+    <Box> 
       <Box 
         sx={{
           minHeight: '80vh', 
@@ -92,7 +89,7 @@ export default function Home() {
           boxShadow: '0 15px 40px rgba(0,0,0,0.2)' 
         }}
       >
-        {/* HÁTTÉR VIDEÓ */}
+       
         <video 
           autoPlay 
           loop 
@@ -112,7 +109,7 @@ export default function Home() {
           <source src="/videos/bg.mp4" type="video/mp4" />
         </video>
 
-        {/* TISZTA SÖTÉTÍTŐ RÉTEG */}
+      
         <Box 
           sx={{
             position: 'absolute',
@@ -120,14 +117,13 @@ export default function Home() {
             left: 0,
             width: '100%',
             height: '100%',
-            bgcolor: 'rgba(0, 0, 0, 0.65)', 
+            bgcolor: 'rgba(0, 0, 0, 0.75)', 
             zIndex: 1
           }}
         />
 
-        {/* TARTALOM (Z-index: 2) - Balra igazítva! */}
-        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
-          {/* Adtam neki egy kis bal oldali behúzást (pl), hogy asztali gépen ne tapadjon rá a legszélére */}
+    
+        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>  
           <Box sx={{ textAlign: 'left', pl: { xs: 0, md: 4, lg: 8 } }}> 
               <Typography 
                 variant="h1" 
@@ -136,7 +132,7 @@ export default function Home() {
                   color: '#ffffff', 
                   fontWeight: 'bold', 
                   mb: 2, 
-                  fontFamily: '"Garamond", serif', // Garamond beállítása
+                  fontFamily: '"Garamond", serif', 
                   letterSpacing: 1, 
                   lineHeight: 1.1, 
                   fontSize: {xs: '3rem', md: '5rem'} 
@@ -152,13 +148,13 @@ export default function Home() {
                   fontWeight: 300, 
                   opacity: 0.9, 
                   maxWidth: '800px', 
-                  fontFamily: '"Garamond", serif' // Alcím is Garamond lett
+                  fontFamily: '"Garamond", serif' 
                 }}
               >
                 Ahol a családi hagyomány találkozik a modern borkészítéssel.
               </Typography>
               
-              {/* Gombok balra igazítása (justifyContent: 'flex-start') */}
+            
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
                 <Button 
                     variant="contained" 
@@ -174,7 +170,7 @@ export default function Home() {
                       fontWeight: 'bold',
                       textTransform: 'none',
                       boxShadow: '0 4px 20px rgba(114, 47, 55, 0.5)',
-                      fontFamily: '"Garamond", serif' // Gomb betűtípusa is Garamond
+                      fontFamily: '"Garamond", serif' 
                     }}
                 >
                     Irány a webshop
@@ -192,7 +188,7 @@ export default function Home() {
                       borderRadius: '50px',
                       fontWeight: 'bold',
                       textTransform: 'none',
-                      fontFamily: '"Garamond", serif' // Gomb betűtípusa is Garamond
+                      fontFamily: '"Garamond", serif' 
                     }}
                 >
                     Kóstoló foglalás
@@ -202,9 +198,7 @@ export default function Home() {
         </Container>
       </Box>
 
-      {/* ========================================== */}
-      {/* 1.5 KIEMELT AJÁNLATOK KARUSSZEL (Fehér háttérrel) */}
-      {/* ========================================== */}
+   
       <Box sx={{ bgcolor: '#ffffff', py: {xs: 8, md: 12} }}>
         <Container maxWidth="lg">
           <Fade in={visible} timeout={1000}>

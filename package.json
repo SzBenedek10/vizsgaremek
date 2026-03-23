@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "Indító szkriptek a Szente Pincészet webshophoz",
   "scripts": {
-    "dev": "echo --- WEBSHOP: http://localhost:5173 --- && echo --- SZERVER: http://localhost:5000 --- && cd Boraszat_react/boraszat && docker compose up --build",
+    "dev": "concurrently -n \"DOCS,DOCKER\" -c \"magenta,blue\" \"cd boraszat_docu && npm start\" \"cd Boraszat_react/boraszat && docker compose up --build\"",
     "stop": "cd Boraszat_react/boraszat && docker compose down",
     "restart": "npm run stop && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
