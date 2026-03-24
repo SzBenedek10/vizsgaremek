@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom'; 
 import './Wine.css';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import WineDetails from '../pages/WineDetails';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -73,16 +74,32 @@ export default function WineCard({ bor, kiszerelesek = [], onAddToCart }) {
           
          
           
-
+{/* Gombok és ár - a "margin-top: auto" mindig legalulra nyomja */}
+        <div className="wine-actions">
+          
           <div className="wine-price">{HUF.format(vegsoAr)} Ft</div>
 
-        
-
-            
+          <div className="wine-button-group" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            {/* Új Részletek gomb */}
+            <button 
+              className="details-button" 
+              onClick={goToDetails}
+              style={{
+                flex: 1,
+                padding: '8px',
+                backgroundColor: '#f0f0f0',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              Részletek
+            </button>
+              </div>
+            </div>
           </div>
         </div>
-
-      </div>
-    
+      </div> 
   );
 }

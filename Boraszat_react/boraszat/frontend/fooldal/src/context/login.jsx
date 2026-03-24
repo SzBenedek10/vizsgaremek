@@ -25,7 +25,6 @@ const Login = () => {
             login(res.data.token, res.data.user); 
             alert("Üdvözlünk bent!");
             
-            // 4. A '/' helyett a 'from' változóba irányítjuk át!
             navigate(from); 
         } catch (err) {
             alert(err.response?.data?.error || "Hiba történt");

@@ -337,7 +337,6 @@ export default function WineDetails() {
                     <Button 
                         fullWidth
                         variant="contained" 
-                        startIcon={<ShoppingCartIcon />} 
                         onClick={handleAddToCart} 
                         sx={{ 
                             bgcolor: '#722f37', 

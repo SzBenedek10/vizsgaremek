@@ -32,7 +32,7 @@ export default function SignInSide() {
     text: `Sikeresen bejelentkeztél, ${res.data.user.nev}!`,
     icon: 'success',
     confirmButtonColor: '#722f37',
-    timer: 2000,
+    timer: 1000,
     timerProgressBar: true,
     showConfirmButton: false
   }).then(() => {
