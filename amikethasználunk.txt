@@ -5,3 +5,6 @@ az uj oldalon minmdig felülre ugorjon
 
 idözitete email küldés
 npm install node-cron
+
+QR-kod generálásához kell 
+npm install qrcode

@@ -9,10 +9,15 @@ const path = require('path');
 const fs = require('fs');
 const cron = require('node-cron'); 
 
+// EZ A KÉT SOR NAGYON FONTOS A SZÁMLÁHOZ!
+const PDFDocument = require('pdfkit');
+const QRCode = require('qrcode');
+
 // BEIMPORTÁLJUK AZ ÚJ EMAIL SZOLGÁLTATÁST!
 const emailService = require('./services/emailService');
 
 const app = express();
+// ... innen folytatódik a kódod ...
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
@@ -112,7 +117,7 @@ app.post("/api/rendeles", (req, res) => {
 // ==========================================
 // IDŐZÍTETT NAPI HÍRLEVÉL (Budapesti idő szerint)
 // ==========================================
-cron.schedule('* * * * *', () => {
+cron.schedule('0 11 * * *', () => {
     console.log("⏰ Napi hírlevél generálása indítva...");
 
     const topWinesSql = `
@@ -464,6 +469,155 @@ app.put('/api/admin/uzenetek/:id', (req, res) => {
     db.query(sql, [nev, email, targy, uzenet, id], (err, result) => {
         if (err) return res.status(500).json({ error: "Hiba módosításkor" });
         res.json({ message: "Üzenet sikeresen frissítve!" });
+    });
+});
+// --- FOGLALÁS SZÁMLA LETÖLTÉSE (ELEGÁNS PDF DESIGN QR KÓDDAL) ---
+app.get('/api/foglalas/:id/szamla', (req, res) => {
+    const foglalasId = req.params.id;
+
+    const sql = `
+        SELECT f.*, sz.nev as szolgaltatas_nev, u.nev as user_nev, u.email as user_email, u.irsz, u.varos, u.utca, u.hazszam 
+        FROM foglalas f 
+        JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id 
+        JOIN users u ON f.user_id = u.id 
+        WHERE f.id = ?
+    `;
+
+    db.query(sql, [foglalasId], async (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        if (results.length === 0) return res.status(404).json({ error: "A foglalás nem található" });
+
+        const booking = results[0];
+
+        if (booking.statusz !== 'CONFIRMED') {
+            return res.status(403).json({ error: "A számla még nem tölthető le ehhez a foglaláshoz." });
+        }
+
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+        res.setHeader('Content-disposition', `attachment; filename=Szente_Pinceszet_Foglalas_${foglalasId}.pdf`);
+        res.setHeader('Content-type', 'application/pdf');
+        doc.pipe(res);
+
+        const safeText = (text) => {
+            if(!text) return '';
+            return text.toString().replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
+        };
+
+        // =========================================================
+        // 1. FEJLÉC
+        // =========================================================
+        doc.fontSize(24).fillColor('#722f37').font('Helvetica-Bold').text('VISSZAIGAZOLÁS', 50, 50);
+        
+        doc.fontSize(10).fillColor('#888888').font('Helvetica');
+        doc.text('Borkóstoló / Program foglalás', 50, 78);
+        
+        doc.fontSize(10).fillColor('#555555').font('Helvetica-Bold');
+        doc.text(`Azonosító: #FOGL-${foglalasId}`, 50, 95);
+        doc.font('Helvetica').text(`Kiállítás dátuma: ${new Date().toLocaleDateString('hu-HU')}`, 50, 110);
+
+        // Szente Pincészet adatok (Jobb oldal)
+        doc.fontSize(14).fillColor('#333333').font('Helvetica-Bold').text('Szente Pincészet', 300, 50, { width: 245, align: 'right' });
+        doc.fontSize(10).fillColor('#666666').font('Helvetica');
+        doc.text('8318 Lesencetomaj, Római út 12.', 300, 70, { width: 245, align: 'right' });
+        doc.text('info@szentepinceszet.hu', 300, 85, { width: 245, align: 'right' });
+        doc.text('+36 30 123 4567', 300, 100, { width: 245, align: 'right' });
+
+        // Vastagabb, elegáns díszítő vonal
+        doc.moveTo(50, 135).lineTo(550, 135).lineWidth(2).strokeColor('#722f37').stroke();
+
+        // =========================================================
+        // 2. VÁSÁRLÓ ADATAI (Finom, színezett dobozban)
+        // =========================================================
+        doc.rect(50, 155, 500, 75).fillAndStroke('#fcf9f9', '#eedddf');
+        
+        doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 65, 165);
+        doc.fontSize(10).fillColor('#333333').font('Helvetica-Bold');
+        doc.text(safeText(booking.user_nev), 65, 185);
+        
+        doc.font('Helvetica').fillColor('#555555');
+        if (booking.irsz && booking.varos) {
+            doc.text(`${safeText(booking.irsz)} ${safeText(booking.varos)}, ${safeText(booking.utca)} ${safeText(booking.hazszam)}`, 65, 200);
+        } else {
+            doc.text(`Email: ${safeText(booking.user_email)}`, 65, 200);
+        }
+
+        // =========================================================
+        // 3. TÁBLÁZAT FEJLÉC (Teli bordó háttér, fehér betűk)
+        // =========================================================
+        doc.rect(50, 260, 500, 25).fill('#722f37');
+        
+        doc.fontSize(10).fillColor('#ffffff').font('Helvetica-Bold');
+        doc.text('Szolgáltatás', 60, 268);
+        doc.text('Dátum', 220, 268);
+        doc.text('Időpont', 320, 268);
+        doc.text('Létszám', 400, 268, { width: 40, align: 'right' });
+        doc.text('Összesen', 460, 268, { width: 80, align: 'right' });
+
+        // =========================================================
+        // 4. TÁBLÁZAT ADATSOR
+        // =========================================================
+        const y = 295;
+        doc.font('Helvetica').fillColor('#333333');
+        
+        const d = new Date(booking.datum || booking.idopont);
+        const dateStr = d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' }) + '.';
+        
+        let timeStr = booking.idotartam ? booking.idotartam.toString() : "14:00";
+        if (timeStr.length >= 5) {
+            timeStr = timeStr.substring(0, 5);
+        }
+
+        doc.text(safeText(booking.szolgaltatas_nev), 60, y, { width: 150 });
+        doc.text(dateStr, 220, y);
+        doc.text(timeStr, 320, y);
+        doc.text(`${booking.letszam} fő`, 400, y, { width: 40, align: 'right' });
+        doc.font('Helvetica-Bold').text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 460, y, { width: 80, align: 'right' });
+
+        doc.moveTo(50, y + 25).lineTo(550, y + 25).lineWidth(1).strokeColor('#e0e0e0').stroke();
+
+        // =========================================================
+        // 5. VÉGÖSSZEG (Kiemelt, halvány dobozban)
+        // =========================================================
+        doc.rect(330, y + 45, 220, 35).fill('#f9f5f5');
+        doc.fontSize(12).fillColor('#555555').font('Helvetica-Bold');
+        doc.text('Fizetendő:', 345, y + 57, { width: 80, align: 'left' });
+        doc.fontSize(16).fillColor('#722f37').font('Helvetica-Bold');
+        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 55, { width: 125, align: 'right' });
+
+        // =========================================================
+        // 6. QR KÓD 
+        // =========================================================
+        try {
+            const qrUrl = "http://localhost:3000/admin"; 
+            const qrCodeBuffer = await QRCode.toBuffer(qrUrl, {
+                color: {
+                    dark: '#722f37', 
+                    light: '#ffffff'
+                },
+                width: 80, // Kicsit nagyobb lett, hogy jobban olvasható legyen
+                margin: 0
+            });
+
+            doc.image(qrCodeBuffer, 50, y + 45);
+            
+            doc.fontSize(8).fillColor('#888888').font('Helvetica-Bold');
+            doc.text('Adminisztrátori', 140, y + 65);
+            doc.text('ellenőrzéshez', 140, y + 75);
+            doc.font('Helvetica').text('olvassa be a kódot!', 140, y + 85);
+        } catch (err) {
+            console.error("Hiba a QR kód generálásakor:", err);
+        }
+
+        // =========================================================
+        // 7. LÁBLÉC
+        // =========================================================
+        doc.moveTo(50, 750).lineTo(550, 750).lineWidth(1).strokeColor('#e0e0e0').stroke();
+        doc.fontSize(10).fillColor('#999999').font('Helvetica');
+        doc.text('Köszönjük a foglalást! Várjuk szeretettel a Szente Pincészetben.', 50, 765, { align: 'center' });
+        doc.fillColor('#722f37').text('www.szentepinceszet.hu', 50, 780, { align: 'center' });
+
+        doc.end();
     });
 });
 
