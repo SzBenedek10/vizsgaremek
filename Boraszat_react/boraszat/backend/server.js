@@ -651,6 +651,111 @@ app.put('/api/admin/uzenetek/:id', (req, res) => {
         res.json({ message: "Üzenet sikeresen frissítve!" });
     });
 });
+// --- FOGLALÁS SZÁMLA LETÖLTÉSE (PDF) ---
+app.get('/api/foglalas/:id/szamla', (req, res) => {
+    const foglalasId = req.params.id;
+
+    const sql = `
+        SELECT f.*, sz.nev as szolgaltatas_nev, u.nev as user_nev, u.email as user_email, u.irsz, u.varos, u.utca, u.hazszam 
+        FROM foglalas f 
+        JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id 
+        JOIN users u ON f.user_id = u.id 
+        WHERE f.id = ?
+    `;
+
+    db.query(sql, [foglalasId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        if (results.length === 0) return res.status(404).json({ error: "A foglalás nem található" });
+
+        const booking = results[0];
+
+        // Csak visszaigazolt foglaláshoz adunk számlát
+        if (booking.statusz !== 'CONFIRMED') {
+            return res.status(403).json({ error: "A számla még nem tölthető le ehhez a foglaláshoz." });
+        }
+
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+        // Letöltés kényszerítése a böngészőben
+        res.setHeader('Content-disposition', `attachment; filename=Szente_Pinceszet_Foglalas_${foglalasId}.pdf`);
+        res.setHeader('Content-type', 'application/pdf');
+        doc.pipe(res);
+
+        // Ékezetek biztonságos cseréje PDFKit alap betűtípushoz
+        const safeText = (text) => {
+            if(!text) return '';
+            return text.toString().replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
+        };
+
+        // --- PDF DESIGN ---
+        doc.fontSize(22).fillColor('#722f37').font('Helvetica-Bold').text('Számla / Visszaigazolás', 50, 50);
+        doc.fontSize(10).fillColor('#555555').font('Helvetica');
+        doc.text(`Azonosító: #FOGL-${foglalasId}`, 50, 75);
+        doc.text(`Kiallitás dátuma: ${new Date().toLocaleDateString('hu-HU')}`, 50, 90);
+
+        // FEJLÉC JAVÍTÁS (Szélesebb doboz (245), hogy ne csússzon el a házszám!)
+        doc.fontSize(12).fillColor('#333333').font('Helvetica-Bold').text('Szente Pincészet', 300, 50, { width: 245, align: 'right' });
+        doc.fontSize(10).font('Helvetica').text('8318 Lesencetomaj, Római út 12.', 300, 65, { width: 245, align: 'right' });
+        doc.text('info@szentepinceszet.hu', 300, 80, { width: 245, align: 'right' });
+        doc.text('+36 30 123 4567', 300, 95, { width: 245, align: 'right' });
+
+        doc.moveTo(50, 120).lineTo(550, 120).lineWidth(1).strokeColor('#cccccc').stroke();
+
+        doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 50, 140);
+        doc.fontSize(10).fillColor('#333333').font('Helvetica');
+        doc.text(`Név: ${safeText(booking.user_nev)}`, 50, 160);
+        
+        if (booking.irsz && booking.varos) {
+            doc.text(`Cím: ${safeText(booking.irsz)} ${safeText(booking.varos)}, ${safeText(booking.utca)} ${safeText(booking.hazszam)}`, 50, 175);
+        } else {
+            doc.text(`Email: ${safeText(booking.user_email)}`, 50, 175);
+        }
+
+        doc.moveTo(50, 220).lineTo(550, 220).strokeColor('#cccccc').stroke();
+
+        // TÁBLÁZAT FEJLÉC JAVÍTÁS (Dátum és Időpont külön oszlopban)
+        doc.fontSize(10).fillColor('#722f37').font('Helvetica-Bold');
+        doc.text('Szolgáltatás', 50, 240);
+        doc.text('Dátum', 210, 240);
+        doc.text('Idöpont', 310, 240);
+        doc.text('Létszám', 390, 240, { width: 50, align: 'right' });
+        doc.text('Összesen', 460, 240, { width: 90, align: 'right' });
+
+        doc.moveTo(50, 255).lineTo(550, 255).strokeColor('#722f37').stroke();
+
+        // TÁBLÁZAT ADATSOR
+        doc.font('Helvetica').fillColor('#333333');
+        const y = 270;
+        
+        // 1. Dátum formázása szépen (Pl. 2026. 03. 15.)
+        const d = new Date(booking.datum || booking.idopont);
+        const dateStr = d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' }) + '.';
+        
+        // 2. Időpont / Időtartam formázása (Csak óra:perc, pl. 14:00)
+        let timeStr = booking.idotartam ? booking.idotartam.toString() : "14:00";
+        if (timeStr.length >= 5) {
+            timeStr = timeStr.substring(0, 5); // Levágjuk a másodperceket a "14:00:00"-ból
+        }
+
+        doc.text(safeText(booking.szolgaltatas_nev), 50, y, { width: 150 });
+        doc.text(dateStr, 210, y);
+        doc.text(timeStr, 310, y);
+        doc.text(`${booking.letszam} fö`, 390, y, { width: 50, align: 'right' });
+        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 460, y, { width: 90, align: 'right' });
+
+        doc.moveTo(50, y + 20).lineTo(550, y + 20).lineWidth(0.5).strokeColor('#eeeeee').stroke();
+
+        // VÉGÖSSZEG
+        doc.fontSize(14).fillColor('#722f37').font('Helvetica-Bold');
+        doc.text('Fizetendö végösszeg:', 200, y + 40, { width: 200, align: 'right' });
+        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 40, { width: 140, align: 'right' });
+
+        doc.fontSize(10).fillColor('#888888').font('Helvetica');
+        doc.text('Köszönjük a foglalást! Várjuk szeretettel a Szente Pincészetben.', 50, y + 100, { align: 'center' });
+
+        doc.end();
+    });
+});
 
 if (process.env.NODE_ENV !== 'test') {
     app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));

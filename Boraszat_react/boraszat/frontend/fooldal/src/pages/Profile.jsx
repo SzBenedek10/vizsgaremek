@@ -3,11 +3,13 @@ import { AuthContext } from "../context/AuthContext";
 import { 
   Container, Grid, Paper, Typography, Box, Tabs, Tab, 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Chip, Divider, Avatar, Card, CardContent, CircularProgress
+  Chip, Divider, Avatar, CircularProgress, IconButton, Tooltip
 } from "@mui/material";
 import PersonIcon from '@mui/icons-material/Person';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import EventIcon from '@mui/icons-material/Event';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import Swal from 'sweetalert2';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -27,13 +29,11 @@ export default function Profilom() {
   const fetchUserData = async () => {
     setLoading(true);
     try {
-      console.log("Rendelések lekérése indul...");
       const orderRes = await fetch(`http://localhost:5000/api/rendeles/user/${user.id}`);
       if (!orderRes.ok) throw new Error(`Rendelés backend hiba: ${orderRes.status}`);
       const orderData = await orderRes.json();
       setOrders(Array.isArray(orderData) ? orderData : []);
       
-      console.log("Foglalások lekérése indul...");
       const bookingRes = await fetch(`http://localhost:5000/api/foglalas/user/${user.id}`);
       if (!bookingRes.ok) throw new Error(`Foglalás backend hiba: ${bookingRes.status}`);
       const bookingData = await bookingRes.json();
@@ -42,8 +42,37 @@ export default function Profilom() {
     } catch (err) {
       console.error("Hiba történt az adatok lekérésekor:", err.message);
     } finally {
-      // Ez tünteti el a forgó karikát minden esetben!
       setLoading(false);
+    }
+  };
+
+  // --- PDF LETÖLTÉS LOGIKA ---
+  const handleDownloadInvoice = async (bookingId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/foglalas/${bookingId}/szamla`);
+      
+      if (!response.ok) {
+        throw new Error("Hiba történt a számla generálásakor.");
+      }
+
+      // Blob kinyerése és letöltés szimulálása a böngészőben
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Szamla_Foglalas_${bookingId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+    } catch (error) {
+      console.error("Letöltési hiba:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Hiba',
+        text: 'Nem sikerült letölteni a számlát!',
+        confirmButtonColor: '#722f37'
+      });
     }
   };
 
@@ -110,23 +139,30 @@ export default function Profilom() {
                       <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Rendelésszám</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Dátum</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Összeg</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Állapot</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Rendelésszám</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Dátum</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Összeg</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Állapot</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
                           {orders.length > 0 ? orders.map((order) => (
                             <TableRow key={order.id} hover>
-                              <TableCell>#{order.id}</TableCell>
-                              <TableCell>{new Date(order.datum).toLocaleDateString('hu-HU')}</TableCell>
-                              <TableCell sx={{ fontWeight: 'bold' }}>{HUF.format(order.vegosszeg)} Ft</TableCell>
+                              <TableCell sx={{ color: '#555' }}>#{order.id}</TableCell>
+                              <TableCell sx={{ color: '#555' }}>
+                                {new Date(order.datum).toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' })}.
+                              </TableCell>
+                              <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>{HUF.format(order.vegosszeg)} Ft</TableCell>
                               <TableCell>
                                 <Chip 
-                                  label={order.statusz || "Feldolgozás alatt"} 
+                                  label={(order.statusz || "FELDOLGOZAS").toUpperCase()} 
                                   size="small" 
-                                  sx={{ bgcolor: '#722f37', color: 'white' }} 
+                                  sx={{ 
+                                    bgcolor: '#722f37', 
+                                    color: 'white', 
+                                    fontWeight: 'bold', 
+                                    letterSpacing: 0.5 
+                                  }} 
                                 />
                               </TableCell>
                             </TableRow>
@@ -140,32 +176,87 @@ export default function Profilom() {
                     </TableContainer>
                   )}
 
-                  {/* FOGLALÁSOK FÜL */}
+                  {/* FOGLALÁSOK FÜL (Frissítve: Letöltés gomb) */}
                   {tabValue === 1 && (
-                    <Grid container spacing={2}>
-                      {bookings.length > 0 ? bookings.map((booking) => (
-                        <Grid item xs={12} key={booking.id}>
-                          <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                            <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Box>
-                                <Typography variant="h6" sx={{ color: '#722f37' }}>
-                                  {booking.szolgaltatas_nev || "Borkóstoló"}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  Időpont: {new Date(booking.idopont || booking.datum).toLocaleString('hu-HU')}
-                                </Typography>
-                                <Typography variant="body2">Létszám: {booking.letszam} fő</Typography>
-                              </Box>
-                              <Chip label={booking.statusz === 'PENDING' ? 'Feldolgozás alatt' : 'Visszaigazolva'} color={booking.statusz === 'PENDING' ? 'warning' : 'success'} variant="outlined" />
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      )) : (
-                        <Typography sx={{ p: 2, textAlign: 'center', width: '100%' }}>
-                          Még nincs foglalásod.
-                        </Typography>
-                      )}
-                    </Grid>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Szolgáltatás</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Időpont</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Létszám</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>Állapot</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {bookings.length > 0 ? bookings.map((booking) => {
+                            const isConfirmed = booking.statusz === 'CONFIRMED';
+
+                            return (
+                              <TableRow key={booking.id} hover>
+                                <TableCell sx={{ color: '#555', fontWeight: 'bold' }}>
+                                  {(booking.szolgaltatas_nev || "Borkóstoló").toUpperCase()}
+                                </TableCell>
+                                <TableCell sx={{ color: '#555' }}>
+                                  {new Date(booking.idopont || booking.datum).toLocaleString('hu-HU', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>{booking.letszam} fő</TableCell>
+                                
+                                <TableCell>
+                                  {/* Egy dobozba tesszük a státusz jelzőt és a letöltés gombot */}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Chip 
+                                      label={
+                                        booking.statusz === 'PENDING' ? 'FELDOLGOZÁS' : 
+                                        isConfirmed ? 'VISSZAIGAZOLVA' : 'TÖRÖLVE'
+                                      } 
+                                      size="small" 
+                                      sx={{ 
+                                        bgcolor: booking.statusz === 'PENDING' ? '#722f37' : 
+                                                 isConfirmed ? '#2e7d32' : '#d32f2f', 
+                                        color: 'white', 
+                                        fontWeight: 'bold', 
+                                        letterSpacing: 0.5 
+                                      }} 
+                                    />
+                                    
+                                    {/* PDF Letöltés Ikon */}
+                                    <Tooltip title={isConfirmed ? "Számla letöltése (PDF)" : "Csak visszaigazolás után letölthető"}>
+                                      <span>
+                                        <IconButton 
+                                          size="small"
+                                          disabled={!isConfirmed}
+                                          onClick={() => handleDownloadInvoice(booking.id)}
+                                          sx={{ 
+                                            color: isConfirmed ? '#d32f2f' : '#e0e0e0', // Ha él, pirosas, ha nem, szürke
+                                            '&:hover': {
+                                              bgcolor: isConfirmed ? 'rgba(211, 47, 47, 0.1)' : 'transparent'
+                                            }
+                                          }}
+                                        >
+                                          <PictureAsPdfIcon />
+                                        </IconButton>
+                                      </span>
+                                    </Tooltip>
+
+                                  </Box>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }) : (
+                            <TableRow>
+                              <TableCell colSpan={4} align="center">Még nincs foglalásod.</TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
                   )}
                 </>
               )}

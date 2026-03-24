@@ -3,6 +3,9 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from 'sweetalert2';
 
+// Cseréld ki a megfelelő útvonalra, ahol a Terms.jsx található a projektedben!
+import Terms from "./Terms"; 
+
 // UI Komponensek
 import {
   Container,
@@ -15,7 +18,11 @@ import {
   Checkbox,
   Divider,
   Stack,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from "@mui/material";
 
 // Ikonok
@@ -28,6 +35,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import CloseIcon from '@mui/icons-material/Close';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -45,6 +53,13 @@ export default function TastingCheckout() {
     irsz: "", varos: "", utca: "", hazszam: "",
     megjegyzes: ""
   });
+
+  // KÜLÖNVÁLASZTOTT CHECKBOXOK (18+ és ÁSZF)
+  const [isOver18, setIsOver18] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  
+  // ÁSZF FELUGRÓ ABLAK ÁLLAPOTA
+  const [termsOpen, setTermsOpen] = useState(false);
 
   // A maximálisan foglalható helyek száma
   const maxSzabad = selectedPackage?.maxSzabad || selectedPackage?.kapacitas || 10;
@@ -97,6 +112,12 @@ export default function TastingCheckout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedPackage || !user) return; 
+
+    // Extra védelem mindkét feltételre
+    if (!isOver18 || !acceptedTerms) {
+      Swal.fire('Figyelem!', 'A foglaláshoz igazolnod kell, hogy elmúltál 18 éves és el kell fogadnod az ÁSZF-et!', 'warning');
+      return;
+    }
 
     const nyersDatum = selectedPackage?.idopont || selectedPackage?.datum || new Date().toISOString();
     const mysqlDatum = new Date(nyersDatum).toISOString().split('T')[0];
@@ -236,7 +257,6 @@ export default function TastingCheckout() {
 
               {/* LÉTSZÁMVÁLASZTÓ ÉS MARADÉK HELYEK */}
               <Box sx={{ mb: 3 }}>
-                {/* Fehér doboz a kiválasztónak */}
                 <Box sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -245,7 +265,7 @@ export default function TastingCheckout() {
                   bgcolor: '#fdfbfb', 
                   borderRadius: 2, 
                   border: '1px solid',
-                  borderColor: maradekHely === 0 ? '#ffcdd2' : '#e0e0e0', // Pirosas keret, ha megtelt
+                  borderColor: maradekHely === 0 ? '#ffcdd2' : '#e0e0e0',
                   transition: '0.3s'
                 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -277,7 +297,7 @@ export default function TastingCheckout() {
                     <IconButton 
                       size="small" 
                       onClick={handleIncrement} 
-                      disabled={letszam >= maxSzabad} // Gomb letiltása, ha betelt
+                      disabled={letszam >= maxSzabad} 
                       sx={{ 
                         bgcolor: '#fff', 
                         border: '1px solid #ddd', 
@@ -290,13 +310,12 @@ export default function TastingCheckout() {
                   </Box>
                 </Box>
                 
-                {/* Dinamikus, elegáns maradék hely kiírása */}
                 <Typography 
                   variant="caption" 
                   sx={{ 
                     display: 'block', 
                     textAlign: 'right', 
-                    color: maradekHely === 0 ? '#d32f2f' : '#722f37', // Ha 0, akkor élénkebb piros
+                    color: maradekHely === 0 ? '#d32f2f' : '#722f37', 
                     fontWeight: maradekHely === 0 ? 'bold' : '500', 
                     fontStyle: maradekHely === 0 ? 'normal' : 'italic',
                     mt: 0.5,
@@ -319,11 +338,44 @@ export default function TastingCheckout() {
                 </Typography>
               </Box>
 
+              {/* KETTÉBONTOTT, KÖTELEZŐ CHECKBOXOK HOZZÁADVA IDE */}
+              <Box sx={{ mb: 3, p: 2, bgcolor: (isOver18 && acceptedTerms) ? '#e8f5e9' : '#ffebee', borderRadius: 2, border: '1px solid', borderColor: (isOver18 && acceptedTerms) ? '#c8e6c9' : '#ffcdd2', transition: '0.3s' }}>
+                <Stack spacing={1}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={isOver18}
+                        onChange={(e) => setIsOver18(e.target.checked)}
+                        sx={{ color: '#d32f2f', p: 0.5, '&.Mui-checked': { color: '#2e7d32' } }}
+                      />
+                    }
+                    label={<Typography variant="body2" sx={{ fontWeight: 'bold', color: isOver18 ? '#2e7d32' : '#d32f2f', ml: 1 }}>Igen, elmúltam 18 éves. *</Typography>}
+                  />
+                  
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        sx={{ color: '#d32f2f', p: 0.5, '&.Mui-checked': { color: '#2e7d32' } }}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: acceptedTerms ? '#2e7d32' : '#d32f2f', ml: 1 }}>
+                        Elfogadom az <span style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={(e) => { e.preventDefault(); setTermsOpen(true); }}>ÁSZF</span>-et. *
+                      </Typography>
+                    }
+                  />
+                </Stack>
+              </Box>
+
+              {/* GOMBOK FRISSÍTVE (INAKTÍV, HA NINCSENEK BEPIPÁLVA) */}
               <Stack spacing={1.5}>
                 <Button
                   type="submit"
                   fullWidth
                   variant="contained"
+                  disabled={!isOver18 || !acceptedTerms}
                   startIcon={<CheckCircleIcon />}
                   sx={{
                     bgcolor: '#722f37',
@@ -332,7 +384,8 @@ export default function TastingCheckout() {
                     fontWeight: 'bold',
                     borderRadius: 2,
                     textTransform: 'none',
-                    fontSize: '1.05rem'
+                    fontSize: '1.05rem',
+                    '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9e9e9e' }
                   }}
                 >
                   Foglalás véglegesítése
@@ -344,11 +397,13 @@ export default function TastingCheckout() {
                   startIcon={<ArrowBackIcon />}
                   onClick={() => navigate("/borkostolas")}
                   sx={{ 
-                    color: '#555', 
-                    borderColor: '#ddd', 
+                    color: '#722f37', 
+                    borderColor: '#722f37', 
                     borderRadius: 2,
+                    fontWeight: 'bold',
                     textTransform: 'none',
-                    '&:hover': { borderColor: '#999', bgcolor: '#fafafa' }
+                    py: 1,
+                    '&:hover': { borderColor: '#5a252c', bgcolor: '#fdfbfb' }
                   }}
                 >
                   Vissza a válogatáshoz
@@ -359,6 +414,41 @@ export default function TastingCheckout() {
 
         </Box>
       </form>
+
+      {/* ======================================================== */}
+      {/* ÁSZF FELUGRÓ ABLAK (MODAL)                               */}
+      {/* ======================================================== */}
+      <Dialog 
+        open={termsOpen} 
+        onClose={() => setTermsOpen(false)}
+        maxWidth="md" 
+        fullWidth
+        scroll="paper"
+      >
+        <DialogTitle sx={{ bgcolor: '#722f37', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            Általános Szerződési Feltételek
+          </Typography>
+          <IconButton onClick={() => setTermsOpen(false)} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent dividers sx={{ p: 0 }}>
+          {/* ITT TÖLTI BE A SAJÁT TERMS KOMPONENSEDET! */}
+          <Terms /> 
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 2, bgcolor: '#fdfbfb' }}>
+          <Button 
+            onClick={() => { setAcceptedTerms(true); setTermsOpen(false); }} 
+            variant="contained" 
+            sx={{ bgcolor: '#722f37', fontWeight: 'bold', '&:hover': { bgcolor: '#5a252c' } }}
+          >
+            Elolvastam és elfogadom
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
