@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "node-cron": "^4.2.1"
   }
 }

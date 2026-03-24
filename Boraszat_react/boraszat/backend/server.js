@@ -4,29 +4,30 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = "nagyon_titkos_kulcs_123"; 
-const nodemailer = require('nodemailer');
-const PDFDocument = require('pdfkit');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cron = require('node-cron'); 
+
+// BEIMPORTÁLJUK AZ ÚJ EMAIL SZOLGÁLTATÁST!
+const emailService = require('./services/emailService');
+
 const app = express();
-app.use(express.json({ limit: '50mb' })); // KULCS: Megnöveltük a limitet a Base64 képek miatt!
+app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
-app.use('/images', express.static(path.join(__dirname, 'public/borok'))); // Képek kiszolgálása a public/borok könyvtárból
+app.use('/images', express.static(path.join(__dirname, 'public/borok'))); 
 
 const uploadDir = path.join(__dirname, 'public/borok');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Beállítjuk, hova és milyen néven mentse a képeket
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir); // Ide menti (backend/public/images)
+    cb(null, uploadDir); 
   },
   filename: function (req, file, cb) {
-    // Generálunk egy egyedi nevet: timestamp + kiterjesztés (pl. 167890123.jpg)
     const uniqueSuffix = Date.now() + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalname)); 
   }
@@ -39,154 +40,28 @@ const db = mysql.createPool({
   user: 'avnadmin',
   password: 'AVNS_vZV7YDKwkZ4YM_eXDER', 
   database: 'defaultdb',
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'gibszjakab900@gmail.com', 
-        pass: 'gfgf cowy hjkd qoqp' 
-    }
+  ssl: { rejectUnauthorized: false }
 });
 
 db.getConnection((err, connection) => {
-    if (err) {
-        console.error('Adatbázis csatlakozási hiba (Pool):', err.message);
-    } else {
-        console.log('Sikeresen csatlakozva a MySQL-hez (Pool)!');
-        connection.release(); 
-    }
+    if (err) console.error('Adatbázis csatlakozási hiba (Pool):', err.message);
+    else { console.log('Sikeresen csatlakozva a MySQL-hez (Pool)!'); connection.release(); }
 });
 
-app.post('/api/register', async (req, res) => {
-    console.log("Beérkező adatok:", req.body);
-    const { email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam } = req.body;
-
-    if (!email || !password_hash || !nev) {
-        return res.status(400).json({ error: 'Hiányzó adatok: email, név és jelszó kötelező!' });
-    }
-
-    try {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password_hash, salt);
-
-        const sql = `INSERT INTO users 
-            (email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-        const values = [email, hashedPassword, nev, telefonszam, orszag, irsz, varos, utca, hazszam];
-
-        db.query(sql, values, (err, result) => {
-            if (err) {
-                console.error("MYSQL HIBA:", err.sqlMessage);
-                return res.status(500).json({ error: "Adatbázis hiba: " + err.sqlMessage });
-            }
-            res.status(201).json({ message: 'Sikeres regisztráció!' });
-        });
-    } catch (error) {
-        console.error("SZERVER HIBA:", error);
-        res.status(500).json({ error: 'Belső szerverhiba történt.' });
-    }
-});
-
-app.post('/api/login', (req, res) => {
-    const { email, password_hash } = req.body; 
-
-    const sql = "SELECT * FROM users WHERE email = ?";
-    db.query(sql, [email], async (err, results) => {
-        if (err) return res.status(500).json({ error: 'Adatbázis hiba' });
-        if (results.length === 0) return res.status(401).json({ error: 'Hibás adatok!' });
-
-        const user = results[0];
-        const isMatch = await bcrypt.compare(password_hash, user.password_hash);
-
-        if (!isMatch) return res.status(401).json({ error: 'Hibás adatok!' });
-
-        const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '24h' }); 
-    
-        res.json({
-            message: 'Sikeres bejelentkezés!',
-            token: token,
-            user: { 
-                id: user.id, 
-                nev: user.nev, 
-                email: user.email,
-                role: user.role, 
-                telefonszam: user.telefonszam, 
-                irsz: user.irsz,
-                varos: user.varos,
-                utca: user.utca,
-                hazszam: user.hazszam
-            }
-        });
-    });
-});
-
-// --- ÚJ: Bor Színek Lekérése ---
-app.get('/api/bor-szinek', (req, res) => {
-    db.query('SELECT id, nev FROM bor_szin', (err, results) => {
-        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
-        res.json(results);
-    });
-});
-
-// --- MÓDOSÍTVA: Hozzáadva a `kep` és a `bor_szin_id` a lekérdezéshez ---
-app.get('/api/borok', (req, res) => {
-  const sql = `
-    SELECT 
-      b.id, 
-      b.nev, 
-      b.evjarat,
-      b.ar, 
-      b.leiras, 
-      b.keszlet, 
-      b.kep,
-      b.bor_szin_id,
-      b.alkoholfok,
-      k.megnevezes AS kiszereles_nev, 
-      k.szorzo 
-    FROM bor b
-    JOIN kiszereles k ON b.kiszereles_id = k.id
-    WHERE b.keszlet IS NOT NULL
-  `;
-  
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("SQL hiba:", err.message);
-      return res.status(500).json({ error: "Adatbázis hiba" }); 
-    }
-    res.json(results); 
-  });
-});
-
-app.get('/api/kiszerelesek', (req, res) => {
-    const sql = "SELECT * FROM kiszereles ORDER BY id ASC";
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error("Hiba a kiszerelések lekérésekor:", err);
-            return res.status(500).json({ error: "Adatbázis hiba" });
-        }
-        res.json(results);
-    });
-});
-
+// ==========================================
+// RENDELÉS FELADÁSA
+// ==========================================
 app.post("/api/rendeles", (req, res) => {
-  const { userId, szamlazasi, szallitasi, tetelek, vegosszeg } = req.body;
+  const { userId, szamlazasi, szallitasi, tetelek, vegosszeg, szallitasiKoltseg, utanvetDija, kuponKod, kedvezmeny, hirlevel } = req.body;
 
-  if (!tetelek || tetelek.length === 0) {
-    return res.status(400).json({ msg: "Üres a kosár!" });
-  }
+  if (!tetelek || tetelek.length === 0) return res.status(400).json({ msg: "Üres a kosár!" });
 
   const finalUserId = userId || 1; 
 
   const sqlRendeles = `
     INSERT INTO rendeles 
     (user_id, szaml_nev, szaml_orszag, szaml_irsz, szaml_varos, szaml_utca, szaml_hazszam,
-     szall_nev, szall_orszag, szall_irsz, szall_varos, szall_utca, szall_hazszam, 
-     vegosszeg, statusz) 
+     szall_nev, szall_orszag, szall_irsz, szall_varos, szall_utca, szall_hazszam, vegosszeg, statusz) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'FELDOLGOZAS')
   `;
 
@@ -206,173 +81,113 @@ app.post("/api/rendeles", (req, res) => {
       if (err) return res.status(500).json({ msg: "Hiba a tételek mentésekor." });
 
       tetelek.forEach(item => {
-        const sqlUpdateStock = "UPDATE bor SET keszlet = keszlet - ? WHERE id = ?";
-        db.query(sqlUpdateStock, [item.amount, item.id]);
+        db.query("UPDATE bor SET keszlet = keszlet - ? WHERE id = ?", [item.amount, item.id]);
       });
-      
-      const doc = new PDFDocument({ margin: 50, size: 'A4' });
-      let buffers = [];
-      
-      doc.on('data', buffers.push.bind(buffers));
-      
-      doc.on('end', () => {
-          let pdfData = Buffer.concat(buffers);
-          let tetelekHtml = tetelek.map(t => `<li style="margin-bottom: 5px;"><strong>${t.nev}</strong> - ${t.amount} db (${t.ar} Ft/db)</li>`).join('');
-          const vasarloEmail = szamlazasi.email || 'teszt@teszt.hu'; 
 
-          const mailOptions = {
-              from: '"Szente Pincészet" <gibszjakab900@gmail.com>', 
-              to: vasarloEmail, 
-              subject: `Sikeres rendelés! (Azonosító: #${rendelesId})`,
-              html: `
-                <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <div style="background-color: #722f37; padding: 25px; text-align: center; color: white;">
-                        <h1 style="margin: 0; font-size: 24px;">Köszönjük a rendelésed! 🍷</h1>
-                    </div>
-                    <div style="padding: 30px; background-color: #fdfbfb;">
-                        <h2>Kedves ${szamlazasi.nev}!</h2>
-                        <p>Sikeresen megkaptuk a rendelésedet. <b>A mellékletben találod a hivatalos számlát PDF formátumban.</b></p>
-                        <h3 style="border-bottom: 2px solid #722f37; padding-bottom: 8px; color: #2c0e0e;">Rendelés részletei (#${rendelesId})</h3>
-                        <ul>${tetelekHtml}</ul>
-                        <h2 style="color: #722f37;">Fizetendő végösszeg: ${new Intl.NumberFormat("hu-HU").format(vegosszeg)} Ft</h2>
-                        <p><strong>Fizetési mód:</strong> Utánvét (Fizetés a futárnál készpénzzel vagy bankkártyával)</p>
-                        <p>Egészségedre,<br><strong style="color: #722f37;">A Szente Pincészet Csapata</strong></p>
-                    </div>
-                </div>
-              `,
-              attachments: [
-                  {
-                      filename: `Szente_Pinceszet_Szamla_${rendelesId}.pdf`,
-                      content: pdfData
-                  }
-              ]
-          };
-
-          transporter.sendMail(mailOptions, (error, info) => {
-              if (error) console.error("Hiba az email küldésekor:", error);
-              else console.log("PDF-es email elküldve: " + info.response);
+      const vasarloEmail = szamlazasi.email;
+      
+      // Hírlevél feliratkozás mentése & Email
+      if (hirlevel && vasarloEmail) {
+          db.query(`INSERT IGNORE INTO hirlevel_feliratkozok (nev, email) VALUES (?, ?)`, [szamlazasi.nev, vasarloEmail], (hErr) => {
+              if (!hErr) emailService.sendWelcomeEmail(szamlazasi.nev, vasarloEmail);
           });
-      });
+      }
 
-      const safeText = (text) => {
-          if(!text) return '';
-          return text.replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
+      // Rendelés visszaigazoló email & PDF küldése
+      const orderData = {
+          rendelesId, szamlazasi, szallitasi, tetelek, vegosszeg,
+          termekekAra: tetelek.reduce((acc, item) => acc + (item.ar * item.amount), 0),
+          kedvezmeny, kuponKod, szallitasiKoltseg, utanvetDija,
+          afa: Math.round(vegosszeg * 0.212598),
+          vasarloEmail
       };
-
-      doc.fontSize(22).fillColor('#722f37').font('Helvetica-Bold').text('Számla', 50, 50);
-      doc.fontSize(10).fillColor('#555555').font('Helvetica');
-      doc.text(`Azonosító: #${rendelesId}`, 50, 75);
-      doc.text(`Dátúm: ${new Date().toLocaleDateString('hu-HU')}`, 50, 90);
-
-      doc.fontSize(12).fillColor('#333333').font('Helvetica-Bold').text('Szente Pincészet', 400, 50, { align: 'right' });
-      doc.fontSize(10).font('Helvetica').text('8318 Lesencetomaj, Római ut 13.', 400, 65, { align: 'right' });
-      doc.text('info@szentepinceszet.hu', 400, 80, { align: 'right' });
-      doc.text('+36 30 123 4567', 400, 95, { align: 'right' });
-
-      doc.moveTo(50, 120).lineTo(550, 120).lineWidth(1).strokeColor('#cccccc').stroke();
-
-      doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 50, 140);
-      doc.fontSize(10).fillColor('#333333').font('Helvetica');
-      doc.text(`Név: ${safeText(szamlazasi.nev)}`, 50, 160);
-      doc.text(`Cím: ${safeText(szallitasi.irsz)} ${safeText(szallitasi.varos)}`, 50, 175);
-      doc.text(`${safeText(szallitasi.utca)} ${safeText(szallitasi.hazszam)}`, 50, 190);
-
-      doc.moveTo(50, 220).lineTo(550, 220).strokeColor('#cccccc').stroke();
-
-      doc.fontSize(10).fillColor('#722f37').font('Helvetica-Bold');
-      doc.text('Termék megnevezése', 50, 240);
-      doc.text('Mennyiség', 300, 240, { width: 60, align: 'right' });
-      doc.text('Egységár', 380, 240, { width: 80, align: 'right' });
-      doc.text('Összesen', 470, 240, { width: 80, align: 'right' });
-
-      doc.moveTo(50, 255).lineTo(550, 255).strokeColor('#722f37').stroke();
       
-      doc.font('Helvetica').fillColor('#333333');
-      let y = 270;
-      
-      tetelek.forEach(t => {
-          doc.text(safeText(t.nev), 50, y);
-          doc.text(`${t.amount} db`, 300, y, { width: 60, align: 'right' });
-          doc.text(`${new Intl.NumberFormat("hu-HU").format(t.ar)} Ft`, 380, y, { width: 80, align: 'right' });
-          doc.text(`${new Intl.NumberFormat("hu-HU").format(t.amount * t.ar)} Ft`, 470, y, { width: 80, align: 'right' });
-          
-          y += 20;
-          doc.moveTo(50, y - 5).lineTo(550, y - 5).lineWidth(0.5).strokeColor('#eeeeee').stroke();
-      });
+      emailService.sendOrderConfirmation(orderData);
 
-      y += 10;
-      doc.fontSize(14).fillColor('#722f37').font('Helvetica-Bold');
-      doc.text('Fizetendő végösszeg:', 250, y, { width: 150, align: 'right' });
-      doc.text(`${new Intl.NumberFormat("hu-HU").format(vegosszeg)} Ft`, 410, y, { width: 140, align: 'right' });
-
-      y += 60;
-      doc.fontSize(10).fillColor('#888888').font('Helvetica');
-      doc.text('Fizetési mód: Utánvét (készpénz vagy bankkártya a futárnál)', 50, y, { align: 'center' });
-      doc.text('Köszönyjük, hogy a mi borainkat választottad!', 50, y + 15, { align: 'center' });
-
-      doc.end();
       res.json({ msg: "Rendelés sikeresen rögzítve!", orderId: rendelesId });
     });
   });
 });
 
-app.get('/api/users', (req, res) => {
-    const sql = "SELECT id, nev, email, role, telefonszam, is_active FROM users";
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
-        res.json(results);
+// ==========================================
+// IDŐZÍTETT NAPI HÍRLEVÉL (Budapesti idő szerint)
+// ==========================================
+cron.schedule('* * * * *', () => {
+    console.log("⏰ Napi hírlevél generálása indítva...");
+
+    const topWinesSql = `
+        SELECT b.nev, b.ar, b.leiras, SUM(rt.mennyiseg) as eladott_db 
+        FROM bor b LEFT JOIN rendeles_tetel rt ON b.id = rt.bor_id
+        GROUP BY b.id ORDER BY eladott_db DESC LIMIT 3
+    `;
+
+    db.query(topWinesSql, (err, wines) => {
+        if (err || wines.length === 0) return console.error("Hiba a borok lekérésekor a hírlevélhez.");
+
+        db.query("SELECT nev, email FROM hirlevel_feliratkozok", (errSub, subscribers) => {
+            if (errSub || subscribers.length === 0) return console.log("Nincsenek feliratkozók.");
+            
+            emailService.sendDailyNewsletter(wines, subscribers);
+            console.log(`Hírlevél kiküldve ${subscribers.length} feliratkozónak!`);
+        });
+    });
+}, {
+    scheduled: true,
+    timezone: "Europe/Budapest" // <-- EZ A KULCS! Így a magyar időt figyeli, nem a Docker belső idejét.
+});
+
+
+// Többi API végpont
+app.post('/api/register', async (req, res) => {
+    const { email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam } = req.body;
+    if (!email || !password_hash || !nev) return res.status(400).json({ error: 'Hiányzó adatok: email, név és jelszó kötelező!' });
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password_hash, salt);
+        const sql = `INSERT INTO users (email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        db.query(sql, [email, hashedPassword, nev, telefonszam, orszag, irsz, varos, utca, hazszam], (err, result) => {
+            if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+            res.status(201).json({ message: 'Sikeres regisztráció!' });
+        });
+    } catch (error) { res.status(500).json({ error: 'Belső szerverhiba történt.' }); }
+});
+
+app.post('/api/login', (req, res) => {
+    const { email, password_hash } = req.body; 
+    db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
+        if (err) return res.status(500).json({ error: 'Adatbázis hiba' });
+        if (results.length === 0) return res.status(401).json({ error: 'Hibás adatok!' });
+        const user = results[0];
+        if (!(await bcrypt.compare(password_hash, user.password_hash))) return res.status(401).json({ error: 'Hibás adatok!' });
+        const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '24h' }); 
+        res.json({ message: 'Sikeres bejelentkezés!', token, user: { id: user.id, nev: user.nev, email: user.email, role: user.role, telefonszam: user.telefonszam, irsz: user.irsz, varos: user.varos, utca: user.utca, hazszam: user.hazszam } });
     });
 });
 
-app.delete('/api/users/:id', (req, res) => {
-    const id = req.params.id;
-    if(id == 1) return res.status(403).json({ error: "A fő admint nem lehet törölni!" });
+app.get('/api/bor-szinek', (req, res) => { db.query('SELECT id, nev FROM bor_szin', (err, results) => { res.json(results); }); });
 
-    const sql = "DELETE FROM users WHERE id = ?";
-    db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: "Hiba a törléskor" });
-        res.json({ message: "Felhasználó törölve!" });
-    });
+app.get('/api/borok', (req, res) => {
+  db.query(`SELECT b.id, b.nev, b.evjarat, b.ar, b.leiras, b.keszlet, b.kep, b.bor_szin_id, b.alkoholfok, k.megnevezes AS kiszereles_nev, k.szorzo FROM bor b JOIN kiszereles k ON b.kiszereles_id = k.id WHERE b.keszlet IS NOT NULL`, (err, results) => { res.json(results); });
 });
+
+app.get('/api/kiszerelesek', (req, res) => { db.query("SELECT * FROM kiszereles ORDER BY id ASC", (err, results) => { res.json(results); }); });
+app.get('/api/users', (req, res) => { db.query("SELECT id, nev, email, role, telefonszam, is_active FROM users", (err, results) => { res.json(results); }); });
+app.delete('/api/users/:id', (req, res) => { if(req.params.id == 1) return res.status(403).json({ error: "Fő admint nem lehet törölni" }); db.query("DELETE FROM users WHERE id = ?", [req.params.id], () => res.json({ message: "Felhasználó törölve!" })); });
 
 app.post('/api/borok', upload.single('kep'), (req, res) => {
     const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
-    
-    // Ha jött fájl, a Multer elmentette, mi csak a nevét (pl. /images/123.jpg) mentjük az adatbázisba!
-    const kepUrl = req.file ? `/images/${req.file.filename}` : null;
-    
-    const sql = `INSERT INTO bor (nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok, kep) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    const values = [nev, evjarat, ar, keszlet || 0, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0, kepUrl];
-
-    db.query(sql, values, (err, result) => {
-        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
-        res.json({ message: "Bor sikeresen hozzáadva!", id: result.insertId });
-    });
+    db.query(`INSERT INTO bor (nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok, kep) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+    [nev, evjarat, ar, keszlet || 0, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0, req.file ? `/images/${req.file.filename}` : null], 
+    (err, result) => res.json({ message: "Bor sikeresen hozzáadva!", id: result.insertId }));
 });
 
-// --- PROFI BOR MÓDOSÍTÁSA ---
 app.put('/api/borok/:id', upload.single('kep'), (req, res) => {
-    const id = req.params.id;
     const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
-    
-    // Csak akkor frissítjük a képet az adatbázisban, ha a felhasználó töltött fel újat!
     let sql = `UPDATE bor SET nev=?, evjarat=?, ar=?, keszlet=?, leiras=?, bor_szin_id=?, kiszereles_id=?, alkoholfok=?`;
     let values = [nev, evjarat, ar, keszlet || 0, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0];
-
-    if (req.file) {
-        sql += `, kep=?`;
-        values.push(`/images/${req.file.filename}`);
-    }
-    
-    sql += ` WHERE id=?`;
-    values.push(id);
-
-    db.query(sql, values, (err, result) => {
-        if (err) return res.status(500).json({ error: "Hiba a módosításkor" });
-        res.json({ message: "Bor sikeresen frissítve!" });
-    });
+    if (req.file) { sql += `, kep=?`; values.push(`/images/${req.file.filename}`); }
+    sql += ` WHERE id=?`; values.push(req.params.id);
+    db.query(sql, values, () => res.json({ message: "Bor frissítve!" }));
 });
 
 app.delete('/api/borok/:id', (req, res) => {
@@ -651,113 +466,8 @@ app.put('/api/admin/uzenetek/:id', (req, res) => {
         res.json({ message: "Üzenet sikeresen frissítve!" });
     });
 });
-// --- FOGLALÁS SZÁMLA LETÖLTÉSE (PDF) ---
-app.get('/api/foglalas/:id/szamla', (req, res) => {
-    const foglalasId = req.params.id;
-
-    const sql = `
-        SELECT f.*, sz.nev as szolgaltatas_nev, u.nev as user_nev, u.email as user_email, u.irsz, u.varos, u.utca, u.hazszam 
-        FROM foglalas f 
-        JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id 
-        JOIN users u ON f.user_id = u.id 
-        WHERE f.id = ?
-    `;
-
-    db.query(sql, [foglalasId], (err, results) => {
-        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
-        if (results.length === 0) return res.status(404).json({ error: "A foglalás nem található" });
-
-        const booking = results[0];
-
-        // Csak visszaigazolt foglaláshoz adunk számlát
-        if (booking.statusz !== 'CONFIRMED') {
-            return res.status(403).json({ error: "A számla még nem tölthető le ehhez a foglaláshoz." });
-        }
-
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-
-        // Letöltés kényszerítése a böngészőben
-        res.setHeader('Content-disposition', `attachment; filename=Szente_Pinceszet_Foglalas_${foglalasId}.pdf`);
-        res.setHeader('Content-type', 'application/pdf');
-        doc.pipe(res);
-
-        // Ékezetek biztonságos cseréje PDFKit alap betűtípushoz
-        const safeText = (text) => {
-            if(!text) return '';
-            return text.toString().replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
-        };
-
-        // --- PDF DESIGN ---
-        doc.fontSize(22).fillColor('#722f37').font('Helvetica-Bold').text('Számla / Visszaigazolás', 50, 50);
-        doc.fontSize(10).fillColor('#555555').font('Helvetica');
-        doc.text(`Azonosító: #FOGL-${foglalasId}`, 50, 75);
-        doc.text(`Kiallitás dátuma: ${new Date().toLocaleDateString('hu-HU')}`, 50, 90);
-
-        // FEJLÉC JAVÍTÁS (Szélesebb doboz (245), hogy ne csússzon el a házszám!)
-        doc.fontSize(12).fillColor('#333333').font('Helvetica-Bold').text('Szente Pincészet', 300, 50, { width: 245, align: 'right' });
-        doc.fontSize(10).font('Helvetica').text('8318 Lesencetomaj, Római út 12.', 300, 65, { width: 245, align: 'right' });
-        doc.text('info@szentepinceszet.hu', 300, 80, { width: 245, align: 'right' });
-        doc.text('+36 30 123 4567', 300, 95, { width: 245, align: 'right' });
-
-        doc.moveTo(50, 120).lineTo(550, 120).lineWidth(1).strokeColor('#cccccc').stroke();
-
-        doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 50, 140);
-        doc.fontSize(10).fillColor('#333333').font('Helvetica');
-        doc.text(`Név: ${safeText(booking.user_nev)}`, 50, 160);
-        
-        if (booking.irsz && booking.varos) {
-            doc.text(`Cím: ${safeText(booking.irsz)} ${safeText(booking.varos)}, ${safeText(booking.utca)} ${safeText(booking.hazszam)}`, 50, 175);
-        } else {
-            doc.text(`Email: ${safeText(booking.user_email)}`, 50, 175);
-        }
-
-        doc.moveTo(50, 220).lineTo(550, 220).strokeColor('#cccccc').stroke();
-
-        // TÁBLÁZAT FEJLÉC JAVÍTÁS (Dátum és Időpont külön oszlopban)
-        doc.fontSize(10).fillColor('#722f37').font('Helvetica-Bold');
-        doc.text('Szolgáltatás', 50, 240);
-        doc.text('Dátum', 210, 240);
-        doc.text('Idöpont', 310, 240);
-        doc.text('Létszám', 390, 240, { width: 50, align: 'right' });
-        doc.text('Összesen', 460, 240, { width: 90, align: 'right' });
-
-        doc.moveTo(50, 255).lineTo(550, 255).strokeColor('#722f37').stroke();
-
-        // TÁBLÁZAT ADATSOR
-        doc.font('Helvetica').fillColor('#333333');
-        const y = 270;
-        
-        // 1. Dátum formázása szépen (Pl. 2026. 03. 15.)
-        const d = new Date(booking.datum || booking.idopont);
-        const dateStr = d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' }) + '.';
-        
-        // 2. Időpont / Időtartam formázása (Csak óra:perc, pl. 14:00)
-        let timeStr = booking.idotartam ? booking.idotartam.toString() : "14:00";
-        if (timeStr.length >= 5) {
-            timeStr = timeStr.substring(0, 5); // Levágjuk a másodperceket a "14:00:00"-ból
-        }
-
-        doc.text(safeText(booking.szolgaltatas_nev), 50, y, { width: 150 });
-        doc.text(dateStr, 210, y);
-        doc.text(timeStr, 310, y);
-        doc.text(`${booking.letszam} fö`, 390, y, { width: 50, align: 'right' });
-        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 460, y, { width: 90, align: 'right' });
-
-        doc.moveTo(50, y + 20).lineTo(550, y + 20).lineWidth(0.5).strokeColor('#eeeeee').stroke();
-
-        // VÉGÖSSZEG
-        doc.fontSize(14).fillColor('#722f37').font('Helvetica-Bold');
-        doc.text('Fizetendö végösszeg:', 200, y + 40, { width: 200, align: 'right' });
-        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 40, { width: 140, align: 'right' });
-
-        doc.fontSize(10).fillColor('#888888').font('Helvetica');
-        doc.text('Köszönjük a foglalást! Várjuk szeretettel a Szente Pincészetben.', 50, y + 100, { align: 'center' });
-
-        doc.end();
-    });
-});
 
 if (process.env.NODE_ENV !== 'test') {
-    app.listen(5000, () => console.log('A szerver fut a 5000-es porton!'));
+    app.listen(5000, () => console.log('A szerver fut a 5000-es porton! Napi hírlevél cron elindítva.'));
 }
 module.exports = app;
