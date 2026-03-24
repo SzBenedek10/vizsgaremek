@@ -2,3 +2,6 @@ multer backend
 npm install multer
 
 az uj oldalon minmdig felülre ugorjon
+
+idözitete email küldés
+npm install node-cron

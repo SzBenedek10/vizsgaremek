@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom'; 
-import './Wine.css'; // Ne felejtsd el beimportálni a CSS fájlt!
+import './Wine.css';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 const HUF = new Intl.NumberFormat("hu-HU");

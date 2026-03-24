@@ -4,10 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 
-// Cseréld ki a megfelelő útvonalra, ahol a Terms.jsx található a projektedben!
 import Terms from "./Terms"; 
 
-// UI Komponensek
 import {
   Container,
   Paper,
@@ -23,7 +21,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton
+  IconButton,
+  InputAdornment
 } from "@mui/material";
 
 // Ikonok
@@ -34,6 +33,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import CloseIcon from '@mui/icons-material/Close';
+import DiscountIcon from '@mui/icons-material/Discount';
+import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 
 const HUF = new Intl.NumberFormat("hu-HU");
 
@@ -58,21 +59,53 @@ export default function Checkout() {
   // KÜLÖNVÁLASZTOTT CHECKBOXOK
   const [isOver18, setIsOver18] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [newsletter, setNewsletter] = useState(true); // Alapból bepipálva a jobb konverzióért (de kivehető)
 
   // ÁSZF FELUGRÓ ABLAK ÁLLAPOTA
   const [termsOpen, setTermsOpen] = useState(false);
+
+  // --- KUPON ÁLLAPOTOK ---
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(0); 
+
+  // --- KUPON BEVÁLTÁSI LOGIKA ---
+  const handleApplyCoupon = () => {
+    if (!couponCode) return;
+    
+    const code = couponCode.trim().toLowerCase();
+    
+    if (code === "isti10") {
+      setAppliedDiscount(10);
+      Swal.fire({ title: 'Kupon beváltva!', text: '10% kedvezményt adtunk a termékek árából.', icon: 'success', confirmButtonColor: '#722f37', timer: 2000 });
+    } else if (code === "refi20") {
+      setAppliedDiscount(20);
+      Swal.fire({ title: 'Kupon beváltva!', text: '20% kedvezményt adtunk a termékek árából.', icon: 'success', confirmButtonColor: '#722f37', timer: 2000 });
+    } else {
+      setAppliedDiscount(0);
+      Swal.fire({ title: 'Érvénytelen kupon!', text: 'A megadott kuponkód nem létezik vagy lejárt.', icon: 'error', confirmButtonColor: '#722f37' });
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedDiscount(0);
+    setCouponCode("");
+  };
+
+  // --- KÖLTSÉGEK KISZÁMÍTÁSA ---
+  const productTotal = totalAmount; 
+  const discountAmount = Math.round(productTotal * (appliedDiscount / 100));
+  const discountedProductTotal = productTotal - discountAmount;
+  const freeShippingThreshold = 20000; 
+  const shippingFee = discountedProductTotal >= freeShippingThreshold ? 0 : 2500; 
+  const paymentFee = 300; 
+  const finalTotal = discountedProductTotal + shippingFee + paymentFee;
+  const vatContent = Math.round(finalTotal * 0.212598);
 
   // VÉDELEM
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!user) {
-        Swal.fire({
-          title: 'Jelentkezz be!',
-          text: 'A vásárláshoz be kell jelentkezned.',
-          icon: 'warning',
-          confirmButtonColor: '#722f37',
-          confirmButtonText: 'OK'
-        }).then(() => navigate('/login'));
+        Swal.fire({ title: 'Jelentkezz be!', text: 'A vásárláshoz be kell jelentkezned.', icon: 'warning', confirmButtonColor: '#722f37', confirmButtonText: 'OK' }).then(() => navigate('/login'));
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -85,13 +118,8 @@ export default function Checkout() {
 
     if (isChecked && user) {
       setBilling({
-        nev: user.nev || "",
-        email: user.email || "",
-        tel: user.telefonszam || user.tel || "",
-        irsz: user.irsz || "",
-        varos: user.varos || "",
-        utca: user.utca || "",
-        hazszam: user.hazszam || ""
+        nev: user.nev || "", email: user.email || "", tel: user.telefonszam || user.tel || "",
+        irsz: user.irsz || "", varos: user.varos || "", utca: user.utca || "", hazszam: user.hazszam || ""
       });
     } else {
       setBilling({ nev: "", email: "", tel: "", irsz: "", varos: "", utca: "", hazszam: "" });
@@ -111,18 +139,13 @@ export default function Checkout() {
     e.preventDefault();
     if (!user) return;
     
-    // Extra védelem mindkét feltételre
     if (!isOver18 || !acceptedTerms) {
       Swal.fire('Figyelem!', 'A rendeléshez igazolnod kell, hogy elmúltál 18 éves és el kell fogadnod az ÁSZF-et!', 'warning');
       return;
     }
 
     const finalShipping = shippingSameAsBilling ? {
-      nev: billing.nev,
-      irsz: billing.irsz,
-      varos: billing.varos,
-      utca: billing.utca,
-      hazszam: billing.hazszam
+      nev: billing.nev, irsz: billing.irsz, varos: billing.varos, utca: billing.utca, hazszam: billing.hazszam
     } : shipping;
 
     const rendelesAdat = {
@@ -130,7 +153,12 @@ export default function Checkout() {
       szamlazasi: billing,
       szallitasi: finalShipping,
       tetelek: cartItems,
-      vegosszeg: totalAmount
+      vegosszeg: finalTotal, 
+      szallitasiKoltseg: shippingFee,
+      utanvetDija: paymentFee,
+      kuponKod: appliedDiscount > 0 ? couponCode.toUpperCase() : null,
+      kedvezmeny: discountAmount,
+      hirlevel: newsletter // <-- ÚJ MEZŐ: elküldjük a backendnek, hogy feliratkozott-e
     };
 
     try {
@@ -177,12 +205,8 @@ export default function Checkout() {
       <form onSubmit={handleOrder}>
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, alignItems: 'flex-start' }}>
           
-          {/* ======================================================== */}
-          {/* BAL OLDAL: SZÁMLÁZÁS, SZÁLLÍTÁS ÉS FIZETÉS               */}
-          {/* ======================================================== */}
           <Box sx={{ flex: { xs: '1 1 100%', md: '1.7 1 0%' }, width: '100%' }}>
             <Stack spacing={4}>
-              
               <Paper elevation={2} sx={{ p: { xs: 3, md: 4 }, borderRadius: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <ReceiptIcon sx={{ color: '#722f37', mr: 1 }} />
@@ -256,17 +280,13 @@ export default function Checkout() {
                     label={<Typography variant="body1" sx={{ fontWeight: 'bold', color: '#333' }}>Utánvét (Fizetés a futárnál)</Typography>}
                   />
                   <Typography variant="body2" sx={{ ml: 4, mt: -1, color: '#666', lineHeight: 1.6 }}>
-                    Jelenleg kizárólag utánvétes fizetésre van lehetőség. A rendelés végösszegét a csomag átvételekor a futárnak tudod kifizetni (készpénzzel vagy bankkártyával).
+                    Jelenleg kizárólag utánvétes fizetésre van lehetőség. A rendelés végösszegét a csomag átvételekor a futárnak tudod kifizetni (készpénzzel vagy bankkártyával). A szolgáltatás díja +300 Ft.
                   </Typography>
                 </Box>
               </Paper>
-              
             </Stack>
           </Box>
 
-          {/* ======================================================== */}
-          {/* JOBB OLDAL: RENDELÉS ÖSSZESÍTÉSE                         */}
-          {/* ======================================================== */}
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 0%' }, width: '100%', position: 'sticky', top: 100 }}>
             <Paper elevation={4} sx={{ p: { xs: 3, md: 4 }, borderRadius: 4, bgcolor: '#fdfbfb' }}>
               <Typography variant="h5" gutterBottom sx={{color: '#722f37', fontWeight: 'bold', fontFamily: 'Playfair Display, serif'}}>
@@ -274,12 +294,17 @@ export default function Checkout() {
               </Typography>
               <Divider sx={{ mb: 3 }} />
               
-              <Stack spacing={2} sx={{ mb: 3, maxHeight: '300px', overflowY: 'auto', pr: 1 }}>
+              <Stack spacing={2} sx={{ mb: 3, maxHeight: '250px', overflowY: 'auto', pr: 1 }}>
                 {cartItems.map((item) => (
                   <Box key={`${item.id}-${item.kiszereles_id}`} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
                     <Box sx={{ width: '65%' }}>
                       <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#333' }}>{item.nev}</Typography>
-                      <Typography variant="caption" sx={{ color: '#777' }}>{item.kiszereles_nev} x {item.amount} db</Typography>
+                      <Typography variant="caption" sx={{ color: '#777', display: 'block' }}>
+                        {item.kiszereles_nev} x {item.amount} db
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#999' }}>
+                        Egységár: {HUF.format(item.ar)} Ft
+                      </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#722f37' }}>
                       {HUF.format(item.ar * item.amount)} Ft
@@ -289,36 +314,94 @@ export default function Checkout() {
               </Stack>
               
               <Divider sx={{ mb: 3 }} />
+
+              <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
+                <TextField 
+                  size="small" label="Kuponkód megadása" variant="outlined" fullWidth value={couponCode} onChange={(e) => setCouponCode(e.target.value)} disabled={appliedDiscount > 0} 
+                  InputProps={{ startAdornment: (<InputAdornment position="start"><DiscountIcon fontSize="small" sx={{ color: appliedDiscount > 0 ? '#2e7d32' : '#777' }} /></InputAdornment>) }}
+                  sx={{ bgcolor: 'white', '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: appliedDiscount > 0 ? '#2e7d32' : '#ccc' } } }}
+                />
+                <Button 
+                  variant="contained" onClick={appliedDiscount > 0 ? handleRemoveCoupon : handleApplyCoupon}
+                  sx={{ bgcolor: appliedDiscount > 0 ? '#d32f2f' : '#722f37', color: 'white', fontWeight: 'bold', '&:hover': { bgcolor: appliedDiscount > 0 ? '#b71c1c' : '#5a252c'} }}
+                >
+                  {appliedDiscount > 0 ? 'Törlés' : 'Beváltás'}
+                </Button>
+              </Box>
               
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555' }}>Végösszeg:</Typography>
-                <Typography variant="h5" sx={{ color: '#722f37', fontWeight: '900' }}>
-                  {HUF.format(totalAmount)} Ft
-                </Typography>
+              <Stack spacing={1.5} sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Termékek ára (bruttó):</Typography>
+                  <Typography variant="body2" fontWeight="bold" color="#333">{HUF.format(productTotal)} Ft</Typography>
+                </Box>
+
+                {appliedDiscount > 0 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: '#e8f5e9', p: 1, borderRadius: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>Kupon kedvezmény (-{appliedDiscount}%):</Typography>
+                    <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>-{HUF.format(discountAmount)} Ft</Typography>
+                  </Box>
+                )}
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Házhozszállítás díja:</Typography>
+                    <Typography variant="caption" display="block" color={shippingFee === 0 ? "success.main" : "text.secondary"}>
+                      {shippingFee === 0 ? "Ingyenes szállítás!" : `(Ingyenes ${HUF.format(freeShippingThreshold)} Ft felett)`}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" fontWeight="bold" color="#333">{shippingFee === 0 ? "0 Ft" : `+${HUF.format(shippingFee)} Ft`}</Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Utánvét díja:</Typography>
+                  <Typography variant="body2" fontWeight="bold" color="#333">+{HUF.format(paymentFee)} Ft</Typography>
+                </Box>
+              </Stack>
+
+              <Divider sx={{ mb: 2 }} />
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>Fizetendő végösszeg:</Typography>
+                <Typography variant="h5" sx={{ color: '#722f37', fontWeight: '900' }}>{HUF.format(finalTotal)} Ft</Typography>
               </Box>
 
-              {/* KETTÉBONTOTT, KÖTELEZŐ CHECKBOXOK */}
+              <Typography variant="caption" sx={{ color: '#888', display: 'block', textAlign: 'right', mb: 3 }}>
+                A végösszeg tartalmazza a 27% ÁFÁ-t ({HUF.format(vatContent)} Ft).
+              </Typography>
+
+              {/* --- ÚJ: HÍRLEVÉL CHECKBOX --- */}
+              <Box sx={{ mb: 2, p: 1.5, bgcolor: '#f4f4f4', borderRadius: 2, display: 'flex', alignItems: 'flex-start' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={newsletter}
+                      onChange={(e) => setNewsletter(e.target.checked)}
+                      sx={{ color: '#722f37', p: 0.5, '&.Mui-checked': { color: '#722f37' } }}
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#333' }}>
+                        Feliratkozom a hírlevélre
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#666', lineHeight: 1.2, display: 'block' }}>
+                        Szeretnék értesülni az exkluzív borválogatásokról és egyedi akciókról.
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ m: 0, alignItems: 'flex-start' }}
+                />
+              </Box>
+
+              {/* KÖTELEZŐ CHECKBOXOK */}
               <Box sx={{ mb: 3, p: 2, bgcolor: (isOver18 && acceptedTerms) ? '#e8f5e9' : '#ffebee', borderRadius: 2, border: '1px solid', borderColor: (isOver18 && acceptedTerms) ? '#c8e6c9' : '#ffcdd2', transition: '0.3s' }}>
                 <Stack spacing={1}>
                   <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={isOver18}
-                        onChange={(e) => setIsOver18(e.target.checked)}
-                        sx={{ color: '#d32f2f', p: 0.5, '&.Mui-checked': { color: '#2e7d32' } }}
-                      />
-                    }
+                    control={<Checkbox checked={isOver18} onChange={(e) => setIsOver18(e.target.checked)} sx={{ color: '#d32f2f', p: 0.5, '&.Mui-checked': { color: '#2e7d32' } }} />}
                     label={<Typography variant="body2" sx={{ fontWeight: 'bold', color: isOver18 ? '#2e7d32' : '#d32f2f', ml: 1 }}>Igen, elmúltam 18 éves. *</Typography>}
                   />
-                  
                   <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={acceptedTerms}
-                        onChange={(e) => setAcceptedTerms(e.target.checked)}
-                        sx={{ color: '#d32f2f', p: 0.5, '&.Mui-checked': { color: '#2e7d32' } }}
-                      />
-                    }
+                    control={<Checkbox checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} sx={{ color: '#d32f2f', p: 0.5, '&.Mui-checked': { color: '#2e7d32' } }} />}
                     label={
                       <Typography variant="body2" sx={{ fontWeight: 'bold', color: acceptedTerms ? '#2e7d32' : '#d32f2f', ml: 1 }}>
                         Elfogadom az <span style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={(e) => { e.preventDefault(); setTermsOpen(true); }}>ÁSZF</span>-et. *
@@ -330,78 +413,33 @@ export default function Checkout() {
 
               <Stack spacing={2}>
                 <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  disabled={!isOver18 || !acceptedTerms} // CSAK AKKOR KATTINTHATÓ, HA MINDKETTŐ PIPÁLVA VAN
-                  startIcon={<CheckCircleIcon />}
-                  sx={{
-                    bgcolor: '#722f37',
-                    '&:hover': { bgcolor: '#5a252c', transform: 'scale(1.02)' },
-                    py: 1.8,
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    borderRadius: 50,
-                    transition: 'all 0.2s',
-                    boxShadow: '0 6px 15px rgba(114, 47, 55, 0.3)',
-                    '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9e9e9e', boxShadow: 'none', transform: 'none' }
-                  }}
+                  type="submit" fullWidth variant="contained" size="large" disabled={!isOver18 || !acceptedTerms} startIcon={<CheckCircleIcon />}
+                  sx={{ bgcolor: '#722f37', '&:hover': { bgcolor: '#5a252c', transform: 'scale(1.02)' }, py: 1.8, fontSize: '1rem', fontWeight: 'bold', borderRadius: 50, transition: 'all 0.2s', boxShadow: '0 6px 15px rgba(114, 47, 55, 0.3)', '&.Mui-disabled': { bgcolor: '#e0e0e0', color: '#9e9e9e', boxShadow: 'none', transform: 'none' } }}
                 >
-                  Megrendelés elküldése
+                  Fizetési kötelezettséggel járó megrendelés
                 </Button>
-
-                <Button
-                  fullWidth
-                  variant="text"
-                  startIcon={<ArrowBackIcon />}
-                  onClick={() => navigate("/borrendeles")}
-                  sx={{ color: '#777', '&:hover': { color: '#333', bgcolor: 'transparent' } }}
-                >
+                <Button fullWidth variant="text" startIcon={<ArrowBackIcon />} onClick={() => navigate("/borrendeles")} sx={{ color: '#777', '&:hover': { color: '#333', bgcolor: 'transparent' } }}>
                   Vissza a vásárláshoz
                 </Button>
               </Stack>
             </Paper>
           </Box>
-
         </Box>
       </form>
 
-      {/* ======================================================== */}
-      {/* ÁSZF FELUGRÓ ABLAK (MODAL)                               */}
-      {/* ======================================================== */}
-      <Dialog 
-        open={termsOpen} 
-        onClose={() => setTermsOpen(false)}
-        maxWidth="md" // Széles ablak a kényelmes olvasáshoz
-        fullWidth
-        scroll="paper"
-      >
+      {/* ÁSZF MODAL */}
+      <Dialog open={termsOpen} onClose={() => setTermsOpen(false)} maxWidth="md" fullWidth scroll="paper">
         <DialogTitle sx={{ bgcolor: '#722f37', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: 'Playfair Display' }}>
-            Általános Szerződési Feltételek
-          </Typography>
-          <IconButton onClick={() => setTermsOpen(false)} sx={{ color: 'white' }}>
-            <CloseIcon />
-          </IconButton>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: 'Playfair Display' }}>Általános Szerződési Feltételek</Typography>
+          <IconButton onClick={() => setTermsOpen(false)} sx={{ color: 'white' }}><CloseIcon /></IconButton>
         </DialogTitle>
-        
-        <DialogContent dividers sx={{ p: 0 }}>
-          {/* ITT TÖLTI BE A SAJÁT TERMS KOMPONENSEDET! */}
-          <Terms /> 
-        </DialogContent>
-        
+        <DialogContent dividers sx={{ p: 0 }}><Terms /></DialogContent>
         <DialogActions sx={{ p: 2, bgcolor: '#fdfbfb' }}>
-          <Button 
-            onClick={() => { setAcceptedTerms(true); setTermsOpen(false); }} 
-            variant="contained" 
-            sx={{ bgcolor: '#722f37', fontWeight: 'bold', '&:hover': { bgcolor: '#5a252c' } }}
-          >
+          <Button onClick={() => { setAcceptedTerms(true); setTermsOpen(false); }} variant="contained" sx={{ bgcolor: '#722f37', fontWeight: 'bold', '&:hover': { bgcolor: '#5a252c' } }}>
             Elolvastam és elfogadom
           </Button>
         </DialogActions>
       </Dialog>
-
     </Container>
   );
 }
