@@ -9,4 +9,3 @@ import GitHubFeed from '@site/src/components/GitHubFeed';
 
 <GitHubFeed />
 
-Itt fogom vezetni a vizsgaremekem fejlődését...
