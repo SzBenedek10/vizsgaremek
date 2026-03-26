@@ -499,6 +499,7 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
         res.setHeader('Content-type', 'application/pdf');
         doc.pipe(res);
 
+        // Adatbázisból érkező szövegek ékezet-mentesítése (ő->ö, ű->ü)
         const safeText = (text) => {
             if(!text) return '';
             return text.toString().replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
@@ -524,35 +525,35 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
         doc.text('+36 30 123 4567', 300, 100, { width: 245, align: 'right' });
 
         // Vastagabb, elegáns díszítő vonal
-        doc.moveTo(50, 135).lineTo(550, 135).lineWidth(2).strokeColor('#722f37').stroke();
+        doc.moveTo(50, 135).lineTo(550, 135).lineWidth(1.5).strokeColor('#722f37').stroke();
 
         // =========================================================
-        // 2. VÁSÁRLÓ ADATAI (Finom, színezett dobozban)
+        // 2. VÁSÁRLÓ ADATAI (Lekerekített, világos dobozban)
         // =========================================================
-        doc.rect(50, 155, 500, 75).fillAndStroke('#fcf9f9', '#eedddf');
+        doc.roundedRect(50, 155, 500, 75, 5).fillAndStroke('#fafafa', '#e0e0e0');
         
-        doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 65, 165);
+        doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 70, 170);
         doc.fontSize(10).fillColor('#333333').font('Helvetica-Bold');
-        doc.text(safeText(booking.user_nev), 65, 185);
+        doc.text(safeText(booking.user_nev), 70, 190);
         
         doc.font('Helvetica').fillColor('#555555');
         if (booking.irsz && booking.varos) {
-            doc.text(`${safeText(booking.irsz)} ${safeText(booking.varos)}, ${safeText(booking.utca)} ${safeText(booking.hazszam)}`, 65, 200);
+            doc.text(`${safeText(booking.irsz)} ${safeText(booking.varos)}, ${safeText(booking.utca)} ${safeText(booking.hazszam)}`, 70, 205);
         } else {
-            doc.text(`Email: ${safeText(booking.user_email)}`, 65, 200);
+            doc.text(`Email: ${safeText(booking.user_email)}`, 70, 205);
         }
 
         // =========================================================
         // 3. TÁBLÁZAT FEJLÉC (Teli bordó háttér, fehér betűk)
         // =========================================================
-        doc.rect(50, 260, 500, 25).fill('#722f37');
+        doc.roundedRect(50, 255, 500, 25, 4).fill('#722f37');
         
         doc.fontSize(10).fillColor('#ffffff').font('Helvetica-Bold');
-        doc.text('Szolgáltatás', 60, 268);
-        doc.text('Dátum', 220, 268);
-        doc.text('Időpont', 320, 268);
-        doc.text('Létszám', 400, 268, { width: 40, align: 'right' });
-        doc.text('Összesen', 460, 268, { width: 80, align: 'right' });
+        doc.text('Szolgáltatás', 65, 263);
+        doc.text('Dátum', 230, 263);
+        doc.text('Kezdés', 320, 263); // <--- Itt cseréltük a szót, hogy biztosan szép legyen
+        doc.text('Létszám', 390, 263, { width: 60, align: 'center' }); // <--- Szélesebb lett
+        doc.text('Összesen', 460, 263, { width: 75, align: 'right' });
 
         // =========================================================
         // 4. TÁBLÁZAT ADATSOR
@@ -568,25 +569,25 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
             timeStr = timeStr.substring(0, 5);
         }
 
-        doc.text(safeText(booking.szolgaltatas_nev), 60, y, { width: 150 });
-        doc.text(dateStr, 220, y);
+        doc.text(safeText(booking.szolgaltatas_nev), 65, y, { width: 150 });
+        doc.text(dateStr, 230, y);
         doc.text(timeStr, 320, y);
-        doc.text(`${booking.letszam} fő`, 400, y, { width: 40, align: 'right' });
-        doc.font('Helvetica-Bold').text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 460, y, { width: 80, align: 'right' });
+        doc.text(`${booking.letszam} fö`, 390, y, { width: 60, align: 'center' }); // <--- "fö"
+        doc.font('Helvetica-Bold').text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 460, y, { width: 75, align: 'right' });
 
-        doc.moveTo(50, y + 25).lineTo(550, y + 25).lineWidth(1).strokeColor('#e0e0e0').stroke();
+        doc.moveTo(50, y + 25).lineTo(550, y + 25).lineWidth(1).strokeColor('#eeeeee').stroke();
 
         // =========================================================
-        // 5. VÉGÖSSZEG (Kiemelt, halvány dobozban)
+        // 5. VÉGÖSSZEG (Kiemelt, modern dobozban)
         // =========================================================
-        doc.rect(330, y + 45, 220, 35).fill('#f9f5f5');
+        doc.roundedRect(300, y + 50, 250, 40, 5).fill('#fcf8f8');
         doc.fontSize(12).fillColor('#555555').font('Helvetica-Bold');
-        doc.text('Fizetendő:', 345, y + 57, { width: 80, align: 'left' });
+        doc.text('Fizetendö:', 320, y + 65, { width: 100, align: 'left' });
         doc.fontSize(16).fillColor('#722f37').font('Helvetica-Bold');
-        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 55, { width: 125, align: 'right' });
+        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 63, { width: 125, align: 'right' });
 
         // =========================================================
-        // 6. QR KÓD 
+        // 6. QR KÓD (Belépőjegy stílusban)
         // =========================================================
         try {
             const qrUrl = "http://localhost:3000/admin"; 
@@ -595,16 +596,21 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
                     dark: '#722f37', 
                     light: '#ffffff'
                 },
-                width: 80, // Kicsit nagyobb lett, hogy jobban olvasható legyen
+                width: 90, 
                 margin: 0
             });
 
-            doc.image(qrCodeBuffer, 50, y + 45);
+            doc.image(qrCodeBuffer, 50, y + 50);
             
-            doc.fontSize(8).fillColor('#888888').font('Helvetica-Bold');
-            doc.text('Adminisztrátori', 140, y + 65);
-            doc.text('ellenőrzéshez', 140, y + 75);
-            doc.font('Helvetica').text('olvassa be a kódot!', 140, y + 85);
+            // Finom szürke elválasztó vonal a QR kód és a magyarázó szöveg közé
+            doc.moveTo(155, y + 55).lineTo(155, y + 130).lineWidth(1).strokeColor('#eeeeee').stroke();
+            
+            doc.fontSize(9).fillColor('#722f37').font('Helvetica-Bold');
+            doc.text('Belépöjegy & Ellenörzés', 170, y + 65);
+            doc.fontSize(8).fillColor('#888888').font('Helvetica');
+            doc.text('Kérjük, mutassa be ezt a', 170, y + 80);
+            doc.text('QR kódot a helyszínen', 170, y + 92);
+            doc.text('a gyorsabb bejutáshoz.', 170, y + 104);
         } catch (err) {
             console.error("Hiba a QR kód generálásakor:", err);
         }

@@ -35,20 +35,19 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
     }) + ".";
   };
 
-  // Bővített, hangulatos sablonszöveg generátor
   const getTemplateText = (id) => {
     const defaultId = id || 0;
     const sablonok = [
       "Szeretettel várjuk a Szente Pincészet exkluzív eseményén! Pincészetünk elkötelezett amellett, hogy a borkóstolás ne csupán egy egyszerű ízélmény, hanem egy felejthetetlen utazás legyen a szőlőtőkék és tölgyfahordók lenyűgöző világában. Szakértő borászaink mesélnek a dűlők történetéről, a gondos szüretről és arról a szenvedélyről, amit minden egyes palackba bezárunk. Lépjen ki a hétköznapok rohanásából, és engedje át magát a harmóniának egy pohár kiváló bor társaságában.",
-      
       "Lépjen be a borok varázslatos világába, és ismerje meg a helyi terroir egyedi, utánozhatatlan adottságait! Ezen a különleges programon bepillantást nyerhet a borkészítés féltve őrzött kulisszatitkaiba a szőlőszemektől egészen a pohárig. Megtanítjuk az alapvető kóstolási technikákra, megmutatjuk, hogyan érdemes vizsgálni a bor színét, illatát és ízjegyeit. Mindezt csodálatos, autentikus környezetben, ahol a hagyomány és a természet közelsége teszi teljessé az élményt.",
-      
       "Dőljön hátra, és élvezze a pillanatot a festői környezetben! Kóstolóinkat úgy állítottuk össze, hogy a laikus borbarátok és a sokat tapasztalt ínyencek is megtalálják a számukra legizgalmasabb zamatokat. Egy kötetlen és vidám program keretében barangolunk az ízek tengerén, ahol a friss, ropogós tételektől kezdve a testesebb, hordós érlelésű borokig sok mindent górcső alá veszünk. A jó társaság, a csodás kilátás és a kiváló nedűk garantálják a tökéletes kikapcsolódást.",
-      
       "Engedje meg, hogy elkalauzoljuk a Szente Pincészet legféltettebb kincsei közé! Ezen a prémium túrán a többgenerációs hagyomány és a modern borászat tökéletes találkozását tapasztalhatja meg. Ritkábban kóstolható, különleges tételeink is előkerülnek a pince mélyéről, melyekhez izgalmas történetek és kulisszatitkok is társulnak. Ha egy igazán mély és komplex gasztronómiai utazásra vágyik, ahol a borok és a történelem összefonódik, ez a program Önnek szól."
     ];
     return sablonok[defaultId % sablonok.length];
   };
+
+  // EZ A GYÖNYÖRŰ ALAPÉRTELMEZETT KÉP FOG BETÖLTENI
+  const defaultImageUrl = "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
 
   return (
     <>
@@ -60,17 +59,19 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
           height: '100%', 
           display: 'flex', 
           flexDirection: 'column',
-          transition: 'transform 0.3s',
-          '&:hover': { transform: 'translateY(-5px)' }
+          transition: 'transform 0.3s, box-shadow 0.3s',
+          '&:hover': { transform: 'translateY(-5px)', boxShadow: '0 8px 20px rgba(114, 47, 55, 0.15)' }
         }}
       >
-        <Box sx={{ height: 200, bgcolor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* KÉP BETÖLTÉSE */}
+        <Box sx={{ height: 200, overflow: 'hidden', bgcolor: '#f0f0f0' }}>
           <img 
-            src={csomag.kep ? `http://localhost:5000${csomag.kep}` : "/images/tasting-placeholder.jpg"} 
+            src={csomag.kep ? `http://localhost:5000${csomag.kep}` : defaultImageUrl} 
             alt={csomag.nev}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={(e) => { 
-              e.target.src = "https://via.placeholder.com/400x250?text=Borkostolo"; 
+              e.target.onerror = null; 
+              e.target.src = defaultImageUrl; 
             }}
           />
         </Box>
@@ -107,7 +108,7 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
             </Typography>
           </Box>
 
-          {/* GOMBOK: Foglalás bal oldalon, Leírás jobb oldalon */}
+          {/* GOMBOK */}
           <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Button 
               fullWidth 
@@ -194,7 +195,6 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
             </Box>
           </Box>
           
-          {/* EGYEDI, BŐVÍTETT SABLON SZÖVEG MEGJELENÍTÉSE */}
           <Typography variant="body1" sx={{ color: '#555', mb: 4, textAlign: 'justify', lineHeight: 1.8 }}>
             {getTemplateText(csomag.id)}
           </Typography>
