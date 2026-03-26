@@ -9,11 +9,15 @@ const path = require('path');
 const fs = require('fs');
 const cron = require('node-cron'); 
 
-// Új, különálló e-mail és PDF szolgáltatás beimportálása
+// EZ A KÉT SOR NAGYON FONTOS A SZÁMLÁHOZ!
+const PDFDocument = require('pdfkit');
+const QRCode = require('qrcode');
+
+// BEIMPORTÁLJUK AZ ÚJ EMAIL SZOLGÁLTATÁST!
 const emailService = require('./services/emailService');
 
 const app = express();
-
+// ... innen folytatódik a kódod ...
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
@@ -34,758 +38,596 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage: storage });
-
-const db = mysql.createConnection({
-    host: "szente-pince-gibszjakab900-28a1.c.aivencloud.com",
-    port: 14888,
-    user: "root",
-    password: "", 
-    database: "boraszat",
-    ssl: {
-        rejectUnauthorized: false
-    }
+const upload = multer({ storage: storage })
+const db = mysql.createPool({
+  host: 'szente-pince-gibszjakab900-28a1.c.aivencloud.com',
+  port: 14888,
+  user: 'avnadmin',
+  password: 'AVNS_vZV7YDKwkZ4YM_eXDER', 
+  database: 'defaultdb',
+  ssl: { rejectUnauthorized: false }
 });
 
-db.connect(err => {
-    if (err) {
-        console.error('Hiba az adatbázis csatlakozásakor:', err);
-        return;
-    }
-    console.log('Sikeresen csatlakozva a felhős MySQL (Aiven) adatbázishoz!');
+db.getConnection((err, connection) => {
+    if (err) console.error('Adatbázis csatlakozási hiba (Pool):', err.message);
+    else { console.log('Sikeresen csatlakozva a MySQL-hez (Pool)!'); connection.release(); }
 });
 
-const promisePool = db.promise();
-
 // ==========================================
-// KÖZÖS MIDDLEWARE-EK
+// RENDELÉS FELADÁSA
 // ==========================================
+app.post("/api/rendeles", (req, res) => {
+  const { userId, szamlazasi, szallitasi, tetelek, vegosszeg, szallitasiKoltseg, utanvetDija, kuponKod, kedvezmeny, hirlevel } = req.body;
 
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: "Nincs megadva token" });
+  if (!tetelek || tetelek.length === 0) return res.status(400).json({ msg: "Üres a kosár!" });
 
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: "Érvénytelen vagy lejárt token" });
-        req.user = user; 
-        next();
+  const finalUserId = userId || 1; 
+
+  const sqlRendeles = `
+    INSERT INTO rendeles 
+    (user_id, szaml_nev, szaml_orszag, szaml_irsz, szaml_varos, szaml_utca, szaml_hazszam,
+     szall_nev, szall_orszag, szall_irsz, szall_varos, szall_utca, szall_hazszam, vegosszeg, statusz) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'FELDOLGOZAS')
+  `;
+
+  const valuesRendeles = [
+    finalUserId, szamlazasi.nev, szamlazasi.orszag || 'Magyarország', szamlazasi.irsz, szamlazasi.varos, szamlazasi.utca, szamlazasi.hazszam,
+    szallitasi.nev, szallitasi.orszag || 'Magyarország', szallitasi.irsz, szallitasi.varos, szallitasi.utca, szallitasi.hazszam, vegosszeg
+  ];
+
+  db.query(sqlRendeles, valuesRendeles, (err, result) => {
+    if (err) return res.status(500).json({ msg: "Adatbázis hiba a rendelés mentésekor." });
+
+    const rendelesId = result.insertId;
+    const tetelValues = tetelek.map(item => [rendelesId, item.id, item.amount, item.ar]);
+    const sqlTetel = `INSERT INTO rendeles_tetel (rendeles_id, bor_id, mennyiseg, egysegar) VALUES ?`;
+
+    db.query(sqlTetel, [tetelValues], (err, resultItems) => {
+      if (err) return res.status(500).json({ msg: "Hiba a tételek mentésekor." });
+
+      tetelek.forEach(item => {
+        db.query("UPDATE bor SET keszlet = keszlet - ? WHERE id = ?", [item.amount, item.id]);
+      });
+
+      const vasarloEmail = szamlazasi.email;
+      
+      // Hírlevél feliratkozás mentése & Email
+      if (hirlevel && vasarloEmail) {
+          db.query(`INSERT IGNORE INTO hirlevel_feliratkozok (nev, email) VALUES (?, ?)`, [szamlazasi.nev, vasarloEmail], (hErr) => {
+              if (!hErr) emailService.sendWelcomeEmail(szamlazasi.nev, vasarloEmail);
+          });
+      }
+
+      // Rendelés visszaigazoló email & PDF küldése
+      const orderData = {
+          rendelesId, szamlazasi, szallitasi, tetelek, vegosszeg,
+          termekekAra: tetelek.reduce((acc, item) => acc + (item.ar * item.amount), 0),
+          kedvezmeny, kuponKod, szallitasiKoltseg, utanvetDija,
+          afa: Math.round(vegosszeg * 0.212598),
+          vasarloEmail
+      };
+      
+      emailService.sendOrderConfirmation(orderData);
+
+      res.json({ msg: "Rendelés sikeresen rögzítve!", orderId: rendelesId });
     });
-};
-
-const isAdmin = (req, res, next) => {
-    if (req.user.jogosultsag !== 'admin') {
-        return res.status(403).json({ error: "Nincs admin jogosultságod ehhez a művelethez" });
-    }
-    next();
-};
-
-// ==========================================
-// REGISZTRÁCIÓ ÉS BEJELENTKEZÉS
-// ==========================================
-
-app.post('/api/register', async (req, res) => {
-    const { nev, email, jelszo } = req.body;
-    try {
-        const [existing] = await promisePool.query('SELECT email FROM felhasznalok WHERE email = ?', [email]);
-        if (existing.length > 0) return res.status(400).json({ error: 'Ez az email cím már regisztrálva van!' });
-
-        const hashedPassword = await bcrypt.hash(jelszo, 10);
-        await promisePool.query('INSERT INTO felhasznalok (nev, email, jelszo) VALUES (?, ?, ?)', [nev, email, hashedPassword]);
-        res.status(201).json({ message: 'Sikeres regisztráció!' });
-    } catch (err) {
-        res.status(500).json({ error: 'Hiba a regisztráció során', details: err });
-    }
-});
-
-app.post('/api/login', async (req, res) => {
-    const { email, jelszo } = req.body;
-    try {
-        const [users] = await promisePool.query('SELECT * FROM felhasznalok WHERE email = ?', [email]);
-        if (users.length === 0) return res.status(401).json({ error: 'Hibás email vagy jelszó!' });
-
-        const user = users[0];
-        const match = await bcrypt.compare(jelszo, user.jelszo);
-        if (!match) return res.status(401).json({ error: 'Hibás email vagy jelszó!' });
-
-        const token = jwt.sign(
-            { id: user.id, email: user.email, jogosultsag: user.jogosultsag },
-            JWT_SECRET,
-            { expiresIn: '1d' }
-        );
-
-        res.json({ message: 'Sikeres bejelentkezés!', token, user: { id: user.id, nev: user.nev, email: user.email, jogosultsag: user.jogosultsag } });
-    } catch (err) {
-        res.status(500).json({ error: 'Szerverhiba', details: err });
-    }
-});
-
-app.get('/api/verify', authenticateToken, async (req, res) => {
-    try {
-        const [users] = await promisePool.query('SELECT id, nev, email, jogosultsag FROM felhasznalok WHERE id = ?', [req.user.id]);
-        if (users.length === 0) return res.status(404).json({ error: "Felhasználó nem található" });
-        res.json({ user: users[0] });
-    } catch (error) {
-        res.status(500).json({ error: "Szerverhiba" });
-    }
+  });
 });
 
 // ==========================================
-// FELHASZNÁLÓI PROFIL KEZELÉSE
+// IDŐZÍTETT NAPI HÍRLEVÉL (Budapesti idő szerint)
 // ==========================================
-
-app.get('/api/profil', authenticateToken, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(
-            'SELECT nev, email, telefonszam, irsz, varos, utca, hazszam FROM felhasznalok WHERE id = ?',
-            [req.user.id]
-        );
-        if (rows.length === 0) return res.status(404).json({ error: "Nem található" });
-        res.json(rows[0]);
-    } catch (error) {
-        res.status(500).json({ error: "Szerverhiba" });
-    }
-});
-
-app.put('/api/profil', authenticateToken, async (req, res) => {
-    const { nev, telefonszam, irsz, varos, utca, hazszam, regiJelszo, ujJelszo } = req.body;
-    try {
-        if (regiJelszo && ujJelszo) {
-            const [users] = await promisePool.query('SELECT jelszo FROM felhasznalok WHERE id = ?', [req.user.id]);
-            const match = await bcrypt.compare(regiJelszo, users[0].jelszo);
-            if (!match) return res.status(400).json({ error: "A régi jelszó hibás!" });
-            
-            const hashedNew = await bcrypt.hash(ujJelszo, 10);
-            await promisePool.query('UPDATE felhasznalok SET jelszo = ? WHERE id = ?', [hashedNew, req.user.id]);
-        }
-
-        await promisePool.query(
-            'UPDATE felhasznalok SET nev=?, telefonszam=?, irsz=?, varos=?, utca=?, hazszam=? WHERE id=?',
-            [nev, telefonszam, irsz, varos, utca, hazszam, req.user.id]
-        );
-        res.json({ message: "Profil sikeresen frissítve!" });
-    } catch (error) {
-        res.status(500).json({ error: "Hiba történt" });
-    }
-});
-
-app.get('/api/profil/rendelesek', authenticateToken, async (req, res) => {
-    try {
-        const [rendelesek] = await promisePool.query(
-            `SELECT id, datum, vegosszeg, allapot 
-             FROM rendelesek WHERE felhasznalo_id = ? ORDER BY datum DESC`,
-            [req.user.id]
-        );
-
-        for (let r of rendelesek) {
-            const [tetelek] = await promisePool.query(
-                `SELECT rt.mennyiseg, rt.egysegar, b.nev AS bor_nev, bk.kiszereles_nev 
-                 FROM rendeles_tetelek rt
-                 JOIN borok b ON rt.bor_id = b.id
-                 JOIN bor_kiszerelesek bk ON rt.kiszereles_id = bk.id
-                 WHERE rt.rendeles_id = ?`,
-                [r.id]
-            );
-            r.tetelek = tetelek;
-        }
-
-        res.json(rendelesek);
-    } catch (error) {
-        res.status(500).json({ error: "Szerverhiba" });
-    }
-});
-
-app.get('/api/profil/foglalasok', authenticateToken, async (req, res) => {
-    try {
-        const [foglalasok] = await promisePool.query(
-            `SELECT f.id, f.datum, f.idotartam, f.letszam, f.osszeg, f.allapot, 
-                    sz.nev AS szolgaltatas_nev, sz.kep_url
-             FROM foglalasok f
-             JOIN szolgaltatasok sz ON f.szolgaltatas_id = sz.id
-             WHERE f.felhasznalo_id = ?
-             ORDER BY f.datum DESC, f.idotartam DESC`,
-            [req.user.id]
-        );
-        res.json(foglalasok);
-    } catch (error) {
-        res.status(500).json({ error: "Szerverhiba" });
-    }
-});
-
-// ==========================================
-// BOROK ÉS KISZERELÉSEK LEKÉRDEZÉSE
-// ==========================================
-
-app.get('/api/borok', async (req, res) => {
-    try {
-        const [borok] = await promisePool.query('SELECT * FROM borok');
-        
-        for (let bor of borok) {
-            const [kiszerelesek] = await promisePool.query(
-                'SELECT * FROM bor_kiszerelesek WHERE bor_id = ?', 
-                [bor.id]
-            );
-            bor.kiszerelesek = kiszerelesek;
-        }
-
-        res.json(borok);
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba a borok lekérdezésekor' });
-    }
-});
-
-app.get('/api/borok/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const [borok] = await promisePool.query('SELECT * FROM borok WHERE id = ?', [id]);
-        if (borok.length === 0) return res.status(404).json({ error: 'Bor nem található' });
-
-        const bor = borok[0];
-        const [kiszerelesek] = await promisePool.query('SELECT * FROM bor_kiszerelesek WHERE bor_id = ?', [id]);
-        bor.kiszerelesek = kiszerelesek;
-
-        const [ertekelesek] = await promisePool.query(
-            `SELECT e.ertekeles, e.velemeny, e.datum, f.nev AS felhasznalo_nev 
-             FROM ertekelesek e 
-             JOIN felhasznalok f ON e.felhasznalo_id = f.id 
-             WHERE e.bor_id = ? ORDER BY e.datum DESC`, 
-            [id]
-        );
-        bor.ertekelesek = ertekelesek;
-
-        res.json(bor);
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba történt' });
-    }
-});
-
-// ==========================================
-// KOSÁR KEZELÉSE (ADATBÁZISBAN)
-// ==========================================
-
-app.get('/api/kosar', authenticateToken, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(
-            `SELECT k.id AS kosar_tetel_id, k.mennyiseg, 
-                    b.id AS bor_id, b.nev AS bor_nev, b.kep_url, 
-                    bk.id AS kiszereles_id, bk.kiszereles_nev, bk.ar
-             FROM kosar k
-             JOIN borok b ON k.bor_id = b.id
-             JOIN bor_kiszerelesek bk ON k.kiszereles_id = bk.id
-             WHERE k.felhasznalo_id = ?`,
-            [req.user.id]
-        );
-        
-        const cartItems = rows.map(r => ({
-            id: r.bor_id,
-            kiszereles_id: r.kiszereles_id,
-            nev: r.bor_nev,
-            kep_url: r.kep_url,
-            kiszereles_nev: r.kiszereles_nev,
-            ar: r.ar,
-            amount: r.mennyiseg
-        }));
-
-        res.json(cartItems);
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba a kosár betöltésekor' });
-    }
-});
-
-app.post('/api/kosar', authenticateToken, async (req, res) => {
-    const { bor_id, kiszereles_id, mennyiseg } = req.body;
-    try {
-        const [letezo] = await promisePool.query(
-            'SELECT id, mennyiseg FROM kosar WHERE felhasznalo_id = ? AND bor_id = ? AND kiszereles_id = ?',
-            [req.user.id, bor_id, kiszereles_id]
-        );
-
-        if (letezo.length > 0) {
-            await promisePool.query(
-                'UPDATE kosar SET mennyiseg = mennyiseg + ? WHERE id = ?',
-                [mennyiseg, letezo[0].id]
-            );
-        } else {
-            await promisePool.query(
-                'INSERT INTO kosar (felhasznalo_id, bor_id, kiszereles_id, mennyiseg) VALUES (?, ?, ?, ?)',
-                [req.user.id, bor_id, kiszereles_id, mennyiseg]
-            );
-        }
-        res.json({ message: 'Sikeresen hozzáadva a kosárhoz' });
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba a kosárba tételkor' });
-    }
-});
-
-app.put('/api/kosar', authenticateToken, async (req, res) => {
-    const { bor_id, kiszereles_id, mennyiseg } = req.body;
-    try {
-        await promisePool.query(
-            'UPDATE kosar SET mennyiseg = ? WHERE felhasznalo_id = ? AND bor_id = ? AND kiszereles_id = ?',
-            [mennyiseg, req.user.id, bor_id, kiszereles_id]
-        );
-        res.json({ message: 'Mennyiség frissítve' });
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba' });
-    }
-});
-
-app.delete('/api/kosar', authenticateToken, async (req, res) => {
-    const { bor_id, kiszereles_id } = req.body;
-    try {
-        await promisePool.query(
-            'DELETE FROM kosar WHERE felhasznalo_id = ? AND bor_id = ? AND kiszereles_id = ?',
-            [req.user.id, bor_id, kiszereles_id]
-        );
-        res.json({ message: 'Tétel törölve' });
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba' });
-    }
-});
-
-app.delete('/api/kosar/urites', authenticateToken, async (req, res) => {
-    try {
-        await promisePool.query('DELETE FROM kosar WHERE felhasznalo_id = ?', [req.user.id]);
-        res.json({ message: 'Kosár kiürítve' });
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba a kosár ürítésekor' });
-    }
-});
-
-// ==========================================
-// HÍRLEVÉL AUTOMATIZÁLÁS (CRON JOB)
-// ==========================================
-
-cron.schedule('0 11 * * *', async () => {
+cron.schedule('0 11 * * *', () => {
     console.log("⏰ Napi hírlevél generálása indítva...");
-    
-    try {
-        const [subscribers] = await promisePool.query('SELECT nev, email FROM felhasznalok WHERE hirlevel = 1');
-        
-        if (subscribers.length === 0) {
-            console.log("Nincs aktív feliratkozó, hírlevél küldés megszakítva.");
-            return;
-        }
 
-        const [topWines] = await promisePool.query(`
-            SELECT b.id, b.nev, b.rovid_leiras, b.kep_url, bk.ar 
-            FROM borok b
-            JOIN bor_kiszerelesek bk ON b.id = bk.bor_id
-            WHERE bk.kiszereles_nev = '0.75 L'
-            ORDER BY RAND() LIMIT 3
-        `);
+    const topWinesSql = `
+        SELECT b.nev, b.ar, b.leiras, SUM(rt.mennyiseg) as eladott_db 
+        FROM bor b LEFT JOIN rendeles_tetel rt ON b.id = rt.bor_id
+        GROUP BY b.id ORDER BY eladott_db DESC LIMIT 3
+    `;
 
-        if (topWines.length === 0) return;
+    db.query(topWinesSql, (err, wines) => {
+        if (err || wines.length === 0) return console.error("Hiba a borok lekérésekor a hírlevélhez.");
 
-        const winesHtml = topWines.map(w => `
-            <div style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
-                <h3 style="color: #722f37; margin-bottom: 5px;">${w.nev}</h3>
-                <p style="color: #555; font-size: 14px; margin-top: 0;">${w.rovid_leiras}</p>
-                <div style="display: inline-block; background-color: #f4f4f4; padding: 5px 10px; border-radius: 5px; font-weight: bold; color: #333;">
-                    Csak ${new Intl.NumberFormat("hu-HU").format(w.ar)} Ft
-                </div>
-            </div>
-        `).join('');
-
-        for (const sub of subscribers) {
-            try {
-                // Új, tiszta emailService hívás!
-                await emailService.sendNewsletterEmail(sub.email, sub.nev, winesHtml);
-                console.log(`✉️ E-mail sikeresen kiküldve: ${sub.email}`);
-            } catch (err) {
-                console.error(`Hiba az e-mail küldésekor (${sub.email}):`, err);
-            }
-        }
-
-        console.log("✅ Hírlevél küldés befejeződött.");
-    } catch (error) {
-        console.error("Hiba a cron job futtatásakor:", error);
-    }
-});
-
-// ==========================================
-// RENDELÉS LEADÁSA (WEBSHOP) ÉS PDF SZÁMLA
-// ==========================================
-
-app.post('/api/rendeles', authenticateToken, async (req, res) => {
-    const { szamlazasi, szallitasi, tetelek, vegosszeg, szallitasiKoltseg, utanvetDija, kuponKod, kedvezmeny, hirlevel } = req.body;
-    
-    try {
-        await promisePool.query('START TRANSACTION');
-
-        const [users] = await promisePool.query('SELECT nev, email FROM felhasznalok WHERE id = ?', [req.user.id]);
-        const user = users[0];
-
-        if (hirlevel === true) {
-            await promisePool.query('UPDATE felhasznalok SET hirlevel = 1 WHERE id = ?', [req.user.id]);
-        }
-
-        const [rendelesResult] = await promisePool.query(
-            `INSERT INTO rendelesek 
-            (felhasznalo_id, szamlazasi_nev, szamlazasi_irsz, szamlazasi_varos, szamlazasi_utca, szamlazasi_hazszam, szamlazasi_telefon, 
-             szallitasi_nev, szallitasi_irsz, szallitasi_varos, szallitasi_utca, szallitasi_hazszam, 
-             szallitasi_dij, utanvet_dija, kupon_kod, kedvezmeny_osszege, vegosszeg, allapot) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Feldolgozás alatt')`,
-            [req.user.id, szamlazasi.nev, szamlazasi.irsz, szamlazasi.varos, szamlazasi.utca, szamlazasi.hazszam, szamlazasi.tel,
-             szallitasi.nev, szallitasi.irsz, szallitasi.varos, szallitasi.utca, szallitasi.hazszam,
-             szallitasiKoltseg || 0, utanvetDija || 0, kuponKod || null, kedvezmeny || 0, vegosszeg]
-        );
-
-        const insertId = rendelesResult.insertId;
-
-        for (let t of tetelek) {
-            await promisePool.query(
-                `INSERT INTO rendeles_tetelek (rendeles_id, bor_id, kiszereles_id, mennyiseg, egysegar) 
-                 VALUES (?, ?, ?, ?, ?)`,
-                [insertId, t.id, t.kiszereles_id, t.amount, t.ar]
-            );
-
-            await promisePool.query(
-                `UPDATE bor_kiszerelesek SET keszlet = keszlet - ? WHERE id = ? AND keszlet >= ?`,
-                [t.amount, t.kiszereles_id, t.amount]
-            );
-        }
-
-        await promisePool.query('DELETE FROM kosar WHERE felhasznalo_id = ?', [req.user.id]);
-        await promisePool.query('COMMIT');
-
-        // --- ÚJ, TISZTA EMAIL SERVICE HÍVÁS A PDF GENERÁLÁSHOZ ---
-        const orderInfo = {
-            rendelesId: insertId,
-            szamlazasi: szamlazasi,
-            vegosszeg: vegosszeg,
-            szallitasiKoltseg: szallitasiKoltseg,
-            utanvetDija: utanvetDija,
-            kedvezmeny: kedvezmeny
-        };
-        
-        emailService.sendOrderConfirmation(user.email, user.nev, orderInfo, tetelek)
-            .then(() => console.log(`✉️ Rendelés PDF elküldve: ${user.email}`))
-            .catch(err => console.error("Hiba a rendelés email küldésekor:", err));
-
-        res.status(201).json({ msg: 'Rendelés sikeresen rögzítve!', orderId: insertId });
-
-    } catch (error) {
-        await promisePool.query('ROLLBACK');
-        console.error(error);
-        res.status(500).json({ msg: 'Szerverhiba a rendelés során.' });
-    }
-});
-
-// ==========================================
-// ADMIN RÉSZ - RENDELÉSEK KEZELÉSE
-// ==========================================
-
-app.get('/api/admin/rendelesek', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(
-            `SELECT r.*, f.nev AS felhasznalo_nev, f.email 
-             FROM rendelesek r 
-             JOIN felhasznalok f ON r.felhasznalo_id = f.id 
-             ORDER BY r.datum DESC`
-        );
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba a lekérdezéskor' });
-    }
-});
-
-app.put('/api/admin/rendelesek/:id/allapot', authenticateToken, isAdmin, async (req, res) => {
-    const { allapot } = req.body;
-    try {
-        await promisePool.query('UPDATE rendelesek SET allapot = ? WHERE id = ?', [allapot, req.params.id]);
-        res.json({ message: 'Állapot frissítve!' });
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba a frissítéskor' });
-    }
-});
-
-app.get('/api/admin/rendelesek/:id/tetelek', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(
-            `SELECT rt.*, b.nev AS bor_nev, bk.kiszereles_nev 
-             FROM rendeles_tetelek rt
-             JOIN borok b ON rt.bor_id = b.id
-             JOIN bor_kiszerelesek bk ON rt.kiszereles_id = bk.id
-             WHERE rt.rendeles_id = ?`,
-            [req.params.id]
-        );
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: 'Hiba a lekérdezéskor' });
-    }
-});
-
-// ==========================================
-// ADMIN RÉSZ - BOROK KEZELÉSE (CRUD)
-// ==========================================
-
-app.post('/api/admin/borok', authenticateToken, isAdmin, upload.single('kep'), async (req, res) => {
-    const { nev, fajta, evjarat, tipus, rovid_leiras, hosszu_leiras, jellego, alkohol, sav, cukor } = req.body;
-    const kep_url = req.file ? `/images/${req.file.filename}` : null;
-
-    try {
-        const [result] = await promisePool.query(
-            `INSERT INTO borok (nev, fajta, evjarat, tipus, rovid_leiras, hosszu_leiras, jellego, alkohol, sav, cukor, kep_url) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [nev, fajta, evjarat, tipus, rovid_leiras, hosszu_leiras, jellego, alkohol, sav, cukor, kep_url]
-        );
-        res.status(201).json({ message: "Bor sikeresen hozzáadva", id: result.insertId, kep_url });
-    } catch (error) {
-        res.status(500).json({ error: "Adatbázis hiba" });
-    }
-});
-
-app.put('/api/admin/borok/:id', authenticateToken, isAdmin, upload.single('kep'), async (req, res) => {
-    const { id } = req.params;
-    const { nev, fajta, evjarat, tipus, rovid_leiras, hosszu_leiras, jellego, alkohol, sav, cukor } = req.body;
-    
-    let query = `UPDATE borok SET nev=?, fajta=?, evjarat=?, tipus=?, rovid_leiras=?, hosszu_leiras=?, jellego=?, alkohol=?, sav=?, cukor=?`;
-    let params = [nev, fajta, evjarat, tipus, rovid_leiras, hosszu_leiras, jellego, alkohol, sav, cukor];
-
-    if (req.file) {
-        query += `, kep_url=?`;
-        params.push(`/images/${req.file.filename}`);
-    }
-    
-    query += ` WHERE id=?`;
-    params.push(id);
-
-    try {
-        await promisePool.query(query, params);
-        res.json({ message: "Bor sikeresen frissítve" });
-    } catch (error) {
-        res.status(500).json({ error: "Hiba a frissítéskor" });
-    }
-});
-
-app.delete('/api/admin/borok/:id', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const [bor] = await promisePool.query('SELECT kep_url FROM borok WHERE id = ?', [req.params.id]);
-        if (bor.length > 0 && bor[0].kep_url) {
-            const filepath = path.join(__dirname, 'public', bor[0].kep_url);
-            if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
-        }
-        await promisePool.query('DELETE FROM borok WHERE id = ?', [req.params.id]);
-        res.json({ message: "Bor törölve" });
-    } catch (error) {
-        res.status(500).json({ error: "Hiba a törléskor" });
-    }
-});
-
-app.post('/api/admin/borok/:id/kiszerelesek', authenticateToken, isAdmin, async (req, res) => {
-    const { kiszereles_nev, ar, keszlet } = req.body;
-    try {
-        await promisePool.query(
-            'INSERT INTO bor_kiszerelesek (bor_id, kiszereles_nev, ar, keszlet) VALUES (?, ?, ?, ?)',
-            [req.params.id, kiszereles_nev, ar, keszlet]
-        );
-        res.status(201).json({ message: "Kiszerelés hozzáadva!" });
-    } catch (error) {
-        res.status(500).json({ error: "Hiba a mentéskor" });
-    }
-});
-
-app.delete('/api/admin/kiszerelesek/:kiszerelesId', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        await promisePool.query('DELETE FROM bor_kiszerelesek WHERE id = ?', [req.params.kiszerelesId]);
-        res.json({ message: "Kiszerelés törölve!" });
-    } catch (error) {
-        res.status(500).json({ error: "Hiba a törléskor" });
-    }
-});
-
-// ==========================================
-// ADMIN RÉSZ - ÉRTÉKELÉSEK KEZELÉSE
-// ==========================================
-
-app.get('/api/admin/ertekelesek', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(`
-            SELECT e.*, b.nev AS bor_nev, f.nev AS felhasznalo_nev 
-            FROM ertekelesek e
-            JOIN borok b ON e.bor_id = b.id
-            JOIN felhasznalok f ON e.felhasznalo_id = f.id
-            ORDER BY e.datum DESC
-        `);
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: "Adatbázis hiba" });
-    }
-});
-
-app.delete('/api/admin/ertekelesek/:id', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        await promisePool.query('DELETE FROM ertekelesek WHERE id = ?', [req.params.id]);
-        res.json({ message: "Értékelés törölve" });
-    } catch (error) {
-        res.status(500).json({ error: "Hiba a törléskor" });
-    }
-});
-
-// ==========================================
-// BORKÓSTOLÓK (SZOLGÁLTATÁSOK)
-// ==========================================
-
-app.get('/api/szolgaltatasok', async (req, res) => {
-    try {
-        const [rows] = await promisePool.query('SELECT * FROM szolgaltatasok ORDER BY ar ASC');
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: "Hiba a szolgáltatások lekérdezésekor" });
-    }
-});
-
-app.post('/api/foglalas', authenticateToken, async (req, res) => {
-    const { szolgaltatasId, datum, idotartam, letszam, osszeg, megjegyzes } = req.body;
-    const felhasznaloId = req.user.id;
-
-    if (!szolgaltatasId || !datum || !idotartam || !letszam || !osszeg) {
-        return res.status(400).json({ error: "Minden mező kitöltése kötelező!" });
-    }
-
-    try {
-        await promisePool.query('START TRANSACTION');
-
-        const [szolgRows] = await promisePool.query('SELECT nev FROM szolgaltatasok WHERE id = ?', [szolgaltatasId]);
-        if (szolgRows.length === 0) throw new Error("A szolgáltatás nem található");
-        const szolgaltatas = szolgRows[0];
-
-        const [kapacitasCheck] = await promisePool.query(
-            `SELECT SUM(letszam) as foglalt_fo 
-             FROM foglalasok 
-             WHERE datum = ? AND idotartam = ? AND allapot != 'Lemondva'`,
-            [datum, idotartam]
-        );
-        const eddigFoglalt = kapacitasCheck[0].foglalt_fo || 0;
-        const maxKapacitas = 20;
-
-        if (eddigFoglalt + letszam > maxKapacitas) {
-            await promisePool.query('ROLLBACK');
-            return res.status(400).json({ error: `Nincs elég szabad hely. Még ${maxKapacitas - eddigFoglalt} hely maradt.` });
-        }
-
-        const [result] = await promisePool.query(
-            `INSERT INTO foglalasok (felhasznalo_id, szolgaltatas_id, datum, idotartam, letszam, osszeg, megjegyzes) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [felhasznaloId, szolgaltatasId, datum, idotartam, letszam, osszeg, megjegyzes || null]
-        );
-
-        const insertId = result.insertId;
-
-        const [users] = await promisePool.query('SELECT nev, email FROM felhasznalok WHERE id = ?', [felhasznaloId]);
-        const user = users[0];
-
-        await promisePool.query('COMMIT');
-
-        // --- ÚJ, TISZTA EMAIL SERVICE HÍVÁS A JEGY GENERÁLÁSHOZ ---
-        const bookingInfo = {
-            foglalasId: insertId,
-            szolgaltatasNev: szolgaltatas.nev,
-            datum: datum,
-            idotartam: idotartam,
-            letszam: letszam,
-            osszeg: osszeg
-        };
-
-        emailService.sendBookingConfirmation(user.email, user.nev, bookingInfo)
-            .then(() => console.log(`🎟️ Jegy PDF elküldve: ${user.email}`))
-            .catch(err => console.error("Hiba a jegy email küldésekor:", err));
-
-        res.status(201).json({ msg: 'Sikeres foglalás!', foglalasId: insertId });
-
-    } catch (error) {
-        await promisePool.query('ROLLBACK');
-        console.error(error);
-        res.status(500).json({ error: "Szerverhiba a foglalás során" });
-    }
-});
-
-// ==========================================
-// ADMIN RÉSZ - FOGLALÁSOK KEZELÉSE
-// ==========================================
-
-app.get('/api/admin/foglalasok', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(`
-            SELECT f.*, sz.nev AS szolgaltatas_nev, u.nev AS felhasznalo_nev, u.email, u.telefonszam
-            FROM foglalasok f
-            JOIN szolgaltatasok sz ON f.szolgaltatas_id = sz.id
-            JOIN felhasznalok u ON f.felhasznalo_id = u.id
-            ORDER BY f.datum DESC, f.idotartam ASC
-        `);
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: "Szerverhiba" });
-    }
-});
-
-app.put('/api/admin/foglalasok/:id/allapot', authenticateToken, isAdmin, async (req, res) => {
-    const { id } = req.params;
-    const { allapot } = req.body;
-    try {
-        await promisePool.query('UPDATE foglalasok SET allapot = ? WHERE id = ?', [allapot, id]);
-        res.json({ message: "Foglalás állapota frissítve" });
-    } catch (error) {
-        res.status(500).json({ error: "Szerverhiba" });
-    }
-});
-
-// ==========================================
-// ADMIN RÉSZ - MŰSZERFAL STATISZTIKÁK
-// ==========================================
-
-app.get('/api/admin/dashboard-stats', authenticateToken, isAdmin, async (req, res) => {
-    try {
-        const [salesRows] = await promisePool.query(
-            `SELECT SUM(vegosszeg) AS havi_bevetel 
-             FROM rendelesek 
-             WHERE MONTH(datum) = MONTH(CURRENT_DATE()) AND YEAR(datum) = YEAR(CURRENT_DATE()) AND allapot != 'Törölve'`
-        );
-        const haviBevetel = salesRows[0].havi_bevetel || 0;
-
-        const [orderRows] = await promisePool.query(
-            `SELECT COUNT(*) AS uj_rendelesek 
-             FROM rendelesek 
-             WHERE allapot = 'Feldolgozás alatt'`
-        );
-        const ujRendelesek = orderRows[0].uj_rendelesek || 0;
-
-        const [bookingRows] = await promisePool.query(
-            `SELECT COUNT(*) AS varhato_vendegek 
-             FROM foglalasok 
-             WHERE datum >= CURRENT_DATE() AND allapot = 'Jóváhagyva'`
-        );
-        const varhatoVendegek = bookingRows[0].varhato_vendegek || 0;
-
-        const [userRows] = await promisePool.query(`SELECT COUNT(*) AS osszes_felhasznalo FROM felhasznalok`);
-        const osszesFelhasznalo = userRows[0].osszes_felhasznalo || 0;
-
-        const [chartRows] = await promisePool.query(`
-            SELECT DATE_FORMAT(datum, '%Y-%m') AS ho, SUM(vegosszeg) AS bevetel
-            FROM rendelesek
-            WHERE allapot != 'Törölve' AND datum >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(datum, '%Y-%m')
-            ORDER BY ho ASC
-        `);
-
-        const chartLabels = chartRows.map(r => r.ho);
-        const chartData = chartRows.map(r => r.bevetel);
-
-        res.json({
-            haviBevetel,
-            ujRendelesek,
-            varhatoVendegek,
-            osszesFelhasznalo,
-            chartData: { labels: chartLabels, data: chartData }
+        db.query("SELECT nev, email FROM hirlevel_feliratkozok", (errSub, subscribers) => {
+            if (errSub || subscribers.length === 0) return console.log("Nincsenek feliratkozók.");
+            
+            emailService.sendDailyNewsletter(wines, subscribers);
+            console.log(`Hírlevél kiküldve ${subscribers.length} feliratkozónak!`);
         });
-    } catch (error) {
-        res.status(500).json({ error: "Hiba a statisztikák betöltésekor" });
-    }
+    });
+}, {
+    scheduled: true,
+    timezone: "Europe/Budapest" // <-- EZ A KULCS! Így a magyar időt figyeli, nem a Docker belső idejét.
 });
 
-// A SZERVER INDÍTÁSA
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 A backend szerver fut a http://localhost:${PORT} porton`);
+
+// Többi API végpont
+app.post('/api/register', async (req, res) => {
+    const { email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam } = req.body;
+    if (!email || !password_hash || !nev) return res.status(400).json({ error: 'Hiányzó adatok: email, név és jelszó kötelező!' });
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password_hash, salt);
+        const sql = `INSERT INTO users (email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        db.query(sql, [email, hashedPassword, nev, telefonszam, orszag, irsz, varos, utca, hazszam], (err, result) => {
+            if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+            res.status(201).json({ message: 'Sikeres regisztráció!' });
+        });
+    } catch (error) { res.status(500).json({ error: 'Belső szerverhiba történt.' }); }
 });
+
+app.post('/api/login', (req, res) => {
+    const { email, password_hash } = req.body; 
+    db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
+        if (err) return res.status(500).json({ error: 'Adatbázis hiba' });
+        if (results.length === 0) return res.status(401).json({ error: 'Hibás adatok!' });
+        const user = results[0];
+        if (!(await bcrypt.compare(password_hash, user.password_hash))) return res.status(401).json({ error: 'Hibás adatok!' });
+        const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '24h' }); 
+        res.json({ message: 'Sikeres bejelentkezés!', token, user: { id: user.id, nev: user.nev, email: user.email, role: user.role, telefonszam: user.telefonszam, irsz: user.irsz, varos: user.varos, utca: user.utca, hazszam: user.hazszam } });
+    });
+});
+
+app.get('/api/bor-szinek', (req, res) => { db.query('SELECT id, nev FROM bor_szin', (err, results) => { res.json(results); }); });
+
+app.get('/api/borok', (req, res) => {
+  db.query(`SELECT b.id, b.nev, b.evjarat, b.ar, b.leiras, b.keszlet, b.kep, b.bor_szin_id, b.alkoholfok, k.megnevezes AS kiszereles_nev, k.szorzo FROM bor b JOIN kiszereles k ON b.kiszereles_id = k.id WHERE b.keszlet IS NOT NULL`, (err, results) => { res.json(results); });
+});
+
+app.get('/api/kiszerelesek', (req, res) => { db.query("SELECT * FROM kiszereles ORDER BY id ASC", (err, results) => { res.json(results); }); });
+app.get('/api/users', (req, res) => { db.query("SELECT id, nev, email, role, telefonszam, is_active FROM users", (err, results) => { res.json(results); }); });
+app.delete('/api/users/:id', (req, res) => { if(req.params.id == 1) return res.status(403).json({ error: "Fő admint nem lehet törölni" }); db.query("DELETE FROM users WHERE id = ?", [req.params.id], () => res.json({ message: "Felhasználó törölve!" })); });
+
+app.post('/api/borok', upload.single('kep'), (req, res) => {
+    const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
+    db.query(`INSERT INTO bor (nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok, kep) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+    [nev, evjarat, ar, keszlet || 0, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0, req.file ? `/images/${req.file.filename}` : null], 
+    (err, result) => res.json({ message: "Bor sikeresen hozzáadva!", id: result.insertId }));
+});
+
+app.put('/api/borok/:id', upload.single('kep'), (req, res) => {
+    const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
+    let sql = `UPDATE bor SET nev=?, evjarat=?, ar=?, keszlet=?, leiras=?, bor_szin_id=?, kiszereles_id=?, alkoholfok=?`;
+    let values = [nev, evjarat, ar, keszlet || 0, leiras, bor_szin_id || 1, kiszereles_id || 1, alkoholfok || 0];
+    if (req.file) { sql += `, kep=?`; values.push(`/images/${req.file.filename}`); }
+    sql += ` WHERE id=?`; values.push(req.params.id);
+    db.query(sql, values, () => res.json({ message: "Bor frissítve!" }));
+});
+
+app.delete('/api/borok/:id', (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM bor WHERE id = ?", [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba törléskor" });
+        res.json({ message: "Törölve" });
+    });
+});
+
+app.get('/api/borok/top', (req, res) => {
+    const sql = `
+        SELECT b.*, SUM(rt.mennyiseg) as eladott_db 
+        FROM bor b
+        LEFT JOIN rendeles_tetel rt ON b.id = rt.bor_id
+        GROUP BY b.id
+        ORDER BY eladott_db DESC
+        LIMIT 3
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+app.get('/api/admin/szolgaltatasok', (req, res) => {
+    const sql = "SELECT * FROM szolgaltatas ORDER BY datum DESC"; 
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+app.post('/api/szolgaltatasok', (req, res) => {
+    const { nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv } = req.body;
+    const sql = "INSERT INTO szolgaltatas (nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    const values = [nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv !== undefined ? aktiv : 1];
+    
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Hiba:", err);
+            return res.status(500).json({ error: "Hiba létrehozáskor" });
+        }
+        res.json({ message: "Szolgáltatás létrehozva", id: result.insertId });
+    });
+});
+
+app.put('/api/szolgaltatasok/:id', (req, res) => {
+    const id = req.params.id;
+    const { nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv } = req.body;
+    const sql = "UPDATE szolgaltatas SET nev=?, leiras=?, ar=?, kapacitas=?, datum=?, idotartam=?, extra=?, aktiv=? WHERE id=?";
+    const values = [nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv, id];
+
+    db.query(sql, values, (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba módosításkor" });
+        res.json({ message: "Szolgáltatás frissítve" });
+    });
+});
+
+app.delete('/api/szolgaltatasok/:id', (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM szolgaltatas WHERE id = ?", [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba törléskor" });
+        res.json({ message: "Törölve" });
+    });
+});
+
+app.get('/api/borok/new', (req, res) => {
+    const sql = `SELECT * FROM bor ORDER BY created_at DESC LIMIT 3`;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+app.get('/api/szolgaltatasok', (req, res) => {
+  const sql = "SELECT * FROM szolgaltatas WHERE aktiv = 1";
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("SQL hiba a szolgáltatásoknál:", err.message);
+      return res.status(500).json({ error: "Adatbázis hiba" });
+    }
+    res.json(results);
+  });
+});
+
+app.get('/api/foglaltsag', (req, res) => {
+    const sql = `
+        SELECT szolgaltatas_id, SUM(letszam) as ossz_letszam 
+        FROM foglalas 
+        WHERE statusz != 'CANCELLED'
+        GROUP BY szolgaltatas_id
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Hiba a foglaltság lekérésekor" });
+        res.json(results);
+    });
+});
+
+app.post('/api/contact', (req, res) => {
+    const { userId, nev, email, targy, uzenet } = req.body;
+
+    if (!userId || !targy || !uzenet) {
+        return res.status(400).json({ error: "Hiányzó adatok!" });
+    }
+
+    const sql = "INSERT INTO uzenetek (user_id, nev, email, targy, uzenet) VALUES (?, ?, ?, ?, ?)";
+    
+    db.query(sql, [userId, nev, email, targy, uzenet], (err, result) => {
+        if (err) {
+            console.error("Hiba az üzenet mentésekor:", err);
+            return res.status(500).json({ error: "Szerver hiba történt." });
+        }
+        res.json({ message: "Köszönjük! Üzenetét megkaptuk." });
+    });
+});
+
+app.get('/api/cegadatok', (req, res) => {
+    const sql = "SELECT * FROM ceg_adatok LIMIT 1";
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Hiba a cégadatok lekérésekor:", err);
+            return res.status(500).json({ error: "Adatbázis hiba" });
+        }
+        
+        if (results.length === 0) {
+             return res.json({ 
+                 cim: "Nincs megadva", 
+                 telefon: "-", 
+                 email: "-", 
+                 nyitvatartas: "-" 
+             });
+        }
+        res.json(results[0]);
+    });
+});
+
+app.get('/api/rendeles/user/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const sql = "SELECT * FROM rendeles WHERE user_id = ? ORDER BY datum DESC";
+    
+    db.query(sql, [userId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbazis hiba a rendeleseknel" });
+        res.json(results);
+    });
+});
+
+app.get('/api/foglalas/user/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const sql = "SELECT f.*, sz.nev as szolgaltatas_nev FROM foglalas f LEFT JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id WHERE f.user_id = ? ORDER BY f.datum DESC";
+    
+    db.query(sql, [userId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbazis hiba a foglalasoknal" });
+        res.json(results);
+    });
+});
+
+app.get('/api/admin/uzenetek', (req, res) => {
+    const sql = "SELECT * FROM uzenetek ORDER BY datum DESC";
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba az üzenetek lekérésekor" });
+        res.json(results);
+    });
+});
+
+app.delete('/api/admin/uzenetek/:id', (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM uzenetek WHERE id = ?", [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba törléskor" });
+        res.json({ message: "Üzenet törölve" });
+    });
+});
+
+app.get('/api/admin/rendelesek', (req, res) => {
+    const sql = "SELECT * FROM rendeles ORDER BY datum DESC";
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+app.put('/api/admin/rendelesek/:id/statusz', (req, res) => {
+    const { statusz } = req.body;
+    db.query("UPDATE rendeles SET statusz = ? WHERE id = ?", [statusz, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: "Hiba a frissítéskor" });
+        res.json({ message: "Sikeres frissítés" });
+    });
+});
+
+app.get('/api/admin/foglalasok', (req, res) => {
+    const sql = `
+        SELECT f.*, sz.nev as szolgaltatas_nev, u.nev as user_nev, u.email as user_email 
+        FROM foglalas f 
+        LEFT JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id 
+        LEFT JOIN users u ON f.user_id = u.id 
+        ORDER BY f.foglalas_datuma DESC
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        res.json(results);
+    });
+});
+
+app.put('/api/admin/foglalasok/:id/statusz', (req, res) => {
+    const { statusz } = req.body;
+    db.query("UPDATE foglalas SET statusz = ? WHERE id = ?", [statusz, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: "Hiba a frissítéskor" });
+        res.json({ message: "Sikeres frissítés" });
+    });
+})
+
+app.get('/api/borok/:id/ertekelesek', (req, res) => {
+    const borId = req.params.id;
+    const sql = `
+        SELECT e.id, e.ertekeles as rating, e.szoveg as text, 
+               DATE_FORMAT(e.datum, '%Y-%m-%d %H:%i') as date, 
+               u.nev as user
+        FROM ertekelesek e
+        JOIN users u ON e.user_id = u.id
+        WHERE e.bor_id = ?
+        ORDER BY e.datum DESC
+    `;
+    
+    db.query(sql, [borId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Hiba az értékelések lekérésekor" });
+        res.json(results);
+    });
+});
+
+app.post('/api/ertekelesek', (req, res) => {
+    const { bor_id, user_id, ertekeles, szoveg } = req.body;
+
+    if (!user_id) return res.status(401).json({ error: "Be kell jelentkezned a hozzászóláshoz!" });
+    if (!szoveg) return res.status(400).json({ error: "A hozzászólás nem lehet üres!" });
+
+    const sql = "INSERT INTO ertekelesek (bor_id, user_id, ertekeles, szoveg) VALUES (?, ?, ?, ?)";
+    
+    db.query(sql, [bor_id, user_id, ertekeles || 5, szoveg], (err, result) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba a mentéskor" });
+        res.json({ message: "Sikeres hozzászólás!" });
+    });
+});
+
+app.post('/api/foglalas', (req, res) => {
+    const { userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes } = req.body;
+
+    if (!userId || !szolgaltatasId || !datum || !letszam) {
+        return res.status(400).json({ error: "Hiányzó adatok! Kérjük töltsön ki minden mezőt." });
+    }
+
+    const sql = `
+        INSERT INTO foglalas 
+        (user_id, szolgaltatas_id, letszam, datum, idotartam, osszeg, statusz, megjegyzes, foglalas_datuma) 
+        VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, NOW())
+    `;
+
+    const values = [userId, szolgaltatasId, letszam, datum, idotartam, osszeg, megjegyzes];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Hiba a foglalás mentésekor:", err);
+            return res.status(500).json({ error: "Adatbázis hiba történt a mentés során." });
+        }
+        res.json({ message: "Sikeres foglalás!", foglalasId: result.insertId });
+    });
+});
+
+app.put('/api/admin/uzenetek/:id', (req, res) => {
+    const id = req.params.id;
+    const { nev, email, targy, uzenet } = req.body;
+    
+    const sql = "UPDATE uzenetek SET nev=?, email=?, targy=?, uzenet=? WHERE id=?";
+    db.query(sql, [nev, email, targy, uzenet, id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba módosításkor" });
+        res.json({ message: "Üzenet sikeresen frissítve!" });
+    });
+});
+// --- FOGLALÁS SZÁMLA LETÖLTÉSE (ELEGÁNS PDF DESIGN QR KÓDDAL) ---
+app.get('/api/foglalas/:id/szamla', (req, res) => {
+    const foglalasId = req.params.id;
+
+    const sql = `
+        SELECT f.*, sz.nev as szolgaltatas_nev, u.nev as user_nev, u.email as user_email, u.irsz, u.varos, u.utca, u.hazszam 
+        FROM foglalas f 
+        JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id 
+        JOIN users u ON f.user_id = u.id 
+        WHERE f.id = ?
+    `;
+
+    db.query(sql, [foglalasId], async (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        if (results.length === 0) return res.status(404).json({ error: "A foglalás nem található" });
+
+        const booking = results[0];
+
+        if (booking.statusz !== 'CONFIRMED') {
+            return res.status(403).json({ error: "A számla még nem tölthető le ehhez a foglaláshoz." });
+        }
+
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+        res.setHeader('Content-disposition', `attachment; filename=Szente_Pinceszet_Foglalas_${foglalasId}.pdf`);
+        res.setHeader('Content-type', 'application/pdf');
+        doc.pipe(res);
+
+        // Adatbázisból érkező szövegek ékezet-mentesítése (ő->ö, ű->ü)
+        const safeText = (text) => {
+            if(!text) return '';
+            return text.toString().replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
+        };
+
+        // =========================================================
+        // 1. FEJLÉC
+        // =========================================================
+        doc.fontSize(24).fillColor('#722f37').font('Helvetica-Bold').text('VISSZAIGAZOLÁS', 50, 50);
+        
+        doc.fontSize(10).fillColor('#888888').font('Helvetica');
+        doc.text('Borkóstoló / Program foglalás', 50, 78);
+        
+        doc.fontSize(10).fillColor('#555555').font('Helvetica-Bold');
+        doc.text(`Azonosító: #FOGL-${foglalasId}`, 50, 95);
+        doc.font('Helvetica').text(`Kiállítás dátuma: ${new Date().toLocaleDateString('hu-HU')}`, 50, 110);
+
+        // Szente Pincészet adatok (Jobb oldal)
+        doc.fontSize(14).fillColor('#333333').font('Helvetica-Bold').text('Szente Pincészet', 300, 50, { width: 245, align: 'right' });
+        doc.fontSize(10).fillColor('#666666').font('Helvetica');
+        doc.text('8318 Lesencetomaj, Római út 12.', 300, 70, { width: 245, align: 'right' });
+        doc.text('info@szentepinceszet.hu', 300, 85, { width: 245, align: 'right' });
+        doc.text('+36 30 123 4567', 300, 100, { width: 245, align: 'right' });
+
+        // Vastagabb, elegáns díszítő vonal
+        doc.moveTo(50, 135).lineTo(550, 135).lineWidth(1.5).strokeColor('#722f37').stroke();
+
+        // =========================================================
+        // 2. VÁSÁRLÓ ADATAI (Lekerekített, világos dobozban)
+        // =========================================================
+        doc.roundedRect(50, 155, 500, 75, 5).fillAndStroke('#fafafa', '#e0e0e0');
+        
+        doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 70, 170);
+        doc.fontSize(10).fillColor('#333333').font('Helvetica-Bold');
+        doc.text(safeText(booking.user_nev), 70, 190);
+        
+        doc.font('Helvetica').fillColor('#555555');
+        if (booking.irsz && booking.varos) {
+            doc.text(`${safeText(booking.irsz)} ${safeText(booking.varos)}, ${safeText(booking.utca)} ${safeText(booking.hazszam)}`, 70, 205);
+        } else {
+            doc.text(`Email: ${safeText(booking.user_email)}`, 70, 205);
+        }
+
+        // =========================================================
+        // 3. TÁBLÁZAT FEJLÉC (Teli bordó háttér, fehér betűk)
+        // =========================================================
+        doc.roundedRect(50, 255, 500, 25, 4).fill('#722f37');
+        
+        doc.fontSize(10).fillColor('#ffffff').font('Helvetica-Bold');
+        doc.text('Szolgáltatás', 65, 263);
+        doc.text('Dátum', 230, 263);
+        doc.text('Kezdés', 320, 263); // <--- Itt cseréltük a szót, hogy biztosan szép legyen
+        doc.text('Létszám', 390, 263, { width: 60, align: 'center' }); // <--- Szélesebb lett
+        doc.text('Összesen', 460, 263, { width: 75, align: 'right' });
+
+        // =========================================================
+        // 4. TÁBLÁZAT ADATSOR
+        // =========================================================
+        const y = 295;
+        doc.font('Helvetica').fillColor('#333333');
+        
+        const d = new Date(booking.datum || booking.idopont);
+        const dateStr = d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' }) + '.';
+        
+        let timeStr = booking.idotartam ? booking.idotartam.toString() : "14:00";
+        if (timeStr.length >= 5) {
+            timeStr = timeStr.substring(0, 5);
+        }
+
+        doc.text(safeText(booking.szolgaltatas_nev), 65, y, { width: 150 });
+        doc.text(dateStr, 230, y);
+        doc.text(timeStr, 320, y);
+        doc.text(`${booking.letszam} fö`, 390, y, { width: 60, align: 'center' }); // <--- "fö"
+        doc.font('Helvetica-Bold').text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 460, y, { width: 75, align: 'right' });
+
+        doc.moveTo(50, y + 25).lineTo(550, y + 25).lineWidth(1).strokeColor('#eeeeee').stroke();
+
+        // =========================================================
+        // 5. VÉGÖSSZEG (Kiemelt, modern dobozban)
+        // =========================================================
+        doc.roundedRect(300, y + 50, 250, 40, 5).fill('#fcf8f8');
+        doc.fontSize(12).fillColor('#555555').font('Helvetica-Bold');
+        doc.text('Fizetendö:', 320, y + 65, { width: 100, align: 'left' });
+        doc.fontSize(16).fillColor('#722f37').font('Helvetica-Bold');
+        doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 63, { width: 125, align: 'right' });
+
+        // =========================================================
+        // 6. QR KÓD (Belépőjegy stílusban)
+        // =========================================================
+        try {
+            const qrUrl = "http://localhost:3000/admin"; 
+            const qrCodeBuffer = await QRCode.toBuffer(qrUrl, {
+                color: {
+                    dark: '#722f37', 
+                    light: '#ffffff'
+                },
+                width: 90, 
+                margin: 0
+            });
+
+            doc.image(qrCodeBuffer, 50, y + 50);
+            
+            // Finom szürke elválasztó vonal a QR kód és a magyarázó szöveg közé
+            doc.moveTo(155, y + 55).lineTo(155, y + 130).lineWidth(1).strokeColor('#eeeeee').stroke();
+            
+            doc.fontSize(9).fillColor('#722f37').font('Helvetica-Bold');
+            doc.text('Belépöjegy & Ellenörzés', 170, y + 65);
+            doc.fontSize(8).fillColor('#888888').font('Helvetica');
+            doc.text('Kérjük, mutassa be ezt a', 170, y + 80);
+            doc.text('QR kódot a helyszínen', 170, y + 92);
+            doc.text('a gyorsabb bejutáshoz.', 170, y + 104);
+        } catch (err) {
+            console.error("Hiba a QR kód generálásakor:", err);
+        }
+
+        // =========================================================
+        // 7. LÁBLÉC
+        // =========================================================
+        doc.moveTo(50, 750).lineTo(550, 750).lineWidth(1).strokeColor('#e0e0e0').stroke();
+        doc.fontSize(10).fillColor('#999999').font('Helvetica');
+        doc.text('Köszönjük a foglalást! Várjuk szeretettel a Szente Pincészetben.', 50, 765, { align: 'center' });
+        doc.fillColor('#722f37').text('www.szentepinceszet.hu', 50, 780, { align: 'center' });
+
+        doc.end();
+    });
+});
+
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(5000, () => console.log('A szerver fut a 5000-es porton! Napi hírlevél cron elindítva.'));
+}
+module.exports = app;
