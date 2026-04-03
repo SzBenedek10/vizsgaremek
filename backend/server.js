@@ -403,7 +403,46 @@ app.put('/api/admin/foglalasok/:id/statusz', (req, res) => {
         if (err) return res.status(500).json({ error: "Hiba a frissítéskor" });
         res.json({ message: "Sikeres frissítés" });
     });
-})
+});
+
+// ==========================================
+// ÚJ: JEGYKEZELŐ - 1. EGY FOGLALÁS LEKÉRÉSE ID ALAPJÁN
+// ==========================================
+app.get('/api/admin/foglalasok/jegy/:id', (req, res) => {
+    // Leszedjük a "FOGL-" előtagot, ha azzal írták be vagy szkennelték
+    let id = req.params.id.replace('FOGL-', '');
+
+    const sql = `
+        SELECT f.*, sz.nev as szolgaltatas_nev, u.nev as user_nev, u.email as user_email 
+        FROM foglalas f 
+        JOIN szolgaltatas sz ON f.szolgaltatas_id = sz.id 
+        JOIN users u ON f.user_id = u.id 
+        WHERE f.id = ?
+    `;
+    db.query(sql, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: "Adatbázis hiba" });
+        if (results.length === 0) return res.status(404).json({ error: "A jegy nem található a rendszerben!" });
+        res.json(results[0]);
+    });
+});
+
+// ==========================================
+// ÚJ: JEGYKEZELŐ - 2. JEGY BEVÁLTÁSA
+// ==========================================
+app.put('/api/admin/foglalasok/jegy/:id/bevalt', (req, res) => {
+    let id = req.params.id.replace('FOGL-', '');
+    
+    // Csak akkor váltjuk be, ha még nincs beváltva (bevaltva = 0)
+    const sql = "UPDATE foglalas SET bevaltva = 1 WHERE id = ? AND bevaltva = 0";
+    
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).json({ error: "Hiba a jegy beváltásakor" });
+        if (result.affectedRows === 0) {
+            return res.status(400).json({ error: "Ezt a jegyet már beváltották, vagy a foglalás nem létezik!" });
+        }
+        res.json({ message: "Jegy sikeresen beváltva!" });
+    });
+});
 
 app.get('/api/borok/:id/ertekelesek', (req, res) => {
     const borId = req.params.id;
@@ -471,6 +510,7 @@ app.put('/api/admin/uzenetek/:id', (req, res) => {
         res.json({ message: "Üzenet sikeresen frissítve!" });
     });
 });
+
 // --- FOGLALÁS SZÁMLA LETÖLTÉSE (ELEGÁNS PDF DESIGN QR KÓDDAL) ---
 app.get('/api/foglalas/:id/szamla', (req, res) => {
     const foglalasId = req.params.id;
@@ -551,8 +591,8 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
         doc.fontSize(10).fillColor('#ffffff').font('Helvetica-Bold');
         doc.text('Szolgáltatás', 65, 263);
         doc.text('Dátum', 230, 263);
-        doc.text('Kezdés', 320, 263); // <--- Itt cseréltük a szót, hogy biztosan szép legyen
-        doc.text('Létszám', 390, 263, { width: 60, align: 'center' }); // <--- Szélesebb lett
+        doc.text('Kezdés', 320, 263); 
+        doc.text('Létszám', 390, 263, { width: 60, align: 'center' }); 
         doc.text('Összesen', 460, 263, { width: 75, align: 'right' });
 
         // =========================================================
@@ -572,7 +612,7 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
         doc.text(safeText(booking.szolgaltatas_nev), 65, y, { width: 150 });
         doc.text(dateStr, 230, y);
         doc.text(timeStr, 320, y);
-        doc.text(`${booking.letszam} fö`, 390, y, { width: 60, align: 'center' }); // <--- "fö"
+        doc.text(`${booking.letszam} fö`, 390, y, { width: 60, align: 'center' }); 
         doc.font('Helvetica-Bold').text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 460, y, { width: 75, align: 'right' });
 
         doc.moveTo(50, y + 25).lineTo(550, y + 25).lineWidth(1).strokeColor('#eeeeee').stroke();
@@ -587,22 +627,20 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
         doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 63, { width: 125, align: 'right' });
 
         // =========================================================
-        // 6. QR KÓD (Belépőjegy stílusban)
+        // 6. QR KÓD (ÚJ! CSAK AZ AZONOSÍTÓT TARTALMAZZA!)
         // =========================================================
         try {
-            const qrUrl = "http://localhost:3000/admin"; 
+            // IDE KERÜLT A MÓDOSÍTÁS! Csak a "FOGL-15" szöveget kódoljuk bele!
+            const qrUrl = `FOGL-${foglalasId}`; 
+            
             const qrCodeBuffer = await QRCode.toBuffer(qrUrl, {
-                color: {
-                    dark: '#722f37', 
-                    light: '#ffffff'
-                },
+                color: { dark: '#722f37', light: '#ffffff' },
                 width: 90, 
                 margin: 0
             });
 
             doc.image(qrCodeBuffer, 50, y + 50);
             
-            // Finom szürke elválasztó vonal a QR kód és a magyarázó szöveg közé
             doc.moveTo(155, y + 55).lineTo(155, y + 130).lineWidth(1).strokeColor('#eeeeee').stroke();
             
             doc.fontSize(9).fillColor('#722f37').font('Helvetica-Bold');

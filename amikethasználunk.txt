@@ -8,3 +8,8 @@ npm install node-cron
 
 QR-kod generálásához kell 
 npm install qrcode
+
+
+npx create-expo-app SzenteJegykezelo --template blank
+npx expo install expo-camera
+npx expo start
