@@ -1,9 +1,82 @@
 :root {
-  --ifm-color-primary: #800020; /* Bordeaux vörös */
+  --ifm-color-primary: #800020;
   --ifm-color-primary-dark: #73001d;
   --ifm-color-primary-darker: #6d001b;
   --ifm-color-primary-darkest: #5a0016;
   --ifm-color-primary-light: #8d0023;
   --ifm-color-primary-lighter: #940025;
   --ifm-color-primary-lightest: #a81a3a;
+}
+
+.markdown h1 {
+  color: #722f37 !important; 
+  font-family: 'Playfair Display', serif, sans-serif;
+  border-bottom: 3px solid #722f37;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+}
+
+.markdown h2 {
+  color: #5a252c !important; 
+  margin-top: 2.5em;
+  border-bottom: 1px solid rgba(114, 47, 55, 0.2);
+  padding-bottom: 8px;
+}
+
+
+.markdown h3 {
+  color: #722f37 !important;
+  margin-top: 1.5em;
+}
+
+.markdown blockquote {
+  background-color: #fdfaeb; 
+  border-left: 6px solid #722f37; 
+  color: #555;
+  font-style: italic;
+  font-size: 1.1rem;
+  padding: 16px 24px;
+  margin: 24px 0;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.markdown strong {
+  color: #722f37;
+}
+
+.markdown ul li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.markdown hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #722f37, transparent);
+  opacity: 0.2;
+  margin: 3rem 0;
+}
+
+.markdown code {
+  background-color: rgba(114, 47, 55, 0.05);
+  color: #722f37;
+  border: 1px solid rgba(114, 47, 55, 0.1);
+}
+
+.markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.markdown table th {
+  background-color: #722f37;
+  color: white;
+  padding: 12px;
+}
+
+.markdown table td {
+  border: 1px solid rgba(114, 47, 55, 0.1);
+  padding: 10px 12px;
 }

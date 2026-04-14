@@ -1,23 +1,76 @@
 /**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
+ * A Szente Pincészet elegáns Docusaurus stílusa
  */
 
 .heroBanner {
-  padding: 4rem 0;
+  padding: 6rem 0;
   text-align: center;
   position: relative;
   overflow: hidden;
+  /* Gyönyörű bordó színátmenet a háttérnek */
+  background: linear-gradient(135deg, #722f37 0%, #4a1e24 100%);
+  color: #fdfaeb; /* Törtfehér/bézs betűszín */
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+.heroTitle {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-family: 'Playfair Display', serif, sans-serif;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.heroSubtitle {
+  font-size: 1.5rem;
+  margin-bottom: 2.5rem;
+  font-weight: 300;
+  opacity: 0.9;
 }
 
 .buttons {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Elegáns bézs színű gomb, bordó szöveggel */
+.wineButton {
+  background-color: #fdfaeb;
+  color: #722f37;
+  padding: 14px 28px;
+  border-radius: 50px;
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: inline-block;
+}
+
+.wineButton:hover {
+  background-color: #ffffff;
+  color: #5a252c;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+  text-decoration: none;
+}
+
+/* Az alsó, leíró rész stílusa */
+.mainContent {
+  padding: 4rem 0;
+  background-color: #fdfbfb;
+  min-height: 40vh;
+}
+
+/* Reszponzív beállítások mobilra */
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 3rem 1rem;
+  }
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+  .heroSubtitle {
+    font-size: 1.2rem;
+  }
 }
