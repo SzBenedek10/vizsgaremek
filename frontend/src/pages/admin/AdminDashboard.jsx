@@ -189,7 +189,32 @@ export default function AdminDashboard() {
     try { await axios.post('http://localhost:5000/api/register', { ...userForm, orszag:'Magyarország' }); setOpenUserDialog(false); fetchUsers(); Swal.fire('Siker', 'Felhasználó létrehozva!', 'success'); } 
     catch(err) { Swal.fire('Hiba', err.response?.data?.error || 'Hiba történt', 'error'); }
   };
-  const handleDeleteUser = (id) => { Swal.fire({ title: 'Törlöd?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Igen' }).then(async (result) => { if (result.isConfirmed) { try { await axios.delete(`http://localhost:5000/api/users/${id}`); fetchUsers(); Swal.fire('Törölve!', '', 'success'); } catch(err) { Swal.fire('Hiba', 'Hiba történt', 'error'); } } }); };
+  const handleDeleteUser = (id) => { 
+  Swal.fire({ 
+    title: 'Biztosan deaktiválod?', 
+    icon: 'warning', 
+    showCancelButton: true, 
+    confirmButtonText: 'Igen' 
+  }).then(async (result) => { 
+    if (result.isConfirmed) { 
+      try { 
+        const token = localStorage.getItem('token'); 
+        console.log("Kiolvasott token:", token);
+        await axios.delete(`http://localhost:5000/api/users/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }); 
+        
+        fetchUsers(); 
+        Swal.fire('Sikeresen deaktiválva!', '', 'success'); 
+      } catch(err) { 
+        console.error("Törlési hiba:", err.response || err);
+        Swal.fire('Hiba', 'Nem sikerült a művelet (403).', 'error'); 
+      } 
+    } 
+  }); 
+};
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>

@@ -150,9 +150,28 @@ app.post('/api/login', (req, res) => {
         if (err) return res.status(500).json({ error: 'Adatbázis hiba' });
         if (results.length === 0) return res.status(401).json({ error: 'Hibás adatok!' });
         const user = results[0];
-        if (!(await bcrypt.compare(password_hash, user.password_hash))) return res.status(401).json({ error: 'Hibás adatok!' });
+        if (user.is_active === 0) {
+            return res.status(403).json({ error: 'Ez a fiók törölve lett vagy inaktív.' });
+        }
+        if (!(await bcrypt.compare(password_hash, user.password_hash))) {
+            return res.status(401).json({ error: 'Hibás adatok!' });
+        }
         const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '24h' }); 
-        res.json({ message: 'Sikeres bejelentkezés!', token, user: { id: user.id, nev: user.nev, email: user.email, role: user.role, telefonszam: user.telefonszam, irsz: user.irsz, varos: user.varos, utca: user.utca, hazszam: user.hazszam } });
+        res.json({ 
+            message: 'Sikeres bejelentkezés!', 
+            token, 
+            user: { 
+                id: user.id, 
+                nev: user.nev, 
+                email: user.email, 
+                role: user.role, 
+                telefonszam: user.telefonszam, 
+                irsz: user.irsz, 
+                varos: user.varos, 
+                utca: user.utca, 
+                hazszam: user.hazszam 
+            } 
+        });
     });
 });
 
@@ -343,6 +362,19 @@ app.get('/api/admin/uzenetek', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) return res.status(500).json({ error: "Adatbázis hiba az üzenetek lekérésekor" });
         res.json(results);
+    });
+});
+app.delete('/api/admin/users/:id', (req, res) => {
+    const userId = req.params.id;
+    
+    const sql = "UPDATE users SET is_active = 0 WHERE id = ?";
+    
+    db.query(sql, [userId], (err, result) => {
+        if (err) {
+            console.error("Hiba a felhasználó deaktiválásakor:", err);
+            return res.status(500).json({ error: "Szerverhiba történt a törlés során." });
+        }
+        res.status(200).json({ message: "Felhasználó sikeresen deaktiválva (archiválva)!" });
     });
 });
 

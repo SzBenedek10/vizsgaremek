@@ -78,7 +78,7 @@ export default function Home() {
             transform: 'scale(1.1)' 
           }}
         >
-          <source src="/videos/Bunyós Pityu - A Kocsma ördöge (2019 klip).mp4" type="video/mp4" />
+          <source src="/videos/9101576-uhd_3840_2160_30fps.mp4" type="video/mp4" />
         </video>
 
         <Box 
