@@ -84,7 +84,7 @@ A webalkalmazás fő funkciói:
 - Node.js
 
 ## Adatbázistervezés
-
+Az adatbázisunk felhőben az alábbi linken érhtő el: https://console.aiven.io/login
 A rendszerhez relációs adatbázis készül, amely tartalmazza többek között az alábbi táblákat:
 
 - Bor
@@ -141,7 +141,7 @@ Email: tesztadmin@bor.com
 Jelszo: Premo900
 
 ## QR-kód szkennelő indítása
-Mivel a QR-kód szkennelő és a vizsgaremek fő része egy porton fut, hogy megfelelően működjön. Így a user által foglalt és az admin által jóváhagyott a borkostolóról szóló pdf-et elösször töltse le. Ezt követően töltse le majd indítsa el az Expo go alkalmazást a telefonján. A terminálba megjelenő QR-kódot szkennelje be az Expo go alkalmazáson belül. Megjelenik a QR-kód olvasó, ha még nem, akkor engedéjezni kell, hogy használhassa a kameráját a program. A már letöltött pdf-ben a QR-kódot be tudja szkennelni vele és tudja érvényesíteni.      
+Mivel a QR-kód szkennelő és a vizsgaremek fő része egy porton fut, hogy megfelelően működjön, így a user által foglalt és az admin által jóváhagyott a borkostolóról szóló pdf-et elösször töltse le. A program többségben localisan fut, ezért első lépéként a SzenteJegykezelo mappában az App.js-ben "IPcímhelye" címszó helyére írja be Pc/Laptop IP címét. Fontos, hogy a telefon és a Pc/Laptop ugyan azon hálozathoz legyenek csatlakozva. Ezt követően telepítse majd indítsa el az Expo go alkalmazást a telefonján. A terminálba megjelenő QR-kódot szkennelje be az Expo go alkalmazáson belül. Megjelenik a QR-kód olvasó, ha még nem, akkor engedéjezni kell, hogy használhassa a kameráját a program. A már letöltött pdf-ben a QR-kódot be tudja szkennelni vele és tudja érvényesíteni.      
 
 ### Lépések:
 1.Mappába belépés
@@ -152,7 +152,7 @@ cd .\SzenteJegykezelo\
 ```bash
 npx expo start
 ```
-Ha nem futna le elsőre akkor futassa a QR-kód szkennelő alkalmazás akkor az alábbi kódot a "SzenteJegykezelő" mappán belül futassa le és utánna indítsa el a programot:
+Ha nem futna le elsőre a QR-kód szkennelő alkalmazás akkor az alábbi kódot a "SzenteJegykezelő" mappán belül futassa le és utánna indítsa el a programot:
 ```bash
 npx expo install expo-camera
 ```
