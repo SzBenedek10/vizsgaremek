@@ -34,10 +34,11 @@ export default function Home() {
         <div className="container" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ color: '#722f37', marginTop: '2rem', marginBottom: '1rem' }}>A Projektről</h2>
           <p style={{ fontSize: '1.1rem', color: '#555', lineHeight: '1.6' }}>
-            Ez a weboldal tartalmazza a Szente Pincészet e-kereskedelmi és asztalfoglalási 
+            Ez a weboldal tartalmazza a Szente Pincészet online bor webshopja és borkostoló foglalási 
             rendszerének teljes fejlesztői dokumentációját. A fenti gombra vagy a menüben 
-            található "Docs" hivatkozásra kattintva megtekintheti az adatbázis-terveket, 
-            a frontend komponensek leírását, és az API végpontok működését.
+            található "Dokumentáció" hivatkozásra kattintva megtekintheti az adatbázis-terveket, 
+            a frontend komponensek leírását, és az API végpontok működését. A blog oldalon pedig a github repot láthatja,
+            a commit üzenetekkel együtt, hogy nyomon követhesse a fejlesztés előrehaladását.
           </p>
         </div>
       </main>

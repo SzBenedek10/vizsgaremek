@@ -122,7 +122,7 @@ export default function Home() {
                   fontSize: {xs: '1.5rem', md: '2rem'}
                 }}
               >
-                Fedezze fel a Balaton-felvidék vulkanikus tanúhegyeinek legszebb tételeit a Szente Pincészet kínálatában.
+                Fedezze fel a Balaton-felvidék legszebb tételeit a Szente Pincészet kínálatában.
               </Typography>
               
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-start', flexWrap: 'wrap' }}>

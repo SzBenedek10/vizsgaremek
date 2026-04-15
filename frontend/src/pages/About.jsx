@@ -133,7 +133,7 @@ export default function About() {
 
         <Box sx={{ mb: 12, textAlign: 'center', ...animationStyle('0.5s') }}>
           <Typography variant="h3" sx={{ fontFamily: 'Playfair Display', fontWeight: 'bold', color: '#333', mb: 1 }}>
-            Szente Benedek Rafaello
+            Szente Benedek Rafael
           </Typography>
           <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', fontSize: '1rem', letterSpacing: 2, display: 'block', mb: 6 }}>
             Alapító & Főborász

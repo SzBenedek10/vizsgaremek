@@ -182,8 +182,24 @@ app.get('/api/borok', (req, res) => {
 });
 
 app.get('/api/kiszerelesek', (req, res) => { db.query("SELECT * FROM kiszereles ORDER BY id ASC", (err, results) => { res.json(results); }); });
-app.get('/api/users', (req, res) => { db.query("SELECT id, nev, email, role, telefonszam, is_active FROM users", (err, results) => { res.json(results); }); });
-app.delete('/api/users/:id', (req, res) => { if(req.params.id == 1) return res.status(403).json({ error: "Fő admint nem lehet törölni" }); db.query("DELETE FROM users WHERE id = ?", [req.params.id], () => res.json({ message: "Felhasználó törölve!" })); });
+
+app.get('/api/users', (req, res) => { 
+
+    db.query("SELECT id, nev, email, role, telefonszam, is_active FROM users WHERE is_active = 1", (err, results) => { 
+        if (err) return res.status(500).json({ error: "Hiba az adatok lekérésekor" });
+        res.json(results); 
+    }); 
+});
+
+app.delete('/api/users/:id', (req, res) => { 
+    if(req.params.id == 1) {
+        return res.status(403).json({ error: "Fő admint nem lehet törölni" }); 
+    }
+    db.query("UPDATE users SET is_active = 0 WHERE id = ?", [req.params.id], (err, result) => { 
+        if (err) return res.status(500).json({ error: "Hiba a felhasználó deaktiválásakor" });
+        res.json({ message: "Felhasználó sikeresen törölve (archiválva)!" }); 
+    }); 
+});
 
 app.post('/api/borok', upload.single('kep'), (req, res) => {
     const { nev, evjarat, ar, keszlet, leiras, bor_szin_id, kiszereles_id, alkoholfok } = req.body;
@@ -232,6 +248,41 @@ app.get('/api/admin/szolgaltatasok', (req, res) => {
     });
 });
 
+app.put('/api/admin/szolgaltatasok/:id', (req, res) => {
+    const { id } = req.params;
+    const { nev, leiras, kapacitas, ar, datum, idotartam, extra, aktiv } = req.body;
+
+    const sql = `
+        UPDATE szolgaltatas 
+        SET nev = ?, leiras = ?, kapacitas = ?, ar = ?, datum = ?, idotartam = ?, extra = ?, aktiv = ? 
+        WHERE id = ?
+    `;
+    const values = [nev, leiras, kapacitas, ar, datum, idotartam, extra, aktiv, id];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Hiba a borkóstoló módosításakor:", err);
+            return res.status(500).json({ error: "Hiba történt a módosítás során" });
+        }
+        res.json({ message: "Borkóstoló sikeresen frissítve!" });
+    });
+});
+
+
+app.delete('/api/admin/szolgaltatasok/:id', (req, res) => {
+    const { id } = req.params;
+    
+    const sql = "UPDATE szolgaltatas SET aktiv = 0 WHERE id = ?";
+    
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error("Hiba a borkóstoló törlésekor:", err);
+            return res.status(500).json({ error: "Hiba történt a törlés során" });
+        }
+        res.json({ message: "Borkóstoló sikeresen törölve (inaktiválva)!" });
+    });
+});
+
 app.post('/api/szolgaltatasok', (req, res) => {
     const { nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv } = req.body;
     const sql = "INSERT INTO szolgaltatas (nev, leiras, ar, kapacitas, datum, idotartam, extra, aktiv) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -259,10 +310,16 @@ app.put('/api/szolgaltatasok/:id', (req, res) => {
 });
 
 app.delete('/api/szolgaltatasok/:id', (req, res) => {
-    const id = req.params.id;
-    db.query("DELETE FROM szolgaltatas WHERE id = ?", [id], (err, result) => {
-        if (err) return res.status(500).json({ error: "Hiba törléskor" });
-        res.json({ message: "Törölve" });
+    const { id } = req.params;
+    
+    const sql = "UPDATE szolgaltatas SET aktiv = 0 WHERE id = ?";
+    
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error("Hiba a borkóstoló törlésekor:", err);
+            return res.status(500).json({ error: "Hiba történt a törlés során" });
+        }
+        res.json({ message: "Borkóstoló sikeresen törölve (inaktiválva)!" });
     });
 });
 

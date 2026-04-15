@@ -274,5 +274,3 @@ A rendszer legfontosabb kényelmi funkciója, hogy a tájékoztatók nem egy új
 ---
 
 ## Melléklet
-
-**Gantt diagram:** A projektterv és a határidők szemléltetése (Lásd a projekt repozitóriumában/dokumentációjában).

@@ -1,4 +1,4 @@
-// @ts-check
+
 import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
@@ -11,7 +11,7 @@ const config = {
   onBrokenMarkdownLinks: 'warn',
 
   i18n: {
-    defaultLocale: 'hu', // Átállítva magyarra
+    defaultLocale: 'hu', 
     locales: ['hu'],
   },
 
@@ -24,7 +24,6 @@ const config = {
           sidebarPath: './sidebars.js',
           routeBasePath: 'docs',
         },
-        // Itt állítsd vissza true-ra vagy adj meg opciókat:
         blog: {
           showReadingTime: true,
           blogTitle: 'Borászat Hírek',
@@ -45,7 +44,7 @@ const config = {
   title: 'Borászat Projekt',
   logo: {
     alt: 'Borászat Logo',
-    src: 'img/logo.svg',
+    src: '/img/logo.png',
   },
   items: [
     {
@@ -54,7 +53,7 @@ const config = {
       position: 'left',
       label: 'Dokumentáció',
     },
-    {to: '/blog', label: 'Blog', position: 'left'}, // Csak a Blog maradjon
+    {to: '/blog', label: 'Blog', position: 'left'},
     {
       href: 'https://github.com/sinthofferbence', 
       label: 'GitHub Repó',
@@ -80,7 +79,6 @@ const config = {
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
-        // C# kódokhoz fontos:
         additionalLanguages: ['csharp'], 
       },
     }),
