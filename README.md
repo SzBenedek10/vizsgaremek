@@ -125,7 +125,9 @@ A projekt futtatásához szükséges, hogy a Docker telepítve legyen és fusson
 ```bash
 git clone <https://github.com/SzBenedek10/vizsgaremek.git>
 ```
-2. Inditás
+2. Indítás - A gyökér könyvtárban
 ```bash
-npm run dev a gyökér könyvtárban
+npm run dev
+```
+Az indítás után elindul a docusaurus és a webalkalmazás is egyszere.
 
