@@ -12,7 +12,6 @@ export default function SignUpSide() {
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
-    // Ellenőrzés a fejlesztői konzolon
     console.log("Küldendő adatok:", data);
 
     try {
@@ -28,7 +27,6 @@ export default function SignUpSide() {
         alert('Sikeres regisztráció!');
         navigate('/login');
       } else {
-        // Ha a szerver 400 vagy 500 hibát ad, kiírjuk az okát
         alert('Hiba történt: ' + (result.error || 'Ismeretlen hiba'));
       }
     } catch (error) {

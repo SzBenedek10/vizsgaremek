@@ -173,7 +173,6 @@ h1 {
   opacity: 0.3;
 }
 
-/* Reszponzív */
 @media (max-width: 1200px) {
   .container { margin: 20px; padding: 30px; }
   .gallery img { width: 45%; height: 200px; }
@@ -191,7 +190,6 @@ h1 {
   h1 { font-size: 2rem; }
 }
 
-/* TOP NAVBAR */
 .topbar {
   position: sticky;
   top: 0;
@@ -203,16 +201,15 @@ h1 {
 
   display: flex;
   align-items: center;
-  justify-content: center;   /* a nav középen marad */
+  justify-content: center;
 }
 
-/* Középső menü */
+
 .nav {
   display: flex;
   gap: 18px;
 }
 
-/* Jobb oldali gombok */
 .navRight {
   position: absolute;
   right: 20px;
@@ -221,7 +218,7 @@ h1 {
   align-items: center;
 }
 
-/* Menüpontok */
+
 .navLink {
   text-decoration: none;
   color: var(--primary-wine);
@@ -246,7 +243,7 @@ h1 {
   box-shadow: 0 10px 25px rgba(160, 26, 47, 0.25);
 }
 
-/* Jobb oldali gombok */
+
 .navBtn,
 .navBtnOutline {
   text-decoration: none;
@@ -280,7 +277,7 @@ h1 {
   box-shadow: 0 10px 24px rgba(160, 26, 47, 0.15);
 }
 
-/* Mobilon ne lógjon le */
+
 @media (max-width: 768px) {
   .topbar {
     flex-direction: column;
@@ -291,7 +288,7 @@ h1 {
   }
 }
 
-/* ===== BORRENDELÉS PAGE (MODERN, FŐOLDALHOZ ILLŐ) ===== */
+
 
 .shopPageWrap{
   max-width: 1700px;
@@ -327,15 +324,11 @@ h1 {
   border-radius: 18px;
   position: relative;
   overflow: hidden;
-
-  /* sötét bordós alap */
   background: white;
   opacity: 0.95;
   border: 1px solid rgba(212,175,55,0.45);
   box-shadow: 0 14px 34px rgba(0,0,0,0.20);
 }
-
-/* világos “üveges” réteg, hogy a szöveg kiemelkedjen */
 .shopHeader::before{
   content: "";
   position: absolute;
@@ -343,8 +336,6 @@ h1 {
   background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(212,175,55,0.10));
   pointer-events: none;
 }
-
-/* hogy a szöveg a ::before felett legyen */
 .shopHeader *{
   position: relative;
   z-index: 1;
@@ -353,7 +344,7 @@ h1 {
 .shopHeader h1{
   margin: 0 0 8px 0;
   font-size: 2.5rem;
-  color: black; /* KONTRASZT */
+  color: black;
   text-shadow: 0 3px 18px rgba(0,0,0,0.35);
   letter-spacing: 0.2px;
 }
@@ -361,7 +352,7 @@ h1 {
 .shopHeader p{
   margin: 0;
   font-size: 1.1rem;
-  color: black; /* KONTRASZT */
+  color: black;
   text-shadow: 0 2px 12px rgba(0,0,0,0.25);
 }
 
@@ -378,7 +369,6 @@ h1 {
   border: 1px solid rgba(255,255,255,0.35);
 }
 
-/* --- shared card surface --- */
 .surface{
   background: rgba(255,255,255,0.92);
   border: 1px solid rgba(160, 26, 47, 0.10);
@@ -647,7 +637,6 @@ h1 {
   box-shadow: 0 14px 28px rgba(160, 26, 47, 0.28);
 }
 
-/* ŰRLAP */
 .orderForm{
   margin-top: 22px;
   padding: 22px;
@@ -713,7 +702,6 @@ h1 {
   box-shadow: 0 16px 34px rgba(160, 26, 47, 0.28);
 }
 
-/* Responsive */
 @media (max-width: 1100px){
   .shopPageWrap{ margin: 20px; padding: 30px; }
 }

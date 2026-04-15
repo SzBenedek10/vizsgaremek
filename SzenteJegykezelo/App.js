@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Button, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons'; // ÚJ: Beimportáljuk az ikonokat!
+import { Ionicons } from '@expo/vector-icons'; 
 
 // IDE ÍRD BE A LAPTOPOD IP CÍMÉT A LOCALHOST HELYETT! (Pl. http://192.168.1.65:5000)
 const API_URL = "http://192.168.1.8:5000";
@@ -12,9 +12,8 @@ export default function App() {
   const [ticketData, setTicketData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [showSuccessMark, setShowSuccessMark] = useState(false); // ÚJ: Állapot a pipa megjelenítéséhez
+  const [showSuccessMark, setShowSuccessMark] = useState(false);
 
-  // --- 1. KAMERA ENGEDÉLY ---
   if (!permission) return <View />; 
   if (!permission.granted) {
     return (
@@ -25,7 +24,6 @@ export default function App() {
     );
   }
 
-  // --- 2. QR KÓD BEOLVASÁSA ÉS KÜLDÉSE A BACKENDNEK ---
   const handleBarCodeScanned = async ({ type, data }) => {
     setScanned(true);
     setLoading(true);
@@ -46,7 +44,6 @@ export default function App() {
     }
   };
 
-  // --- 3. JEGY BEVÁLTÁSA GOMB ---
   const redeemTicket = async () => {
     setLoading(true);
     try {
@@ -58,14 +55,12 @@ export default function App() {
         throw new Error("Hiba történt, vagy ezt a jegyet már beváltották!");
       }
       
-      // ÚJ LOGIKA: Ha sikeres, először a pipát mutatjuk meg
       setLoading(false);
       setShowSuccessMark(true);
 
-      // Várunk 1.5 másodpercet (1500 milliszekundum)
       setTimeout(() => {
-        setShowSuccessMark(false); // Eltüntetjük a pipát
-        setTicketData({ ...ticketData, bevaltva: 1 }); // Átállítjuk a jegyet "Beváltva" állapotra
+        setShowSuccessMark(false);
+        setTicketData({ ...ticketData, bevaltva: 1 });
       }, 1500);
 
     } catch (error) {
@@ -81,7 +76,6 @@ export default function App() {
     setShowSuccessMark(false);
   };
 
-  // --- FELÜLET (UI) ---
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -90,7 +84,6 @@ export default function App() {
       </View>
 
       {!scanned ? (
-        // KAMERA NÉZET
         <View style={styles.scannerContainer}>
           <CameraView
             style={StyleSheet.absoluteFillObject}
@@ -103,19 +96,16 @@ export default function App() {
           </View>
         </View>
       ) : (
-        // EREDMÉNY KÁRTYA NÉZET
         <View style={styles.resultContainer}>
           {loading ? (
             <ActivityIndicator size="large" color="#722f37" />
           ) : errorMsg ? (
-            // HIBAÜZENET
             <View style={[styles.card, { borderColor: '#d32f2f', borderWidth: 3 }]}>
               <Text style={styles.errorTitle}>Hiba!</Text>
               <Text style={styles.errorText}>{errorMsg}</Text>
             </View>
           ) : ticketData ? (
-            
-            // ÚJ: Itt döntjük el, hogy a PIPÁT vagy a KÁRTYÁT mutatjuk
+
             showSuccessMark ? (
               <View style={styles.successContainer}>
                 <Ionicons name="checkmark-circle" size={120} color="#2e7d32" />
@@ -145,7 +135,6 @@ export default function App() {
 
           ) : null}
 
-          {/* Vissza gomb (Csak akkor látszik, ha épp nem a pipát mutatjuk) */}
           {!showSuccessMark && (
             <TouchableOpacity style={styles.backBtn} onPress={resetScanner}>
               <Text style={styles.backBtnText}>Új QR kód beolvasása</Text>
@@ -157,7 +146,7 @@ export default function App() {
   );
 }
 
-// --- STÍLUSOK ---
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdfbfb' },
   header: { paddingTop: 60, paddingBottom: 20, backgroundColor: '#722f37', alignItems: 'center' },
@@ -180,8 +169,6 @@ const styles = StyleSheet.create({
   redeemBtnText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
   backBtn: { marginTop: 30, padding: 15, borderColor: '#722f37', borderWidth: 2, borderRadius: 10, alignItems: 'center' },
   backBtnText: { color: '#722f37', fontSize: 16, fontWeight: 'bold' },
-  
-  // ÚJ STÍLUSOK A PIPÁHOZ
   successContainer: { alignItems: 'center', justifyContent: 'center', padding: 30, backgroundColor: 'white', borderRadius: 20, elevation: 5 },
   successTitle: { fontSize: 28, fontWeight: 'bold', color: '#2e7d32', marginTop: 10 },
   successSub: { fontSize: 16, color: '#666', marginTop: 5 }

@@ -28,4 +28,7 @@ Az alkalmazás (a frontend, a backend és a Docusaurus dokumentáció) egyetlen 
 **1. Lépés: A projekt letöltése** Nyiss egy parancssort (Terminal), és klónozd a tárolót:
 ```bash
 git clone [https://github.com/szentepinceszet/vizsgaremek.git](https://github.com/szentepinceszet/vizsgaremek.git)
-cd vizsgaremek
+
+```
+```bash
+npm run dev

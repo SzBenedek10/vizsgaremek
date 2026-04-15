@@ -8,22 +8,19 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions 
 } from '@mui/material';
 
-// IKONOK
+
 import MenuIcon from '@mui/icons-material/Menu';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import WineBarIcon from '@mui/icons-material/WineBar';
-// ÚJ IKONOK A KOSÁRHOZ:
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-// Pénz formázó
 const HUF = new Intl.NumberFormat("hu-HU");
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
   
-  // BEKÉRTÜK AZ addToCart és removeFromCart FÜGGVÉNYEKET IS!
   const { cartItems, isCartOpen, setIsCartOpen, addToCart, removeFromCart } = useCart(); 
   
   const navigate = useNavigate();
@@ -165,7 +162,6 @@ export default function Navbar() {
         </Toolbar>
       </AppBar>
 
-      {/* MOBIL MENÜ DRAWER */}
       <Drawer anchor="right" open={mobileOpen} onClose={() => setMobileOpen(false)} PaperProps={{ sx: { width: 250, bgcolor: '#fdfbfb', pt: 2 } }}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
            <WineBarIcon sx={{ color: '#722f37', fontSize: 40 }} />
@@ -184,7 +180,6 @@ export default function Navbar() {
         </List>
       </Drawer>
 
-      {/* KOSÁR OLDALSÓ PANEL (FRISSÍTVE GOMBOKKAL) */}
       <Drawer 
         anchor="right" 
         open={isCartOpen} 
@@ -214,16 +209,14 @@ export default function Navbar() {
                         {item.kiszereles_nev || 'Palack'} • {HUF.format(item.ar)} Ft/db
                       </Typography>
 
-                      {/* MENNYISÉG SZABÁLYOZÓ GOMBOK */}
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <IconButton 
                           size="small" 
                           onClick={() => {
-                            // Ha csak 1 db van és csökkenteni akarja, akkor töröljük a sorból!
                             if (item.amount <= 1) {
                               removeFromCart(item.id, item.kiszereles_id);
                             } else {
-                              addToCart(item, -1); // Visszaadunk -1-et, ami levon egyet!
+                              addToCart(item, -1);
                             }
                           }}
                           sx={{ bgcolor: '#f5f5f5', '&:hover': { bgcolor: '#e0e0e0' } }}
@@ -245,7 +238,6 @@ export default function Navbar() {
                       </Box>
                     </Box>
 
-                    {/* TÖRLÉS KUKA ÉS ÁR */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
                       <Typography sx={{ fontWeight: 'bold', color: '#722f37' }}>
                         {HUF.format(item.amount * item.ar)} Ft
@@ -285,7 +277,6 @@ export default function Navbar() {
         </Box>
       </Drawer>
 
-      {/* ELEGÁNS KIJELENTKEZÉS FIGYELMEZTETŐ ABLAK (MODAL) */}
       <Dialog 
         open={logoutDialogOpen} 
         PaperProps={{ 

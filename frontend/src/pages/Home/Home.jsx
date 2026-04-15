@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 export default function Home() {
   const navigate = useNavigate();
 
-  // --- ÁLLAPOTOK ÉS SZÖVEGEK A PÖRGŐ ANIMÁCIÓHOZ ---
   const [wordIndex, setWordIndex] = useState(0);
   
   const offerings = [
@@ -15,7 +14,6 @@ export default function Home() {
     { title: "Prémium minőség saját birtokról, gondos odafigyeléssel." } 
   ];
 
-  // --- GYORSÍTOTT IDŐZÍTŐ A HULLÁM ANIMÁCIÓHOZ ---
   useEffect(() => {
     const wordInterval = setInterval(() => {
       setWordIndex(prev => (prev + 1) % offerings.length);
@@ -25,7 +23,6 @@ export default function Home() {
 
   return (
     <Box> 
-      {/* 🌊 HULLÁM ANIMÁCIÓ DEFINIÁLÁSA 🌊 */}
       <style>
         {`
           @keyframes waveTextAnim {
@@ -49,9 +46,6 @@ export default function Home() {
         `}
       </style>
 
-      {/* ========================================== */}
-      {/* 1. HERO SZEKCIÓ (Videó) */}
-      {/* ========================================== */}
       <Box 
         sx={{
           minHeight: '85vh', 
@@ -173,9 +167,6 @@ export default function Home() {
         </Container>
       </Box>
 
-      {/* ========================================== */}
-      {/* 2. TELJES KÉPERNYŐS, HULLÁMZÓ SZÖVEG SZEKCIÓ */}
-      {/* ========================================== */}
       <Box 
         sx={{ 
           bgcolor: '#ffffff',
@@ -260,9 +251,7 @@ export default function Home() {
         </Container>
       </Box>
 
-      {/* ========================================== */}
-      {/* 3. CÉLUNK / RÓLUNK SZEKCIÓ (Jobbra igazítva) */}
-      {/* ========================================== */}
+
       <Box sx={{ bgcolor: '#fbfbfb', py: {xs: 12, md: 15}, borderTop: '1px solid #efefef' }}>
         <Container maxWidth="lg" sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           

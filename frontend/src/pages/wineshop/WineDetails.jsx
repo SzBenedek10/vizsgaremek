@@ -27,7 +27,6 @@ export default function WineDetails() {
   const [db, setDb] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  // Értékelések állapota
   const [allReviews, setAllReviews] = useState([]);
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
@@ -92,7 +91,6 @@ export default function WineDetails() {
     setIsPlaying(!isPlaying);
   };
 
-  // Okos ételpárosítás generátor
   const getFoodPairing = (borInfo) => {
     if (!borInfo) return "";
     if (borInfo.etelparositas) return borInfo.etelparositas; 
@@ -106,7 +104,6 @@ export default function WineDetails() {
     return "Sültek, sajtok, könnyed ételek";
   };
 
-  // Okos kóstolási jegyzet generátor
   const getTastingNotes = (borInfo) => {
     if (!borInfo) return "";
     if (borInfo.reszletes_leiras) return borInfo.reszletes_leiras; 
@@ -121,7 +118,6 @@ export default function WineDetails() {
     return "Kiváló kísérője a mindennapi étkezéseknek és az ünnepi pillanatoknak is. Fogyasztását enyhén hűtve ajánljuk.";
   };
 
-  // ÚJ: Okos alkoholfok generátor
   const getAlcoholContent = (borInfo) => {
     if (!borInfo) return "N/A";
     if (borInfo.alkoholfok) return `${borInfo.alkoholfok}%`; 
@@ -216,9 +212,6 @@ export default function WineDetails() {
           Vissza a borokhoz
         </Button>
         
-        {/* ========================================== */}
-        {/* 1. CÍM RÉSZ */}
-        {/* ========================================== */}
         <Box sx={{ mb: 2, textAlign: 'center' }}>
             <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', fontSize: '1.2rem' }}>
               {bor.evjarat} • {bor.fajta || "Különlegesség"}
@@ -233,9 +226,6 @@ export default function WineDetails() {
 
         <Divider sx={{ my: 4, borderColor: '#ddd' }} />
 
-        {/* ========================================== */}
-        {/* 2. KÉP ÉS JELLEMZŐK */}
-        {/* ========================================== */}
         <Box sx={{ 
             display: 'flex', 
             flexDirection: { xs: 'column', md: 'row' }, 
@@ -245,7 +235,6 @@ export default function WineDetails() {
         }}>
           
           <Box sx={{ flex: '1 1 0', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              {/* ITT TÖRTÉNT A VÁLTOZÁS: */}
               <Box 
                 component="img" 
                 src={bor.kep ? `http://localhost:5000${bor.kep}` : "/images/placeholder.jpg"}
@@ -263,7 +252,6 @@ export default function WineDetails() {
              </Typography>
              
              <Stack spacing={2.5}>
-                {/* ITT HASZNÁLJUK AZ ALKOHOLFOK GENERÁTORT */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', pb: 1 }}>
                     <Typography variant="body1" color="text.secondary">Alkoholfok</Typography>
                     <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{getAlcoholContent(bor)}</Typography>
@@ -294,9 +282,6 @@ export default function WineDetails() {
 
         <Divider sx={{ my: 5, borderColor: '#ddd' }} />
 
-        {/* ========================================== */}
-        {/* 3. VÁSÁRLÁSI OPCIÓ */}
-        {/* ========================================== */}
         <Box sx={{ 
             maxWidth: '900px', 
             mx: 'auto',        
@@ -357,9 +342,6 @@ export default function WineDetails() {
             </Grid>
         </Box>
 
-        {/* ========================================== */}
-        {/* 4. ÉRTÉKELÉSEK ÉS KOMMENTEK */}
-        {/* ========================================== */}
         <Box sx={{ maxWidth: '800px', mx: 'auto', mt: 4, bgcolor: 'transparent', p: { xs: 2, md: 4 } }}>
             <Typography variant="h4" sx={{ fontFamily: 'Playfair Display', fontWeight: 'bold', mb: 3, textAlign: 'center', color: '#333' }}>Értékelések</Typography>
             

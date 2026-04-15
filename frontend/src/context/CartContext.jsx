@@ -11,7 +11,7 @@ const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
-  // 1. ÚJ: Ez az állapot tárolja, hogy épp nyitva van-e a kosár panel a Navbarban
+
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [cartItems, setCartItems] = useState(() => {
@@ -85,7 +85,6 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         clearCart,
         totalAmount,
-        // 2. ÚJ: Átadjuk az értékeket, hogy más komponensek (WineCard, Navbar) is lássák
         isCartOpen,
         setIsCartOpen,
       }}

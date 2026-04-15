@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom'; // 1. useLocation hozzáadása
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
@@ -9,9 +9,8 @@ const Login = () => {
     const { login } = useContext(AuthContext);
     
     const navigate = useNavigate();
-    const location = useLocation(); // 2. location lekérése
+    const location = useLocation(); 
 
-    // 3. Megnézzük, honnan jött a felhasználó. Ha nem jött sehonnan, akkor alapértelmezetten a főoldalra ('/') küldjük.
     const from = location.state?.from || '/';
 
     const handleSubmit = async (e) => {

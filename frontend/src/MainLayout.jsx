@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
-import Footer from './components/footer'; // Feltételezem, a footer maradt a components mappában
+import Footer from '../components/footer';
 
 export default function MainLayout() {
   return (
@@ -16,7 +16,6 @@ export default function MainLayout() {
       color: '#4b2c2c'    
     }}>
       
-      {/* ITT HÍVJUK MEG AZ ÚJ, MODERN MENÜT! */}
       <Navbar /> 
       
       <Box component="main" sx={{ 

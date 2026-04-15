@@ -46,7 +46,7 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
     return sablonok[defaultId % sablonok.length];
   };
 
-  // EZ A GYÖNYÖRŰ ALAPÉRTELMEZETT KÉP FOG BETÖLTENI
+
   const defaultImageUrl = "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
 
   return (
@@ -63,7 +63,7 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
           '&:hover': { transform: 'translateY(-5px)', boxShadow: '0 8px 20px rgba(114, 47, 55, 0.15)' }
         }}
       >
-        {/* KÉP BETÖLTÉSE */}
+
         <Box sx={{ height: 200, overflow: 'hidden', bgcolor: '#f0f0f0' }}>
           <img 
             src={csomag.kep ? `http://localhost:5000${csomag.kep}` : defaultImageUrl} 
@@ -108,7 +108,6 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
             </Typography>
           </Box>
 
-          {/* GOMBOK */}
           <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Button 
               fullWidth 
@@ -150,7 +149,6 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
         </Box>
       </Paper>
 
-      {/* POPUP ABLAK */}
       <Dialog 
         open={openPopup} 
         onClose={handleClose} 
@@ -179,7 +177,6 @@ export default function TastingCard({ csomag, onValaszt, isFull, szabadHely }) {
             {csomag.nev}
           </Typography>
 
-          {/* ELEGÁNS DÁTUM ÉS IDŐPONT MEGJELENÍTÉS A POPUPBAN */}
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 4, flexWrap: 'wrap' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(114, 47, 55, 0.08)', color: '#722f37', px: 2, py: 0.8, borderRadius: 2 }}>
               <CalendarMonthIcon sx={{ fontSize: 20 }} />

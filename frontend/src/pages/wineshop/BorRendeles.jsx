@@ -18,12 +18,8 @@ export default function BorRendeles() {
   const [kiszerelesek, setKiszerelesek] = useState([]); 
   const [borSzinek, setBorSzinek] = useState([]); 
   const [loading, setLoading] = useState(true);
-  
-  // Szűrők állapota
   const [szuroSzin, setSzuroSzin] = useState('');
   const [szuroEvjarat, setSzuroEvjarat] = useState('');
-  
-  // ÚJ: Rendezés állapota
   const [rendezes, setRendezes] = useState('alap');
 
   const navigate = useNavigate(); 
@@ -58,28 +54,25 @@ export default function BorRendeles() {
 
   const elerhetoEvjaratok = [...new Set(borok.map(b => b.evjarat))].filter(Boolean).sort((a, b) => b - a);
 
-  // 1. Lépés: SZŰRÉS
   let szurtBorok = borok.filter(bor => {
     const szinEgyezik = szuroSzin === '' || String(bor.bor_szin_id) === String(szuroSzin);
     const evjaratEgyezik = szuroEvjarat === '' || String(bor.evjarat) === String(szuroEvjarat);
     return szinEgyezik && evjaratEgyezik;
   });
 
-  // 2. Lépés: RENDEZÉS (Ár és Népszerűség szerint)
   szurtBorok.sort((a, b) => {
-    if (rendezes === 'ar_no') return a.ar - b.ar; // Ár: Alacsonytól a magasig
-    if (rendezes === 'ar_csokken') return b.ar - a.ar; // Ár: Magastól az alacsonyig
+    if (rendezes === 'ar_no') return a.ar - b.ar;
+    if (rendezes === 'ar_csokken') return b.ar - a.ar;
     if (rendezes === 'nepszeru') {
-      // Ha van 'nepszeruseg' mező az adatbázisban, aszerint csökkenőbe teszi, ha nincs, nem omlik össze
       return (b.nepszeruseg || 0) - (a.nepszeruseg || 0);
     }
-    return 0; // 'alap' rendezés (Ahogy az adatbázisból jön)
+    return 0;
   });
 
   const handleResetFilters = () => {
     setSzuroSzin('');
     setSzuroEvjarat('');
-    setRendezes('alap'); // Ezt is visszaállítjuk
+    setRendezes('alap');
   };
 
   const radioStyle = {
@@ -99,7 +92,6 @@ export default function BorRendeles() {
     <Box sx={{ bgcolor: '#fdfbfb', minHeight: '100vh', pb: 10 }}>
       <Container maxWidth="xl" sx={{ pt: { xs: 8, md: 10 } }}>
         
-        {/* FEJLÉC */}
         <Box sx={{ textAlign: 'center', mb: 8 }}>
           <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', fontSize: '1rem', letterSpacing: 2 }}>
             Kínálatunk
@@ -117,9 +109,6 @@ export default function BorRendeles() {
           alignItems: 'flex-start' 
         }}>
           
-          {/* ========================================== */}
-          {/* BAL OLDAL - SZŰRŐ PANEL */}
-          {/* ========================================== */}
           <Box sx={{ 
             width: { xs: '100%', md: '280px', lg: '300px' }, 
             flexShrink: 0, 
@@ -141,7 +130,6 @@ export default function BorRendeles() {
               </Typography>
               <Divider sx={{ mb: 3 }} />
 
-              {/* Bor Színe */}
               <FormControl component="fieldset" sx={{ width: '100%', mb: 3 }}>
                 <Typography variant="subtitle2" sx={{ color: '#888', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
                   Bor Színe
@@ -168,7 +156,6 @@ export default function BorRendeles() {
 
               <Divider sx={{ mb: 3 }} />
 
-              {/* Évjárat */}
               <FormControl component="fieldset" sx={{ width: '100%', mb: 3 }}>
                 <Typography variant="subtitle2" sx={{ color: '#888', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
                   Évjárat
@@ -193,7 +180,6 @@ export default function BorRendeles() {
                 </RadioGroup>
               </FormControl>
 
-              {/* Szűrő törlése gomb */}
               {(szuroSzin !== '' || szuroEvjarat !== '' || rendezes !== 'alap') && (
                 <Button 
                   fullWidth 
@@ -214,26 +200,21 @@ export default function BorRendeles() {
             </Paper>
           </Box>
 
-          {/* ========================================== */}
-          {/* JOBB OLDAL - BOR KÁRTYÁK ÉS RENDEZÉS */}
-          {/* ========================================== */}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            
-            {/* ÚJ: Rendezés panel és találatok száma */}
+
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center', 
               mb: 3, 
               px: 1,
-              flexWrap: 'wrap', // Mobilon szépen egymás alá csússzon
+              flexWrap: 'wrap',
               gap: 2
             }}>
               <Typography variant="body1" sx={{ color: '#555', fontWeight: 'bold' }}>
                 {szurtBorok.length} bort találtunk
               </Typography>
 
-              {/* Rendezés Legördülő */}
               <FormControl size="small" sx={{ minWidth: 220, bgcolor: 'white' }}>
                 <InputLabel sx={{ color: '#722f37' }}>Rendezés</InputLabel>
                 <Select

@@ -2,11 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from 'sweetalert2';
-
-// Cseréld ki a megfelelő útvonalra, ahol a Terms.jsx található a projektedben!
 import LegalDialogs from "../legal/LegalDialogs";
 
-// UI Komponensek
 import {
   Container,
   Paper,
@@ -25,7 +22,6 @@ import {
   DialogActions
 } from "@mui/material";
 
-// Ikonok
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -48,7 +44,6 @@ export default function TastingCheckout() {
   const location = useLocation();
   const selectedPackage = location.state?.selectedPackage;
 
-  // Állapotok
   const [sameAsProfile, setSameAsProfile] = useState(true);
   const [letszam, setLetszam] = useState(selectedPackage?.letszam || 1);
   const [formData, setFormData] = useState({
@@ -57,16 +52,12 @@ export default function TastingCheckout() {
     megjegyzes: ""
   });
 
-  // KÜLÖNVÁLASZTOTT CHECKBOXOK (18+ és ÁSZF)
   const [isOver18, setIsOver18] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   
-  // ÁSZF FELUGRÓ ABLAK ÁLLAPOTA
   const [termsOpen, setTermsOpen] = useState(false);
 
-  // A maximálisan foglalható helyek száma
   const maxSzabad = selectedPackage?.maxSzabad || selectedPackage?.kapacitas || 10;
-  // A még szabadon maradó helyek száma a választott létszám után
   const maradekHely = maxSzabad - letszam;
 
   useEffect(() => {
@@ -91,7 +82,6 @@ export default function TastingCheckout() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Létszám növelése és csökkentése (védelemmel)
   const handleIncrement = () => {
     if (letszam < maxSzabad) {
       setLetszam(prev => prev + 1);
@@ -104,7 +94,6 @@ export default function TastingCheckout() {
     }
   };
 
-  // Dátum formázása
   const getOnlyDate = () => {
     const rawDate = selectedPackage?.idopont || selectedPackage?.datum;
     if (!rawDate) return "Nincs megadva";
@@ -116,7 +105,6 @@ export default function TastingCheckout() {
     e.preventDefault();
     if (!selectedPackage || !user) return; 
 
-    // Extra védelem mindkét feltételre
     if (!isOver18 || !acceptedTerms) {
       Swal.fire('Figyelem!', 'A foglaláshoz igazolnod kell, hogy elmúltál 18 éves és el kell fogadnod az ÁSZF-et!', 'warning');
       return;
@@ -171,7 +159,6 @@ export default function TastingCheckout() {
           alignItems: 'flex-start' 
         }}>
           
-          {/* BAL OLDAL: ADATOK */}
           <Box sx={{ flex: '0 1 65%', width: '100%' }}>
             <Stack spacing={3}>
               
@@ -232,7 +219,6 @@ export default function TastingCheckout() {
             </Stack>
           </Box>
 
-          {/* JOBB OLDAL: ÖSSZESÍTŐ */}
           <Box sx={{ flex: '0 1 35%', width: '100%', position: { md: 'sticky' }, top: 20 }}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 3, borderTop: '4px solid #722f37' }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
@@ -258,7 +244,6 @@ export default function TastingCheckout() {
                 </Box>
               </Stack>
 
-              {/* LÉTSZÁMVÁLASZTÓ ÉS MARADÉK HELYEK */}
               <Box sx={{ mb: 3 }}>
                 <Box sx={{ 
                   display: 'flex', 
@@ -341,7 +326,6 @@ export default function TastingCheckout() {
                 </Typography>
               </Box>
 
-              {/* KETTÉBONTOTT, KÖTELEZŐ CHECKBOXOK HOZZÁADVA IDE */}
               <Box sx={{ mb: 3, p: 2, bgcolor: (isOver18 && acceptedTerms) ? '#e8f5e9' : '#ffebee', borderRadius: 2, border: '1px solid', borderColor: (isOver18 && acceptedTerms) ? '#c8e6c9' : '#ffcdd2', transition: '0.3s' }}>
                 <Stack spacing={1}>
                   <FormControlLabel
@@ -372,7 +356,6 @@ export default function TastingCheckout() {
                 </Stack>
               </Box>
 
-              {/* GOMBOK FRISSÍTVE (INAKTÍV, HA NINCSENEK BEPIPÁLVA) */}
               <Stack spacing={1.5}>
                 <Button
                   type="submit"
@@ -418,9 +401,6 @@ export default function TastingCheckout() {
         </Box>
       </form>
 
-      {/* ======================================================== */}
-      {/* ÁSZF FELUGRÓ ABLAK (MODAL)                               */}
-      {/* ======================================================== */}
       <LegalDialogs 
         open={termsOpen} 
         onClose={() => { setAcceptedTerms(true); setTermsOpen(false); }} 

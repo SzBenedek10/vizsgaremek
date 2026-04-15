@@ -36,18 +36,16 @@ export default function SignInSide() {
     timerProgressBar: true,
     showConfirmButton: false
   }).then(() => {
-    // ITT A VÁLTOZTATÁS:
     if (res.data.user.role === 'ADMIN') {
-        navigate('/admin'); // Ha admin, irány a dashboard
+        navigate('/admin');
     } else {
-        navigate(from); // Ha sima user, irány a főoldal
+        navigate(from);
     }
   });
 
     } catch (err) {
       console.error("Belépési hiba:", err);
       
-      // MODERN HIBAÜZENET:
       Swal.fire({
         title: 'Hiba történt!',
         text: err.response?.data?.error || "Hibás email vagy jelszó!",

@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.setItem('token', newToken);
     sessionStorage.setItem('user', JSON.stringify(newUser));
     
-    // ÚJ: Itt mentjük el a belépés hajszálpontos idejét!
     sessionStorage.setItem('loginTime', new Date().getTime().toString()); 
     
     setToken(newToken);
@@ -37,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     
-    // ÚJ: Kijelentkezéskor az időt is töröljük!
+
     sessionStorage.removeItem('loginTime'); 
     
     setToken(null);

@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     watch: {
-      usePolling: true, // <--- EZ A KULCS WINDOWSHOZ!
+      usePolling: true,
     },
-    host: true, // Hogy kintről is elérhető legyen
+    host: true,
     strictPort: true,
     port: 5173, 
   }

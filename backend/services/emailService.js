@@ -109,7 +109,7 @@ module.exports = {
             transporter.sendMail(orderMailOptions).catch(console.error);
         });
 
-        // PDF GENERÁLÁS (RAJZOLÁS)
+        // PDF GENERÁLÁS
         doc.fontSize(22).fillColor('#722f37').font('Helvetica-Bold').text('Számla', 50, 50);
         doc.fontSize(10).fillColor('#555555').font('Helvetica');
         doc.text(`Azonosító: #${rendelesId}`, 50, 75);

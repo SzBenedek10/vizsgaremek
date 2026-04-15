@@ -3,8 +3,6 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";   
 import { Container, Grid, Typography, Box, TextField, Button, Paper, Stack, Alert, Skeleton, InputAdornment } from "@mui/material";
 import Swal from 'sweetalert2';
-
-// Ikonok
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -13,8 +11,8 @@ import SendIcon from '@mui/icons-material/Send';
 import WineBarIcon from '@mui/icons-material/WineBar';
 import PersonIcon from '@mui/icons-material/Person';
 import LoginIcon from '@mui/icons-material/Login';
-import SubjectIcon from '@mui/icons-material/Subject'; // Új ikon
-import MessageIcon from '@mui/icons-material/Message'; // Új ikon
+import SubjectIcon from '@mui/icons-material/Subject';
+import MessageIcon from '@mui/icons-material/Message'; 
 
 export default function Contact() {
   const { user } = useAuth(); 
@@ -27,7 +25,6 @@ export default function Contact() {
     uzenet: ""
   });
 
-  // Cégadatok betöltése
   useEffect(() => {
     fetch("http://localhost:5000/api/cegadatok")
       .then(res => res.json())
@@ -76,19 +73,18 @@ export default function Contact() {
     }
   };
 
-  // --- STÍLUS AZ INPUT MEZŐKHÖZ ---
   const modernInputStyle = {
     '& .MuiOutlinedInput-root': {
-      borderRadius: '12px', // Kerekítés
-      backgroundColor: '#f8f9fa', // Halvány háttér
+      borderRadius: '12px',
+      backgroundColor: '#f8f9fa',
       transition: '0.3s',
-      '& fieldset': { borderColor: '#e0e0e0' }, // Halvány keret alapból
-      '&:hover fieldset': { borderColor: '#722f37' }, // Hoverre színváltás
-      '&.Mui-focused fieldset': { borderColor: '#722f37', borderWidth: '2px' }, // Fókuszban vastagabb keret
-      '&:hover': { backgroundColor: '#fff' } // Hoverre kifehéredik
+      '& fieldset': { borderColor: '#e0e0e0' },
+      '&:hover fieldset': { borderColor: '#722f37' }, 
+      '&.Mui-focused fieldset': { borderColor: '#722f37', borderWidth: '2px' },
+      '&:hover': { backgroundColor: '#fff' }
     },
-    '& .MuiInputLabel-root': { color: '#777' }, // Címke színe
-    '& .MuiInputLabel-root.Mui-focused': { color: '#722f37', fontWeight: 'bold' } // Fókuszált címke
+    '& .MuiInputLabel-root': { color: '#777' },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#722f37', fontWeight: 'bold' }
   };
 
   return (
@@ -106,7 +102,6 @@ export default function Contact() {
 
         <Grid container spacing={4} alignItems="stretch" justifyContent="center">
           
-          {/* --- BAL OLDAL --- */}
           <Grid item xs={12} md={6} lg={5}>
             <Paper 
               elevation={4} 
@@ -164,7 +159,6 @@ export default function Contact() {
             </Paper>
           </Grid>
 
-          {/* --- JOBB OLDAL (Modernizált Űrlap) --- */}
           <Grid item xs={12} md={6} lg={5}>
             <Paper 
               elevation={4} 
@@ -187,8 +181,6 @@ export default function Contact() {
 
                   <form onSubmit={handleSubmit} style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                     <Grid container spacing={3}>
-                      
-                      {/* TÁRGY MEZŐ - Modern stílus + Ikon */}
                       <Grid item xs={12}>
                         <TextField 
                           fullWidth 
@@ -198,7 +190,7 @@ export default function Contact() {
                           value={formData.targy} 
                           onChange={handleChange} 
                           required 
-                          sx={modernInputStyle} // Itt használjuk a stílust
+                          sx={modernInputStyle} 
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -209,7 +201,6 @@ export default function Contact() {
                         />
                       </Grid>
 
-                      {/* ÜZENET MEZŐ - Modern stílus + Ikon */}
                       <Grid item xs={12}>
                         <TextField 
                           fullWidth 
@@ -221,10 +212,10 @@ export default function Contact() {
                           value={formData.uzenet} 
                           onChange={handleChange} 
                           required 
-                          sx={modernInputStyle} // Itt is
+                          sx={modernInputStyle}
                           InputProps={{
                             startAdornment: (
-                              <InputAdornment position="start" sx={{ mt: -11 }}> {/* Ikon felülre igazítva */}
+                              <InputAdornment position="start" sx={{ mt: -11 }}>
                                 <MessageIcon sx={{ color: '#722f37' }} />
                               </InputAdornment>
                             ),
@@ -237,7 +228,7 @@ export default function Contact() {
                           type="submit" variant="contained" size="large" endIcon={<SendIcon />} fullWidth
                           sx={{ 
                             bgcolor: '#722f37', py: 1.8, borderRadius: 30, fontWeight: 'bold', fontSize: '1.1rem',
-                            boxShadow: '0 4px 14px 0 rgba(114, 47, 55, 0.39)', // Szép árnyék
+                            boxShadow: '0 4px 14px 0 rgba(114, 47, 55, 0.39)',
                             '&:hover': { bgcolor: '#5a252c', transform: 'translateY(-2px)', boxShadow: '0 6px 20px 0 rgba(114, 47, 55, 0.23)' }, 
                             transition: '0.3s'
                           }}

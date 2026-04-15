@@ -195,7 +195,6 @@ export default function About() {
         </Box>
       </Container>
       
-      {/* 3. LIGHTBOX MODÁLIS ABLAK */}
       <Dialog 
         fullScreen open={lightboxOpen} onClose={closeLightbox} TransitionComponent={Fade} 
         PaperProps={{ sx: { bgcolor: 'rgba(0, 0, 0, 0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' } }}

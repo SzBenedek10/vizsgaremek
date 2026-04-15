@@ -3,7 +3,6 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, 
 
 export default function LegalDialogs({ open, onClose, type }) {
   
-  // A cég hivatalos adatai
   const cégadatok = {
     nev: "Szente Pincészet E.V.",
     szekhely: "8318 Lesencetomaj, Szőlőhegy hegy 128., Magyarország",
@@ -31,7 +30,6 @@ export default function LegalDialogs({ open, onClose, type }) {
             </Typography>
             <Divider sx={{ my: 2 }} />
 
-            {/* ÚJ RÉSZ: BORKÓSTOLÓ FOGLALÁS */}
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#722f37' }}>3. Borkóstoló időpontfoglalás és lemondás</Typography>
             <Typography paragraph>
               A weboldalon lehetőség van borkóstoló programokra időpontot foglalni. A foglalás a Szolgáltató e-mailes vagy telefonos visszaigazolásával válik véglegessé. <br /><br />
@@ -81,7 +79,6 @@ export default function LegalDialogs({ open, onClose, type }) {
       case 'szallitas':
         return (
           <>
-            {/* ÚJ RÉSZ: BORKÓSTOLÓ FIZETÉS */}
             <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 2, color: '#722f37' }}>1. Borkóstoló - Részvételi díj fizetése</Typography>
             <Typography paragraph>
               A lefoglalt borkóstoló programok árának kiegyenlítése jellemzően a <strong>helyszínen történik</strong> (készpénzben vagy bankkártyával) a kóstoló végén.
@@ -138,7 +135,7 @@ export default function LegalDialogs({ open, onClose, type }) {
     switch(type) {
       case 'aszf': return 'Általános Szerződési Feltételek (ÁSZF)';
       case 'adatkezeles': return 'Adatkezelési Tájékoztató';
-      case 'szallitas': return 'Szállítás, Fizetés és Foglalás'; // Ezt is átneveztük egy kicsit!
+      case 'szallitas': return 'Szállítás, Fizetés és Foglalás'; 
       case 'impresszum': return 'Impresszum';
       default: return 'Dokumentum';
     }

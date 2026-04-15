@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; 
-// Figyelj rá, hogy a TastingCard útvonala helyes legyen a projektedben!
 import TastingCard from "../../components/TastingCard";
 import { 
   Container, Box, Typography, Paper, Divider, Button, CircularProgress,
@@ -12,8 +11,6 @@ export default function BorKostolas() {
   const [csomagok, setCsomagok] = useState([]);
   const [foglaltsag, setFoglaltsag] = useState({}); 
   const [loading, setLoading] = useState(true);
-
-  // Szűrők és rendezés állapota
   const [szuroElerhetoseg, setSzuroElerhetoseg] = useState('');
   const [szuroHonap, setSzuroHonap] = useState('');
   const [rendezes, setRendezes] = useState('alap');
@@ -44,22 +41,16 @@ export default function BorKostolas() {
       state: { selectedPackage: { ...csomag, letszam: 1, maxSzabad: szabad } } 
     });
   };
-
-  // Dinamikusan kinyerjük, milyen hónapokban vannak programok
   const elerhetoHonapok = [...new Set(csomagok.map(c => {
     if (!c.datum) return "Hamarosan";
     const d = new Date(c.datum);
     return d.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' });
   }))];
 
-  // 1. Lépés: SZŰRÉS
   let szurtCsomagok = csomagok.filter(csomag => {
     const szabadHely = csomag.kapacitas - (foglaltsag[csomag.id] || 0);
     
-    // Elérhetőség szűrő
     const isAvailable = szuroElerhetoseg === 'szabad' ? szabadHely > 0 : true;
-
-    // Hónap szűrő
     let monthStr = "Hamarosan";
     if (csomag.datum) {
       const d = new Date(csomag.datum);
@@ -70,12 +61,10 @@ export default function BorKostolas() {
     return isAvailable && isMonthMatch;
   });
 
-  // 2. Lépés: RENDEZÉS
   szurtCsomagok.sort((a, b) => {
     if (rendezes === 'ar_no') return a.ar - b.ar;
     if (rendezes === 'ar_csokken') return b.ar - a.ar;
     
-    // Alapértelmezett: Dátum szerint (legközelebbi elöl)
     const dateA = a.datum ? new Date(a.datum).getTime() : Infinity;
     const dateB = b.datum ? new Date(b.datum).getTime() : Infinity;
     return dateA - dateB;
@@ -104,7 +93,6 @@ export default function BorKostolas() {
     <Box sx={{ bgcolor: '#fdfbfb', minHeight: '100vh', pb: 10 }}>
       <Container maxWidth="xl" sx={{ pt: { xs: 8, md: 10 } }}>
         
-        {/* FEJLÉC */}
         <Box sx={{ textAlign: 'center', mb: 8 }}>
           <Typography variant="overline" sx={{ color: '#722f37', fontWeight: 'bold', fontSize: '1rem', letterSpacing: 2 }}>
             Kínálatunk
@@ -122,9 +110,6 @@ export default function BorKostolas() {
           alignItems: 'flex-start' 
         }}>
           
-          {/* ========================================== */}
-          {/* BAL OLDAL - SZŰRŐ PANEL */}
-          {/* ========================================== */}
           <Box sx={{ 
             width: { xs: '100%', md: '280px', lg: '300px' }, 
             flexShrink: 0, 
@@ -146,7 +131,6 @@ export default function BorKostolas() {
               </Typography>
               <Divider sx={{ mb: 3 }} />
 
-              {/* Elérhetőség */}
               <FormControl component="fieldset" sx={{ width: '100%', mb: 3 }}>
                 <Typography variant="subtitle2" sx={{ color: '#888', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
                   Elérhetőség
@@ -170,7 +154,6 @@ export default function BorKostolas() {
 
               <Divider sx={{ mb: 3 }} />
 
-              {/* Dátum / Hónap */}
               <FormControl component="fieldset" sx={{ width: '100%', mb: 3 }}>
                 <Typography variant="subtitle2" sx={{ color: '#888', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
                   Időpont
@@ -195,7 +178,6 @@ export default function BorKostolas() {
                 </RadioGroup>
               </FormControl>
 
-              {/* Szűrő törlése gomb */}
               {(szuroElerhetoseg !== '' || szuroHonap !== '' || rendezes !== 'alap') && (
                 <Button 
                   fullWidth 
@@ -216,12 +198,8 @@ export default function BorKostolas() {
             </Paper>
           </Box>
 
-          {/* ========================================== */}
-          {/* JOBB OLDAL - KÁRTYÁK ÉS RENDEZÉS */}
-          {/* ========================================== */}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             
-            {/* Rendezés panel és találatok száma */}
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -235,7 +213,6 @@ export default function BorKostolas() {
                 {szurtCsomagok.length} program elérhető
               </Typography>
 
-              {/* Rendezés Legördülő */}
               <FormControl size="small" sx={{ minWidth: 240, bgcolor: 'white' }}>
                 <InputLabel sx={{ color: '#722f37' }}>Rendezés</InputLabel>
                 <Select
@@ -256,12 +233,10 @@ export default function BorKostolas() {
               </FormControl>
             </Box>
 
-            {/* KÁRTYÁK GRIDJE - PONTOSAN 3 EGY SORBAN! */}
             {szurtCsomagok.length > 0 ? (
               <Box 
                 sx={{ 
                   display: 'grid', 
-                  // Itt adjuk meg, hogy mobilon 1, tableten 2, nagy képernyőn pontosan 3 kártya legyen egy sorban
                   gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, 
                   gap: 4 
                 }}

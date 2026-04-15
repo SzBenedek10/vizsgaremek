@@ -46,7 +46,6 @@ export default function Profilom() {
     }
   };
 
-  // --- PDF LETÖLTÉS LOGIKA ---
   const handleDownloadInvoice = async (bookingId) => {
     try {
       const response = await fetch(`http://localhost:5000/api/foglalas/${bookingId}/szamla`);
@@ -55,7 +54,6 @@ export default function Profilom() {
         throw new Error("Hiba történt a számla generálásakor.");
       }
 
-      // Blob kinyerése és letöltés szimulálása a böngészőben
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -81,8 +79,7 @@ export default function Profilom() {
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
       <Grid container spacing={4}>
-        
-        {/* BAL OLDAL: Kapcsolati Adatok */}
+
         <Grid item xs={12} md={4}>
           <Paper elevation={3} sx={{ p: 3, textAlign: 'center', borderRadius: 4, borderTop: '5px solid #722f37' }}>
             <Avatar 
@@ -111,7 +108,6 @@ export default function Profilom() {
           </Paper>
         </Grid>
 
-        {/* JOBB OLDAL: Tevékenységek fülek */}
         <Grid item xs={12} md={8}>
           <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden', minHeight: '300px' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#f8f9fa' }}>
@@ -133,7 +129,6 @@ export default function Profilom() {
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress sx={{ color: '#722f37' }} /></Box>
               ) : (
                 <>
-                  {/* RENDELÉSEK FÜL */}
                   {tabValue === 0 && (
                     <TableContainer>
                       <Table>
@@ -176,7 +171,6 @@ export default function Profilom() {
                     </TableContainer>
                   )}
 
-                  {/* FOGLALÁSOK FÜL (Frissítve: Letöltés gomb) */}
                   {tabValue === 1 && (
                     <TableContainer>
                       <Table>
@@ -209,7 +203,6 @@ export default function Profilom() {
                                 <TableCell sx={{ fontWeight: 'bold', color: '#333' }}>{booking.letszam} fő</TableCell>
                                 
                                 <TableCell>
-                                  {/* Egy dobozba tesszük a státusz jelzőt és a letöltés gombot */}
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip 
                                       label={
@@ -226,7 +219,6 @@ export default function Profilom() {
                                       }} 
                                     />
                                     
-                                    {/* PDF Letöltés Ikon */}
                                     <Tooltip title={isConfirmed ? "Számla letöltése (PDF)" : "Csak visszaigazolás után letölthető"}>
                                       <span>
                                         <IconButton 
@@ -234,7 +226,7 @@ export default function Profilom() {
                                           disabled={!isConfirmed}
                                           onClick={() => handleDownloadInvoice(booking.id)}
                                           sx={{ 
-                                            color: isConfirmed ? '#d32f2f' : '#e0e0e0', // Ha él, pirosas, ha nem, szürke
+                                            color: isConfirmed ? '#d32f2f' : '#e0e0e0',
                                             '&:hover': {
                                               bgcolor: isConfirmed ? 'rgba(211, 47, 47, 0.1)' : 'transparent'
                                             }

@@ -10,7 +10,7 @@ import EventIcon from '@mui/icons-material/Event';
 import MessageIcon from '@mui/icons-material/Message';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload'; // ÚJ IKON KÉPFELTÖLTÉSHEZ
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../../context/AuthContext';
@@ -23,16 +23,15 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0); 
 
-  // --- ÁLLAPOTOK (STATE) ---
   const [borok, setBorok] = useState([]);
-  const [borSzinek, setBorSzinek] = useState([]); // <--- ÚJ: BOR SZÍNEK TÁROLÁSA
+  const [borSzinek, setBorSzinek] = useState([]);
   const [users, setUsers] = useState([]);
   const [szolgaltatasok, setSzolgaltatasok] = useState([]);
   const [uzenetek, setUzenetek] = useState([]);
   const [rendelesek, setRendelesek] = useState([]);
   const [foglalasok, setFoglalasok] = useState([]);
 
-  // Modal statek
+
   const [openBorDialog, setOpenBorDialog] = useState(false);
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [openSzolgDialog, setOpenSzolgDialog] = useState(false); 
@@ -42,21 +41,20 @@ export default function AdminDashboard() {
   const [editingSzolg, setEditingSzolg] = useState(null); 
   const [editingUzenet, setEditingUzenet] = useState(null); 
 
-  // Űrlap statek (Hozzáadtam a kep mezőt a borForm-hoz)
+
   const [borForm, setBorForm] = useState({ nev: '', evjarat: '', ar: '', keszlet: '', leiras: '', bor_szin_id: 1, alkoholfok: '', kep: null });
   const [userForm, setUserForm] = useState({ nev: '', email: '', password_hash: '', telefonszam: '' });
   const [szolgForm, setSzolgForm] = useState({ nev: '', leiras: '', ar: '', kapacitas: '', datum: '', idotartam: '', extra: '', aktiv: 1 });
   const [uzenetForm, setUzenetForm] = useState({ nev: '', email: '', targy: '', uzenet: '' }); 
 
-  // Védelmi ellenőrzés
+
   useEffect(() => {
     if (user && user.role !== 'ADMIN') navigate('/');
   }, [user, navigate]);
 
-  // Adatok betöltése
   useEffect(() => {
     fetchBorok();
-    fetchBorSzinek(); // <--- ÚJ: SZÍNEK BETÖLTÉSE INDULÁSKOR
+    fetchBorSzinek();
     fetchUsers();
     fetchSzolgaltatasok();
     fetchUzenetek();
@@ -64,7 +62,7 @@ export default function AdminDashboard() {
     fetchFoglalasok();
   }, []);
 
-  // --- LEKÉRDEZÉSEK ---
+
   const fetchBorok = async () => { try { const res = await axios.get('http://localhost:5000/api/borok'); setBorok(res.data); } catch (err) { console.error(err); } };
   const fetchBorSzinek = async () => { try { const res = await axios.get('http://localhost:5000/api/bor-szinek'); setBorSzinek(res.data); } catch (err) { console.error(err); } }; // <--- ÚJ FÜGGVÉNY
   const fetchUsers = async () => { try { const res = await axios.get('http://localhost:5000/api/users'); setUsers(res.data); } catch (err) { console.error(err); } };
@@ -73,7 +71,7 @@ export default function AdminDashboard() {
   const fetchRendelesek = async () => { try { const res = await axios.get('http://localhost:5000/api/admin/rendelesek'); setRendelesek(res.data); } catch (err) { console.error(err); } };
   const fetchFoglalasok = async () => { try { const res = await axios.get('http://localhost:5000/api/admin/foglalasok'); setFoglalasok(res.data); } catch (err) { console.error(err); } };
 
-  // --- STÁTUSZ FRISSÍTÉSEK ---
+
   const updateRendelesStatusz = async (id, ujStatusz) => {
     try {
       await axios.put(`http://localhost:5000/api/admin/rendelesek/${id}/statusz`, { statusz: ujStatusz });
@@ -90,21 +88,20 @@ export default function AdminDashboard() {
     } catch (err) { Swal.fire('Hiba', 'Nem sikerült frissíteni a státuszt', 'error'); }
   };
 
- // --- KÉP KIVÁLASZTÁSA (Csak elmentjük a fájlt az állapotba) ---
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Magát az igazi Fájl objektumot mentjük el!
+
       setBorForm({ ...borForm, kep_fajl: file }); 
-      // Hogy a felületen lásd mit töltöttél fel (előnézet):
+
       setBorForm((prev) => ({ ...prev, kep_elonezet: URL.createObjectURL(file) }));
     }
   };
 
-  // --- BOR MENTÉSE (FormData használata fájlküldéshez) ---
+
   const handleSaveBor = async () => {
     try {
-      // Fájlküldéshez a sima JSON nem jó, egy "FormData" csomagot kell csinálnunk
       const formData = new FormData();
       formData.append('nev', borForm.nev);
       formData.append('evjarat', borForm.evjarat);
@@ -114,12 +111,11 @@ export default function AdminDashboard() {
       formData.append('bor_szin_id', borForm.bor_szin_id);
       formData.append('alkoholfok', borForm.alkoholfok);
       
-      // Ha van új képfájl kiválasztva, azt is beletesszük!
       if (borForm.kep_fajl) {
         formData.append('kep', borForm.kep_fajl);
       }
 
-      // Speciális fejléc (header) kell, hogy a backend tudja: ez egy fájlfeltöltés
+
       const config = { headers: { 'Content-Type': 'multipart/form-data' } };
 
       if (editingBor) {
@@ -149,7 +145,7 @@ export default function AdminDashboard() {
       .then(async (result) => { if (result.isConfirmed) { await axios.delete(`http://localhost:5000/api/borok/${id}`); fetchBorok(); Swal.fire('Törölve!', '', 'success'); } });
   };
 
-  // --- SZOLGÁLTATÁS KEZELÉS --- 
+
   const handleOpenSzolgDialog = (szolg = null) => {
     if (szolg) {
       setEditingSzolg(szolg);
@@ -173,7 +169,6 @@ export default function AdminDashboard() {
       .then(async (result) => { if (result.isConfirmed) { await axios.delete(`http://localhost:5000/api/szolgaltatasok/${id}`); fetchSzolgaltatasok(); Swal.fire('Törölve!', '', 'success'); } });
   };
 
-  // --- ÜZENET KEZELÉS ---
   const handleOpenUzenetDialog = (msg) => {
     setEditingUzenet(msg);
     setUzenetForm({ nev: msg.nev, email: msg.email, targy: msg.targy, uzenet: msg.uzenet });
@@ -190,7 +185,6 @@ export default function AdminDashboard() {
     .then(async (result) => { if (result.isConfirmed) { await axios.delete(`http://localhost:5000/api/admin/uzenetek/${id}`); fetchUzenetek(); Swal.fire('Törölve!', '', 'success'); } }); 
   };
 
-  // --- USER KEZELÉS ---
   const handleSaveUser = async () => {
     try { await axios.post('http://localhost:5000/api/register', { ...userForm, orszag:'Magyarország' }); setOpenUserDialog(false); fetchUsers(); Swal.fire('Siker', 'Felhasználó létrehozva!', 'success'); } 
     catch(err) { Swal.fire('Hiba', err.response?.data?.error || 'Hiba történt', 'error'); }
@@ -214,7 +208,6 @@ export default function AdminDashboard() {
         </Tabs>
       </Box>
 
-      {/* --- 0. TAB: BOROK --- */}
       {tabIndex === 0 && (
         <>
           <Button variant="contained" startIcon={<AddIcon />} sx={{ mb: 2, bgcolor: '#722f37' }} onClick={() => handleOpenBorDialog()}>Új bor</Button>
@@ -233,18 +226,16 @@ export default function AdminDashboard() {
         </>
       )}
 
-      {/* --- TÖBBI TAB (Változatlan) --- */}
+
       {tabIndex === 1 && (<><Button variant="contained" startIcon={<AddIcon />} sx={{ mb: 2, bgcolor: '#722f37' }} onClick={() => setOpenUserDialog(true)}>Új felhasználó</Button><TableContainer component={Paper}><Table><TableHead sx={{ bgcolor: '#eee' }}><TableRow><TableCell>Név</TableCell><TableCell>Email</TableCell><TableCell>Szerepkör</TableCell><TableCell align="center">Műveletek</TableCell></TableRow></TableHead><TableBody>{users.map((u) => (<TableRow key={u.id}><TableCell>{u.nev}</TableCell><TableCell>{u.email}</TableCell><TableCell>{u.role}</TableCell><TableCell align="center"><Button color="error" onClick={() => handleDeleteUser(u.id)} disabled={u.role === 'ADMIN'}><DeleteIcon /></Button></TableCell></TableRow>))}</TableBody></Table></TableContainer></>)}
       {tabIndex === 2 && (<><Button variant="contained" startIcon={<AddIcon />} sx={{ mb: 2, bgcolor: '#722f37' }} onClick={() => handleOpenSzolgDialog()}>Új esemény</Button><TableContainer component={Paper}><Table><TableHead sx={{ bgcolor: '#eee' }}><TableRow><TableCell>Dátum</TableCell><TableCell>Név</TableCell><TableCell>Ár</TableCell><TableCell>Kapacitás</TableCell><TableCell>Státusz</TableCell><TableCell align="center">Műveletek</TableCell></TableRow></TableHead><TableBody>{szolgaltatasok.map((sz) => (<TableRow key={sz.id}><TableCell>{sz.datum ? new Date(sz.datum).toLocaleDateString() : 'Nincs dátum'}</TableCell><TableCell>{sz.nev}</TableCell><TableCell>{sz.ar} Ft</TableCell><TableCell>{sz.kapacitas} fő</TableCell><TableCell>{sz.aktiv ? "Aktív" : "Inaktív"}</TableCell><TableCell align="center"><Button color="primary" onClick={() => handleOpenSzolgDialog(sz)}><EditIcon /></Button><Button color="error" onClick={() => handleDeleteSzolg(sz.id)}><DeleteIcon /></Button></TableCell></TableRow>))}</TableBody></Table></TableContainer></>)}
       {tabIndex === 3 && (<TableContainer component={Paper}><Table><TableHead sx={{ bgcolor: '#eee' }}><TableRow><TableCell>Dátum</TableCell><TableCell>Feladó</TableCell><TableCell>Email</TableCell><TableCell>Tárgy</TableCell><TableCell>Üzenet</TableCell><TableCell align="center">Műveletek</TableCell></TableRow></TableHead><TableBody>{uzenetek.length > 0 ? uzenetek.map((msg) => (<TableRow key={msg.id} hover><TableCell>{new Date(msg.datum).toLocaleString('hu-HU')}</TableCell><TableCell sx={{ fontWeight: 'bold' }}>{msg.nev}</TableCell><TableCell>{msg.email}</TableCell><TableCell>{msg.targy}</TableCell><TableCell sx={{ maxWidth: '300px', whiteSpace: 'pre-wrap' }}>{msg.uzenet}</TableCell><TableCell align="center"><Button color="primary" onClick={() => handleOpenUzenetDialog(msg)}><EditIcon /></Button><Button color="error" onClick={() => handleDeleteUzenet(msg.id)}><DeleteIcon /></Button></TableCell></TableRow>)) : <TableRow><TableCell colSpan={6} align="center">Jelenleg nincsenek beérkezett üzenetek.</TableCell></TableRow>}</TableBody></Table></TableContainer>)}
       {tabIndex === 4 && (<TableContainer component={Paper}><Table><TableHead sx={{ bgcolor: '#eee' }}><TableRow><TableCell>Azonosító</TableCell><TableCell>Dátum</TableCell><TableCell>Vásárló Neve</TableCell><TableCell>Végösszeg</TableCell><TableCell>Státusz Módosítása</TableCell></TableRow></TableHead><TableBody>{rendelesek.length > 0 ? rendelesek.map((rendeles) => (<TableRow key={rendeles.id} hover><TableCell>#{rendeles.id}</TableCell><TableCell>{new Date(rendeles.datum).toLocaleString('hu-HU')}</TableCell><TableCell sx={{ fontWeight: 'bold' }}>{rendeles.szaml_nev || "Ismeretlen"}</TableCell><TableCell>{HUF.format(rendeles.vegosszeg)} Ft</TableCell><TableCell><Select size="small" value={rendeles.statusz} onChange={(e) => updateRendelesStatusz(rendeles.id, e.target.value)} sx={{ minWidth: 150, bgcolor: rendeles.statusz === 'KISZALLITVA' ? '#e8f5e9' : 'white' }}><MenuItem value="KOSAR">Kosárban hagyott</MenuItem><MenuItem value="FELDOLGOZAS">Feldolgozás alatt</MenuItem><MenuItem value="FIZETVE">Fizetve</MenuItem><MenuItem value="KISZALLITVA">Kiszállítva</MenuItem><MenuItem value="TOROLVE">Törölve</MenuItem></Select></TableCell></TableRow>)) : <TableRow><TableCell colSpan={5} align="center">Még nincs leadott rendelés.</TableCell></TableRow>}</TableBody></Table></TableContainer>)}
       {tabIndex === 5 && (<TableContainer component={Paper}><Table><TableHead sx={{ bgcolor: '#eee' }}><TableRow><TableCell>Lefoglalt Időpont</TableCell><TableCell>Foglaló Neve</TableCell><TableCell>Szolgáltatás</TableCell><TableCell>Létszám</TableCell><TableCell>Státusz Módosítása</TableCell></TableRow></TableHead><TableBody>{foglalasok.length > 0 ? foglalasok.map((foglalas) => (<TableRow key={foglalas.id} hover><TableCell>{new Date(foglalas.datum || foglalas.foglalas_datuma).toLocaleString('hu-HU')}</TableCell><TableCell sx={{ fontWeight: 'bold' }}>{foglalas.user_nev || "Ismeretlen"} <br/><small style={{fontWeight:'normal', color:'gray'}}>{foglalas.user_email}</small></TableCell><TableCell>{foglalas.szolgaltatas_nev || "Borkóstoló"}</TableCell><TableCell>{foglalas.letszam} fő</TableCell><TableCell><Select size="small" value={foglalas.statusz} onChange={(e) => updateFoglalasStatusz(foglalas.id, e.target.value)} sx={{ minWidth: 150, bgcolor: foglalas.statusz === 'CONFIRMED' ? '#e8f5e9' : foglalas.statusz === 'CANCELLED' ? '#ffebee' : 'white' }}><MenuItem value="PENDING">Függőben (Pending)</MenuItem><MenuItem value="CONFIRMED">Visszaigazolva</MenuItem><MenuItem value="CANCELLED">Elutasítva / Törölve</MenuItem></Select></TableCell></TableRow>)) : <TableRow><TableCell colSpan={5} align="center">Még nincs leadott foglalás.</TableCell></TableRow>}</TableBody></Table></TableContainer>)}
 
-      {/* --- MÓDOSÍTOTT DIALOG: BOR --- */}
       <Dialog open={openBorDialog} onClose={() => setOpenBorDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editingBor ? 'Bor szerkesztése' : 'Új bor'}</DialogTitle>
         <DialogContent>
-          {/* ÚJ: Bor Színe Választó */}
           <FormControl fullWidth margin="dense">
             <InputLabel>Bor Színe</InputLabel>
             <Select
@@ -265,7 +256,6 @@ export default function AdminDashboard() {
           <TextField margin="dense" label="Készlet" type="number" fullWidth value={borForm.keszlet} onChange={(e) => setBorForm({...borForm, keszlet: e.target.value})} />
           <TextField margin="dense" label="Leírás" multiline rows={2} fullWidth value={borForm.leiras} onChange={(e) => setBorForm({...borForm, leiras: e.target.value})} />
           
-          {/* ÚJ: Képfeltöltő Szekció */}
           <Box sx={{ mt: 3, p: 2, border: '1px dashed #ccc', borderRadius: 2, textAlign: 'center' }}>
             <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} sx={{ color: '#722f37', borderColor: '#722f37', mb: 2 }}>
               Kép feltöltése
@@ -290,7 +280,6 @@ export default function AdminDashboard() {
         </DialogActions>
       </Dialog>
 
-      {/* --- TÖBBI DIALOG (Változatlan) --- */}
       <Dialog open={openSzolgDialog} onClose={() => setOpenSzolgDialog(false)} maxWidth="sm" fullWidth><DialogTitle>{editingSzolg ? 'Kóstoló szerkesztése' : 'Új kóstoló létrehozása'}</DialogTitle><DialogContent><TextField margin="dense" label="Név" fullWidth value={szolgForm.nev} onChange={(e) => setSzolgForm({...szolgForm, nev: e.target.value})} /><TextField margin="dense" label="Dátum" type="date" fullWidth InputLabelProps={{shrink: true}} value={szolgForm.datum} onChange={(e) => setSzolgForm({...szolgForm, datum: e.target.value})} /><TextField margin="dense" label="Időtartam (pl. 02:00)" type="time" fullWidth InputLabelProps={{shrink: true}} value={szolgForm.idotartam} onChange={(e) => setSzolgForm({...szolgForm, idotartam: e.target.value})} /><TextField margin="dense" label="Ár (Ft/fő)" type="number" fullWidth value={szolgForm.ar} onChange={(e) => setSzolgForm({...szolgForm, ar: e.target.value})} /><TextField margin="dense" label="Kapacitás (fő)" type="number" fullWidth value={szolgForm.kapacitas} onChange={(e) => setSzolgForm({...szolgForm, kapacitas: e.target.value})} /><TextField margin="dense" label="Extra infó" fullWidth value={szolgForm.extra} onChange={(e) => setSzolgForm({...szolgForm, extra: e.target.value})} /><TextField margin="dense" label="Leírás" multiline rows={3} fullWidth value={szolgForm.leiras} onChange={(e) => setSzolgForm({...szolgForm, leiras: e.target.value})} /><FormControlLabel control={<Switch checked={Boolean(szolgForm.aktiv)} onChange={(e) => setSzolgForm({...szolgForm, aktiv: e.target.checked ? 1 : 0})} />} label="Aktív (Látható a weboldalon)" sx={{ mt: 1 }} /></DialogContent><DialogActions><Button onClick={() => setOpenSzolgDialog(false)}>Mégsem</Button><Button onClick={handleSaveSzolg} variant="contained" sx={{ bgcolor: '#722f37' }}>Mentés</Button></DialogActions></Dialog>
       <Dialog open={openUzenetDialog} onClose={() => setOpenUzenetDialog(false)} maxWidth="sm" fullWidth><DialogTitle>Üzenet szerkesztése</DialogTitle><DialogContent><TextField margin="dense" label="Név" fullWidth value={uzenetForm.nev} onChange={(e) => setUzenetForm({...uzenetForm, nev: e.target.value})} /><TextField margin="dense" label="Email" fullWidth value={uzenetForm.email} onChange={(e) => setUzenetForm({...uzenetForm, email: e.target.value})} /><TextField margin="dense" label="Tárgy" fullWidth value={uzenetForm.targy} onChange={(e) => setUzenetForm({...uzenetForm, targy: e.target.value})} /><TextField margin="dense" label="Üzenet" multiline rows={4} fullWidth value={uzenetForm.uzenet} onChange={(e) => setUzenetForm({...uzenetForm, uzenet: e.target.value})} /></DialogContent><DialogActions><Button onClick={() => setOpenUzenetDialog(false)}>Mégsem</Button><Button onClick={handleSaveUzenet} variant="contained" sx={{ bgcolor: '#722f37' }}>Mentés</Button></DialogActions></Dialog>
       <Dialog open={openUserDialog} onClose={() => setOpenUserDialog(false)}><DialogTitle>Új user</DialogTitle><DialogContent><TextField margin="dense" label="Név" fullWidth onChange={(e) => setUserForm({...userForm, nev: e.target.value})} /><TextField margin="dense" label="Email" fullWidth onChange={(e) => setUserForm({...userForm, email: e.target.value})} /><TextField margin="dense" label="Jelszó" type="password" fullWidth onChange={(e) => setUserForm({...userForm, password_hash: e.target.value})} /></DialogContent><DialogActions><Button onClick={() => setOpenUserDialog(false)}>Mégsem</Button><Button onClick={handleSaveUser} variant="contained" sx={{ bgcolor: '#722f37' }}>Mentés</Button></DialogActions></Dialog>

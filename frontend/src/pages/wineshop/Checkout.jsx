@@ -3,8 +3,6 @@ import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
-
-// Új, univerzális jogi ablak beimportálása
 import LegalDialogs from "../legal/LegalDialogs";
 
 import {
@@ -21,7 +19,6 @@ import {
   InputAdornment
 } from "@mui/material";
 
-// Ikonok
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -37,7 +34,6 @@ export default function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // --- ÁLLAPOTOK ---
   const [billing, setBilling] = useState({
     nev: "", email: "", tel: "",
     irsz: "", varos: "", utca: "", hazszam: ""
@@ -50,19 +46,15 @@ export default function Checkout() {
   const [useProfileForBilling, setUseProfileForBilling] = useState(false);
   const [shippingSameAsBilling, setShippingSameAsBilling] = useState(true);
   
-  // KÜLÖNVÁLASZTOTT CHECKBOXOK
   const [isOver18, setIsOver18] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [newsletter, setNewsletter] = useState(true);
 
-  // ÁSZF FELUGRÓ ABLAK ÁLLAPOTA
   const [termsOpen, setTermsOpen] = useState(false);
 
-  // --- KUPON ÁLLAPOTOK ---
   const [couponCode, setCouponCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0); 
 
-  // --- KUPON BEVÁLTÁSI LOGIKA ---
   const handleApplyCoupon = () => {
     if (!couponCode) return;
     
@@ -85,7 +77,6 @@ export default function Checkout() {
     setCouponCode("");
   };
 
-  // --- KÖLTSÉGEK KISZÁMÍTÁSA ---
   const productTotal = totalAmount; 
   const discountAmount = Math.round(productTotal * (appliedDiscount / 100));
   const discountedProductTotal = productTotal - discountAmount;
@@ -95,7 +86,6 @@ export default function Checkout() {
   const finalTotal = discountedProductTotal + shippingFee + paymentFee;
   const vatContent = Math.round(finalTotal * 0.212598);
 
-  // VÉDELEM
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!user) {
@@ -105,7 +95,6 @@ export default function Checkout() {
     return () => clearTimeout(timer);
   }, [user, navigate]);
 
-  // LOGIKA
   const handleProfileCheckbox = (e) => {
     const isChecked = e.target.checked;
     setUseProfileForBilling(isChecked);
@@ -198,8 +187,7 @@ export default function Checkout() {
     <Container maxWidth="lg" sx={{ py: { xs: 4, md: 8 } }}>
       <form onSubmit={handleOrder}>
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, alignItems: 'flex-start' }}>
-          
-          {/* BAL OLDAL - ADATOK */}
+
           <Box sx={{ flex: { xs: '1 1 100%', md: '1.7 1 0%' }, width: '100%' }}>
             <Stack spacing={4}>
               <Paper elevation={2} sx={{ p: { xs: 3, md: 4 }, borderRadius: 3 }}>
@@ -282,7 +270,6 @@ export default function Checkout() {
             </Stack>
           </Box>
 
-          {/* JOBB OLDAL - ÖSSZESÍTŐ */}
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 0%' }, width: '100%', position: 'sticky', top: 100 }}>
             <Paper elevation={4} sx={{ p: { xs: 3, md: 4 }, borderRadius: 4, bgcolor: '#fdfbfb' }}>
               <Typography variant="h5" gutterBottom sx={{color: '#722f37', fontWeight: 'bold', fontFamily: 'Playfair Display, serif'}}>
@@ -421,9 +408,6 @@ export default function Checkout() {
         </Box>
       </form>
 
-      {/* ======================================================== */}
-      {/* KÖZÖS ÁSZF FELUGRÓ ABLAK (MODAL)                           */}
-      {/* ======================================================== */}
       <LegalDialogs 
         open={termsOpen} 
         onClose={() => { setAcceptedTerms(true); setTermsOpen(false); }} 

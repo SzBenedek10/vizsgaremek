@@ -45,7 +45,6 @@ export default function WineCard({ bor, kiszerelesek = [], onAddToCart }) {
 
   return (
     <div className="wine-card">
-      {/* FIX 250px magas képtartó */}
       <div className="wine-image-container" onClick={goToDetails}>
         <img 
           src={bor.kep ? `http://localhost:5000${bor.kep}` : "/images/placeholder.jpg"}
@@ -57,10 +56,7 @@ export default function WineCard({ bor, kiszerelesek = [], onAddToCart }) {
         )}
       </div>
 
-      {/* Kártya tartalma - flex-grow-val nyúlik */}
       <div className="wine-content">
-        
-        {/* Szöveges rész, ez foglalja el a maradék helyet */}
         <div className="wine-info">
           <h3 className="wine-title" onClick={goToDetails}>{bor.nev}</h3>
           <p style={{ fontWeight: 'bold', color: '#555', margin: '0 0 10px 0', fontSize: '0.9rem' }}>
@@ -69,18 +65,15 @@ export default function WineCard({ bor, kiszerelesek = [], onAddToCart }) {
           <p className="wine-desc">{bor.leiras}</p>
         </div>
 
-        {/* Gombok és ár - a "margin-top: auto" mindig legalulra nyomja */}
         <div className="wine-actions">
           
          
-          
-{/* Gombok és ár - a "margin-top: auto" mindig legalulra nyomja */}
         <div className="wine-actions">
           
           <div className="wine-price">{HUF.format(vegsoAr)} Ft</div>
 
           <div className="wine-button-group" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            {/* Új Részletek gomb */}
+         
             <button 
               className="details-button" 
               onClick={goToDetails}

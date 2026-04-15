@@ -30,9 +30,6 @@ services:
     ports:
       - "5000:5000"
     environment:
-      # Figyelem: Mivel a helyi mysqldb ki van kommentelve, 
-      # ide is a felhős (Aiven) adatbázisod adatait érdemes majd beírni, 
-      # különben nem fog tudni csatlakozni!
       DB_HOST: mysqldb 
       DB_USER: root
       DB_PASSWORD: ""
@@ -43,7 +40,6 @@ services:
       - /usr/src/app/node_modules
 
   client:
-    # JAVÍTVA: './frontend/fooldal' helyett most már csak './frontend'
     build: ./frontend
     ports:
       - "5173:5173"
@@ -52,7 +48,6 @@ services:
     depends_on:
       - api
     volumes:
-      # JAVÍTVA: Itt is kivettem a '/fooldal' részt
       - ./frontend:/usr/src/app
       - /usr/src/app/node_modules
 

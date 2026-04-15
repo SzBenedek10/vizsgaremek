@@ -8,16 +8,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const cron = require('node-cron'); 
-
-// EZ A KÉT SOR NAGYON FONTOS A SZÁMLÁHOZ!
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
-
-// BEIMPORTÁLJUK AZ ÚJ EMAIL SZOLGÁLTATÁST!
 const emailService = require('./services/emailService');
 
 const app = express();
-// ... innen folytatódik a kódod ...
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
@@ -53,9 +48,7 @@ db.getConnection((err, connection) => {
     else { console.log('Sikeresen csatlakozva a MySQL-hez (Pool)!'); connection.release(); }
 });
 
-// ==========================================
 // RENDELÉS FELADÁSA
-// ==========================================
 app.post("/api/rendeles", (req, res) => {
   const { userId, szamlazasi, szallitasi, tetelek, vegosszeg, szallitasiKoltseg, utanvetDija, kuponKod, kedvezmeny, hirlevel } = req.body;
 
@@ -113,10 +106,6 @@ app.post("/api/rendeles", (req, res) => {
     });
   });
 });
-
-// ==========================================
-// IDŐZÍTETT NAPI HÍRLEVÉL (Budapesti idő szerint)
-// ==========================================
 cron.schedule('0 11 * * *', () => {
     console.log("⏰ Napi hírlevél generálása indítva...");
 
@@ -138,11 +127,9 @@ cron.schedule('0 11 * * *', () => {
     });
 }, {
     scheduled: true,
-    timezone: "Europe/Budapest" // <-- EZ A KULCS! Így a magyar időt figyeli, nem a Docker belső idejét.
+    timezone: "Europe/Budapest" 
 });
 
-
-// Többi API végpont
 app.post('/api/register', async (req, res) => {
     const { email, password_hash, nev, telefonszam, orszag, irsz, varos, utca, hazszam } = req.body;
     if (!email || !password_hash || !nev) return res.status(400).json({ error: 'Hiányzó adatok: email, név és jelszó kötelező!' });
@@ -405,11 +392,8 @@ app.put('/api/admin/foglalasok/:id/statusz', (req, res) => {
     });
 });
 
-// ==========================================
-// ÚJ: JEGYKEZELŐ - 1. EGY FOGLALÁS LEKÉRÉSE ID ALAPJÁN
-// ==========================================
+
 app.get('/api/admin/foglalasok/jegy/:id', (req, res) => {
-    // Leszedjük a "FOGL-" előtagot, ha azzal írták be vagy szkennelték
     let id = req.params.id.replace('FOGL-', '');
 
     const sql = `
@@ -426,13 +410,10 @@ app.get('/api/admin/foglalasok/jegy/:id', (req, res) => {
     });
 });
 
-// ==========================================
-// ÚJ: JEGYKEZELŐ - 2. JEGY BEVÁLTÁSA
-// ==========================================
+
 app.put('/api/admin/foglalasok/jegy/:id/bevalt', (req, res) => {
     let id = req.params.id.replace('FOGL-', '');
     
-    // Csak akkor váltjuk be, ha még nincs beváltva (bevaltva = 0)
     const sql = "UPDATE foglalas SET bevaltva = 1 WHERE id = ? AND bevaltva = 0";
     
     db.query(sql, [id], (err, result) => {
@@ -510,8 +491,6 @@ app.put('/api/admin/uzenetek/:id', (req, res) => {
         res.json({ message: "Üzenet sikeresen frissítve!" });
     });
 });
-
-// --- FOGLALÁS SZÁMLA LETÖLTÉSE (ELEGÁNS PDF DESIGN QR KÓDDAL) ---
 app.get('/api/foglalas/:id/szamla', (req, res) => {
     const foglalasId = req.params.id;
 
@@ -539,37 +518,29 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
         res.setHeader('Content-type', 'application/pdf');
         doc.pipe(res);
 
-        // Adatbázisból érkező szövegek ékezet-mentesítése (ő->ö, ű->ü)
+        
         const safeText = (text) => {
             if(!text) return '';
             return text.toString().replace(/ő/g, 'ö').replace(/ű/g, 'ü').replace(/Ő/g, 'Ö').replace(/Ű/g, 'Ü');
         };
 
-        // =========================================================
-        // 1. FEJLÉC
-        // =========================================================
         doc.fontSize(24).fillColor('#722f37').font('Helvetica-Bold').text('VISSZAIGAZOLÁS', 50, 50);
-        
         doc.fontSize(10).fillColor('#888888').font('Helvetica');
         doc.text('Borkóstoló / Program foglalás', 50, 78);
-        
         doc.fontSize(10).fillColor('#555555').font('Helvetica-Bold');
         doc.text(`Azonosító: #FOGL-${foglalasId}`, 50, 95);
         doc.font('Helvetica').text(`Kiállítás dátuma: ${new Date().toLocaleDateString('hu-HU')}`, 50, 110);
 
-        // Szente Pincészet adatok (Jobb oldal)
+
         doc.fontSize(14).fillColor('#333333').font('Helvetica-Bold').text('Szente Pincészet', 300, 50, { width: 245, align: 'right' });
         doc.fontSize(10).fillColor('#666666').font('Helvetica');
         doc.text('8318 Lesencetomaj, Római út 12.', 300, 70, { width: 245, align: 'right' });
         doc.text('info@szentepinceszet.hu', 300, 85, { width: 245, align: 'right' });
         doc.text('+36 30 123 4567', 300, 100, { width: 245, align: 'right' });
 
-        // Vastagabb, elegáns díszítő vonal
+
         doc.moveTo(50, 135).lineTo(550, 135).lineWidth(1.5).strokeColor('#722f37').stroke();
 
-        // =========================================================
-        // 2. VÁSÁRLÓ ADATAI (Lekerekített, világos dobozban)
-        // =========================================================
         doc.roundedRect(50, 155, 500, 75, 5).fillAndStroke('#fafafa', '#e0e0e0');
         
         doc.fontSize(12).fillColor('#722f37').font('Helvetica-Bold').text('Vásárló adatai:', 70, 170);
@@ -583,9 +554,6 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
             doc.text(`Email: ${safeText(booking.user_email)}`, 70, 205);
         }
 
-        // =========================================================
-        // 3. TÁBLÁZAT FEJLÉC (Teli bordó háttér, fehér betűk)
-        // =========================================================
         doc.roundedRect(50, 255, 500, 25, 4).fill('#722f37');
         
         doc.fontSize(10).fillColor('#ffffff').font('Helvetica-Bold');
@@ -595,9 +563,6 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
         doc.text('Létszám', 390, 263, { width: 60, align: 'center' }); 
         doc.text('Összesen', 460, 263, { width: 75, align: 'right' });
 
-        // =========================================================
-        // 4. TÁBLÁZAT ADATSOR
-        // =========================================================
         const y = 295;
         doc.font('Helvetica').fillColor('#333333');
         
@@ -617,20 +582,15 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
 
         doc.moveTo(50, y + 25).lineTo(550, y + 25).lineWidth(1).strokeColor('#eeeeee').stroke();
 
-        // =========================================================
-        // 5. VÉGÖSSZEG (Kiemelt, modern dobozban)
-        // =========================================================
+
         doc.roundedRect(300, y + 50, 250, 40, 5).fill('#fcf8f8');
         doc.fontSize(12).fillColor('#555555').font('Helvetica-Bold');
         doc.text('Fizetendö:', 320, y + 65, { width: 100, align: 'left' });
         doc.fontSize(16).fillColor('#722f37').font('Helvetica-Bold');
         doc.text(`${new Intl.NumberFormat("hu-HU").format(booking.osszeg)} Ft`, 410, y + 63, { width: 125, align: 'right' });
 
-        // =========================================================
-        // 6. QR KÓD (ÚJ! CSAK AZ AZONOSÍTÓT TARTALMAZZA!)
-        // =========================================================
+
         try {
-            // IDE KERÜLT A MÓDOSÍTÁS! Csak a "FOGL-15" szöveget kódoljuk bele!
             const qrUrl = `FOGL-${foglalasId}`; 
             
             const qrCodeBuffer = await QRCode.toBuffer(qrUrl, {
@@ -653,9 +613,6 @@ app.get('/api/foglalas/:id/szamla', (req, res) => {
             console.error("Hiba a QR kód generálásakor:", err);
         }
 
-        // =========================================================
-        // 7. LÁBLÉC
-        // =========================================================
         doc.moveTo(50, 750).lineTo(550, 750).lineWidth(1).strokeColor('#e0e0e0').stroke();
         doc.fontSize(10).fillColor('#999999').font('Helvetica');
         doc.text('Köszönjük a foglalást! Várjuk szeretettel a Szente Pincészetben.', 50, 765, { align: 'center' });
