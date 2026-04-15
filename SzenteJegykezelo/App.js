@@ -3,8 +3,8 @@ import { StyleSheet, Text, View, Button, ActivityIndicator, TouchableOpacity } f
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons'; 
 
-// IDE ÍRD BE A LAPTOPOD IP CÍMÉT A LOCALHOST HELYETT! (Pl. http://192.168.1.65:5000)
-const API_URL = "http://192.168.1.8:5000";
+// IDE ÍRD BE AZ IP CÍMÉT A LOCALHOST HELYETT! (Pl. http://192.168.1.65:5000)
+const API_URL = "http://IPcímhelye:5000";
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
