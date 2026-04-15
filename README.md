@@ -123,4 +123,8 @@ A projekt futtatásához szükséges, hogy a Docker telepítve legyen és fusson
 
 1. Repository klónozása:
 ```bash
-git clone <repository_link>
+git clone <https://github.com/SzBenedek10/vizsgaremek.git>
+
+```bash
+npm run dev
+
