@@ -49,6 +49,7 @@ A webalkalmazás fő funkciói:
 - Logó készítése
 - Adatbázis tervezése, megvalósítása
 - Kapcsolat oldal tervezése
+- QR-kód szkennelő alkalmazás
 
 ## Frontend
 
@@ -119,6 +120,7 @@ Az adatbázis célja:
 
 A projekt futtatásához szükséges, hogy a Docker telepítve legyen és fusson a háttérben.
 
+
 ### Lépések:
 
 1. Repository klónozása:
@@ -130,4 +132,35 @@ git clone <https://github.com/SzBenedek10/vizsgaremek.git>
 npm run dev
 ```
 Az indítás után elindul a docusaurus és a webalkalmazás is egyszere.
+### Teszt felhasználók
+## User
+Email: teszt@bor.com 
+Jelszó: 123
+## Admin
+Email: tesztadmin@bor.com
+Jelszo: Premo900
+
+## QR-kód szkennelő indítása
+Mivel a QR-kód szkennelő és a vizsgaremek fő része egy porton fut, hogy megfelelően működjön. Így a user által foglalt és az admin által jóváhagyott a borkostolóról szóló pdf-et elösször töltse le. Ezt követően töltse le majd indítsa el az Expo go alkalmazást a telefonján. A terminálba megjelenő QR-kódot szkennelje be az Expo go alkalmazáson belül. Megjelenik a QR-kód olvasó, ha még nem, akkor engedéjezni kell, hogy használhassa a kameráját a program. A már letöltött pdf-ben a QR-kódot be tudja szkennelni vele és tudja érvényesíteni.      
+
+### Lépések:
+1.Mappába belépés
+```bash
+cd .\SzenteJegykezelo\
+```
+2.Program indítása
+```bash
+npx expo start
+```
+Ha nem futna le elsőre akkor futassa a QR-kód szkennelő alkalmazás akkor az alábbi kódot a "SzenteJegykezelő" mappán belül futassa le és utánna indítsa el a programot:
+```bash
+npx expo install expo-camera
+```
+És 
+```bash
+npm install expo
+```
+
+
+
 
